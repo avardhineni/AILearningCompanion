@@ -223,3 +223,19 @@ def generate_quiz(doc_id):
         logger.error(f"Error generating quiz: {str(e)}")
         flash(f'Error generating quiz: {str(e)}', 'error')
         return redirect(url_for('view_document', doc_id=doc_id))
+
+@app.route('/test')
+def test_page():
+    """Test page for AI functionality"""
+    from flask import send_file
+    return send_file('test_ai.html')
+
+@app.route('/test-ai-direct')
+def test_ai_direct():
+    """Direct test of AI functionality"""
+    try:
+        tutor = AITutor()
+        result = tutor.ask_question(1, "What is a computer?")
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)})

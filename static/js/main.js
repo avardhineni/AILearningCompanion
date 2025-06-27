@@ -167,21 +167,23 @@ function toggleContent(pageId) {
     fullContent.style.display = isHidden ? 'block' : 'none';
     
     // Update button text and icon
-    const toggleBtn = event.target.closest('button');
+    const toggleBtn = event && event.target ? event.target.closest('button') : null;
     if (toggleBtn) {
         const icon = toggleBtn.querySelector('i[data-feather]');
         const text = toggleBtn.childNodes[toggleBtn.childNodes.length - 1];
         
-        if (isHidden) {
-            icon.setAttribute('data-feather', 'chevron-up');
-            text.textContent = ' Show Less';
-        } else {
-            icon.setAttribute('data-feather', 'chevron-down');
-            text.textContent = ' Show More';
+        if (icon && text) {
+            if (isHidden) {
+                icon.setAttribute('data-feather', 'chevron-up');
+                text.textContent = ' Show Less';
+            } else {
+                icon.setAttribute('data-feather', 'chevron-down');
+                text.textContent = ' Show More';
+            }
+            
+            // Re-initialize feather icons
+            feather.replace();
         }
-        
-        // Re-initialize feather icons
-        feather.replace();
     }
 }
 

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test AI Response</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: white; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .answer { background: #2a2a2a; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .question { background: #1e3a8a; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        button { background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        textarea { width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Tutor Test</h1>
+        
+        <form id="testForm">
+            <textarea id="questionInput" placeholder="Ask a question about computers..." rows="3"></textarea>
+            <button type="submit">Ask AI</button>
+        </form>
+        
+        <div id="response" style="display: none;">
+            <h3>Response:</h3>
+            <div id="responseContent"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const question = document.getElementById('questionInput').value;
+            const responseDiv = document.getElementById('response');
+            const responseContent = document.getElementById('responseContent');
+            
+            if (!question.trim()) {
+                alert('Please enter a question');
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('document_id', '1');
+                formData.append('question', question);
+                
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const html = await response.text();
+                
+                // Extract answer section from response
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const answerSection = doc.querySelector('.bg-success');
+                
+                if (answerSection) {
+                    responseContent.innerHTML = answerSection.innerHTML;
+                    responseDiv.style.display = 'block';
+                } else {
+                    responseContent.innerHTML = '<p style="color: red;">No answer found in response</p>';
+                    responseDiv.style.display = 'block';
+                }
+                
+            } catch (error) {
+                responseContent.innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+                responseDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

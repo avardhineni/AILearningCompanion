@@ -128,9 +128,20 @@
 
 <!-- Answer Section -->
 {% if answer %}
+<script>
+// Scroll to answer section after page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const answerSection = document.getElementById('answer-section');
+    if (answerSection) {
+        setTimeout(function() {
+            answerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 500);
+    }
+});
+</script>
 <div class="row mt-4">
     <div class="col-12">
-        <div class="card">
+        <div class="card" id="answer-section">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">
                     <i data-feather="message-square" class="me-2"></i>
@@ -152,7 +163,7 @@
                 
                 <div class="mb-3">
                     <h6 class="text-muted">Answer:</h6>
-                    <div class="document-content p-3 bg-success bg-opacity-10 rounded">
+                    <div class="document-content p-3 bg-success bg-opacity-10 rounded" style="border: 2px solid #10b981;">
                         <i data-feather="check-circle" class="me-2 text-success"></i>
                         {{ answer.answer|nl2br|safe }}
                     </div>
@@ -212,9 +223,12 @@ function askAnother() {
     }
     
     // Scroll to form
-    document.getElementById('questionForm').scrollIntoView({
-        behavior: 'smooth'
-    });
+    const form = document.getElementById('questionForm');
+    if (form) {
+        form.scrollIntoView({
+            behavior: 'smooth'
+        });
+    }
 }
 </script>
 {% endblock %}
