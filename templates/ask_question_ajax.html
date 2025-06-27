@@ -212,14 +212,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 const response = await fetch('/ask', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
+                console.log('Response:', result);
                 
                 if (result.error) {
                     alert('Error: ' + result.error);
-                } else {
+                } else if (result.success) {
                     // Display the answer
                     document.getElementById('display-question').innerHTML = 
                         '<i data-feather="help-circle" class="me-2"></i>' + result.question;
@@ -236,14 +244,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Scroll to answer
                     setTimeout(() => {
                         answerSection.scrollIntoView({ behavior: 'smooth' });
+                        // Re-initialize feather icons
+                        feather.replace();
                     }, 100);
-                    
-                    // Re-initialize feather icons
-                    feather.replace();
+                } else {
+                    console.error('Unexpected response format:', result);
+                    alert('Unexpected response format. Please try again.');
                 }
                 
             } catch (error) {
-                alert('Error: ' + error.message);
+                console.error('Fetch error:', error);
+                alert('Network error: ' + error.message);
             } finally {
                 // Reset button and hide loading
                 if (askBtn) {
