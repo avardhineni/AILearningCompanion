@@ -41,5 +41,13 @@ with app.app_context():
     import models
     db.create_all()
 
+# Add custom template filters
+@app.template_filter('nl2br')
+def nl2br_filter(text):
+    """Convert newlines to HTML line breaks"""
+    if text is None:
+        return ''
+    return text.replace('\n', '<br>\n')
+
 # Import routes after app creation
 import routes

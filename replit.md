@@ -99,8 +99,23 @@ This is a Flask-based web application designed to process educational Word docum
 - **File Storage**: Local filesystem with configurable upload directory
 - **Logging**: Debug-level logging for development, configurable for production
 
+## Recent Changes
+- June 27, 2025: Added AI tutoring system with Google Gemini integration
+- Added question-answering feature for uploaded documents
+- Added quiz generation functionality  
+- Fixed document upload issues - documents now properly save to database
+- Added navigation links for AI Tutor features
+- Enhanced document viewer with AI tutoring buttons
+
+## AI Features
+- **Question Answering**: Students can ask questions about uploaded lessons using natural language
+- **Page References**: AI answers include specific page numbers where information can be found
+- **Quiz Generation**: Automatic creation of practice questions based on lesson content
+- **Age-Appropriate Responses**: Answers are tailored for 5th grade students (age 10-11)
+- **Free AI Model**: Uses Google Gemini which provides free tier access
+
 ## Changelog
-- June 27, 2025. Initial setup
+- June 27, 2025. Initial setup and AI tutoring system completion
 
 ## User Preferences
 
