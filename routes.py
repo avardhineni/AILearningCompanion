@@ -181,29 +181,35 @@ def ask_question():
         question = request.form.get('question')
         
         if not document_id or not question:
-            flash('Please select a document and enter a question.', 'error')
-            return render_template('ask_question.html', documents=documents)
+            return jsonify({'error': 'Please select a document and enter a question.'})
         
         try:
             tutor = AITutor()
             result = tutor.ask_question(int(document_id), question)
             
             if 'error' in result:
-                flash(result['error'], 'error')
-                return render_template('ask_question.html', documents=documents)
+                return jsonify({'error': result['error']})
             
-            return render_template('ask_question.html', 
-                                 documents=documents,
-                                 question=question,
-                                 answer=result,
-                                 selected_doc_id=int(document_id))
+            return jsonify({
+                'success': True,
+                'question': question,
+                'answer': result['answer'],
+                'document_title': result['document_title'],
+                'subject': result['subject'],
+                'total_pages': result['total_pages']
+            })
             
         except Exception as e:
             logger.error(f"Error processing question: {str(e)}")
-            flash(f'Error processing question: {str(e)}', 'error')
-            return render_template('ask_question.html', documents=documents)
+            return jsonify({'error': f'Error processing question: {str(e)}'})
     
     return render_template('ask_question.html', documents=documents)
+
+@app.route('/ask-page')
+def ask_page():
+    """Show the ask question page with AJAX"""
+    documents = Document.query.order_by(Document.upload_date.desc()).all()
+    return render_template('ask_question_ajax.html', documents=documents)
 
 @app.route('/quiz/<int:doc_id>')
 def generate_quiz(doc_id):
