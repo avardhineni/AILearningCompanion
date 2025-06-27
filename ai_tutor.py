@@ -75,7 +75,7 @@ Please provide a helpful answer that references the specific page(s) where the i
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     temperature=0.3,  # Lower temperature for more consistent educational responses
-                    max_output_tokens=1000
+                    max_output_tokens=2000  # Increased for complete answers
                 )
             )
             
