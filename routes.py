@@ -5,6 +5,7 @@ from werkzeug.utils import secure_filename
 from app import app, db
 from models import Document, DocumentPage
 from document_processor import DocumentProcessor
+from ai_tutor import AITutor
 import logging
 
 logger = logging.getLogger(__name__)
@@ -32,13 +33,14 @@ def upload_file():
         flash('No file selected', 'error')
         return redirect(url_for('index'))
     
-    if not allowed_file(file.filename):
+    if not file.filename or not allowed_file(file.filename):
         flash('Only .docx files are allowed', 'error')
         return redirect(url_for('index'))
     
+    file_path = None
     try:
         # Generate unique filename
-        original_filename = secure_filename(file.filename)
+        original_filename = secure_filename(file.filename or "")
         unique_filename = str(uuid.uuid4()) + '_' + original_filename
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         
@@ -57,13 +59,12 @@ def upload_file():
             return redirect(url_for('index'))
         
         # Create document record
-        document = Document(
-            filename=unique_filename,
-            original_filename=original_filename,
-            total_pages=len(pages),
-            subject=metadata.get('subject', 'General'),
-            lesson_title=metadata.get('title', 'Untitled Document')
-        )
+        document = Document()
+        document.filename = unique_filename
+        document.original_filename = original_filename
+        document.total_pages = len(pages)
+        document.subject = metadata.get('subject', 'General')
+        document.lesson_title = metadata.get('title', 'Untitled Document')
         
         db.session.add(document)
         db.session.flush()  # Get the document ID
@@ -71,12 +72,11 @@ def upload_file():
         # Create page records
         for page_number, content in pages:
             word_count = processor.count_words(content)
-            page = DocumentPage(
-                document_id=document.id,
-                page_number=page_number,
-                content=content,
-                word_count=word_count
-            )
+            page = DocumentPage()
+            page.document_id = document.id
+            page.page_number = page_number
+            page.content = content
+            page.word_count = word_count
             db.session.add(page)
         
         db.session.commit()
@@ -91,7 +91,7 @@ def upload_file():
         flash(f'Error processing document: {str(e)}', 'error')
         
         # Clean up file if it exists
-        if 'file_path' in locals() and os.path.exists(file_path):
+        if file_path is not None and os.path.exists(file_path):
             os.remove(file_path)
         
         return redirect(url_for('index'))
@@ -170,3 +170,56 @@ def delete_document(doc_id):
         flash(f'Error deleting document: {str(e)}', 'error')
     
     return redirect(url_for('index'))
+
+@app.route('/ask', methods=['GET', 'POST'])
+def ask_question():
+    """Handle AI tutoring questions"""
+    documents = Document.query.order_by(Document.upload_date.desc()).all()
+    
+    if request.method == 'POST':
+        document_id = request.form.get('document_id')
+        question = request.form.get('question')
+        
+        if not document_id or not question:
+            flash('Please select a document and enter a question.', 'error')
+            return render_template('ask_question.html', documents=documents)
+        
+        try:
+            tutor = AITutor()
+            result = tutor.ask_question(int(document_id), question)
+            
+            if 'error' in result:
+                flash(result['error'], 'error')
+                return render_template('ask_question.html', documents=documents)
+            
+            return render_template('ask_question.html', 
+                                 documents=documents,
+                                 question=question,
+                                 answer=result,
+                                 selected_doc_id=int(document_id))
+            
+        except Exception as e:
+            logger.error(f"Error processing question: {str(e)}")
+            flash(f'Error processing question: {str(e)}', 'error')
+            return render_template('ask_question.html', documents=documents)
+    
+    return render_template('ask_question.html', documents=documents)
+
+@app.route('/quiz/<int:doc_id>')
+def generate_quiz(doc_id):
+    """Generate quiz questions for a document"""
+    try:
+        tutor = AITutor()
+        result = tutor.generate_quiz_questions(doc_id)
+        
+        if 'error' in result:
+            flash(result['error'], 'error')
+            return redirect(url_for('view_document', doc_id=doc_id))
+        
+        document = Document.query.get_or_404(doc_id)
+        return render_template('quiz.html', document=document, quiz_result=result)
+        
+    except Exception as e:
+        logger.error(f"Error generating quiz: {str(e)}")
+        flash(f'Error generating quiz: {str(e)}', 'error')
+        return redirect(url_for('view_document', doc_id=doc_id))

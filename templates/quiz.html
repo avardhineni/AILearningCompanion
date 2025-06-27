@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz - {{ document.lesson_title }} - AI Tutor Document Processor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('view_document', doc_id=document.id) }}">{{ document.original_filename }}</a></li>
+                        <li class="breadcrumb-item active">Quiz</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 mb-2">
+                    <i data-feather="clipboard" class="me-2"></i>
+                    Quiz: {{ document.lesson_title }}
+                </h1>
+                <div class="d-flex gap-3 text-muted">
+                    <span><i data-feather="tag" class="me-1"></i>{{ document.subject }}</span>
+                    <span><i data-feather="file-text" class="me-1"></i>{{ document.total_pages }} page{{ 's' if document.total_pages != 1 else '' }}</span>
+                </div>
+            </div>
+            <div class="btn-group">
+                <a href="{{ url_for('view_document', doc_id=document.id) }}" class="btn btn-outline-secondary">
+                    <i data-feather="book-open" class="me-1"></i>
+                    View Document
+                </a>
+                <a href="{{ url_for('ask_question') }}" class="btn btn-outline-primary">
+                    <i data-feather="message-circle" class="me-1"></i>
+                    Ask Questions
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if quiz_result %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i data-feather="help-circle" class="me-2"></i>
+                    Practice Quiz Questions
+                </h5>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-info">{{ quiz_result.subject }}</span>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                        <i data-feather="printer" class="me-1"></i>
+                        Print Quiz
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info d-flex align-items-center mb-4">
+                    <i data-feather="info" class="me-2"></i>
+                    <div>
+                        <strong>Instructions:</strong> These quiz questions are generated based on your lesson content. 
+                        Use them to test your understanding and practice for exams!
+                    </div>
+                </div>
+                
+                <div class="document-content">
+                    {{ quiz_result.quiz|nl2br|safe }}
+                </div>
+                
+                <div class="mt-4 p-3 bg-success bg-opacity-10 rounded">
+                    <h6 class="text-success mb-2">
+                        <i data-feather="lightbulb" class="me-1"></i>
+                        Study Tips:
+                    </h6>
+                    <ul class="mb-0 text-muted">
+                        <li>Review the page numbers mentioned to find detailed explanations</li>
+                        <li>Try to answer without looking at the document first</li>
+                        <li>If you get stuck, ask the AI tutor for help</li>
+                        <li>Practice these questions multiple times for better retention</li>
+                    </ul>
+                </div>
+                
+                <div class="mt-4 d-flex gap-2 flex-wrap">
+                    <a href="{{ url_for('generate_quiz', doc_id=document.id) }}" class="btn btn-outline-primary">
+                        <i data-feather="refresh-cw" class="me-1"></i>
+                        Generate New Quiz
+                    </a>
+                    <a href="{{ url_for('ask_question') }}" class="btn btn-outline-info">
+                        <i data-feather="message-circle" class="me-1"></i>
+                        Ask AI Tutor
+                    </a>
+                    <a href="{{ url_for('view_document', doc_id=document.id) }}" class="btn btn-outline-secondary">
+                        <i data-feather="book-open" class="me-1"></i>
+                        Review Lesson
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i data-feather="alert-circle" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                <h6 class="text-muted">Unable to generate quiz</h6>
+                <p class="text-muted mb-3">There was an issue generating quiz questions for this document.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <a href="{{ url_for('generate_quiz', doc_id=document.id) }}" class="btn btn-primary">
+                        <i data-feather="refresh-cw" class="me-1"></i>
+                        Try Again
+                    </a>
+                    <a href="{{ url_for('ask_question') }}" class="btn btn-outline-primary">
+                        <i data-feather="message-circle" class="me-1"></i>
+                        Ask Questions Instead
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+@media print {
+    .btn, .breadcrumb, nav, .alert, .card-header .d-flex > *:last-child {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .document-content {
+        font-size: 12pt;
+        line-height: 1.5;
+    }
+}
+</style>
+{% endblock %}

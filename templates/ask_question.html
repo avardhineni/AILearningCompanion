@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Ask AI Tutor - AI Tutor Document Processor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                        <li class="breadcrumb-item active">Ask AI Tutor</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 mb-2">
+                    <i data-feather="message-circle" class="me-2"></i>
+                    Ask Your AI Tutor
+                </h1>
+                <p class="text-muted">Ask questions about your uploaded lessons and get instant answers!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Question Form -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i data-feather="edit-3" class="me-2"></i>
+                    Ask Your Question
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if not documents %}
+                    <div class="text-center py-4">
+                        <i data-feather="book-open" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                        <h6 class="text-muted">No documents available</h6>
+                        <p class="text-muted mb-3">Upload a document first to start asking questions.</p>
+                        <a href="{{ url_for('index') }}" class="btn btn-primary">
+                            <i data-feather="upload" class="me-1"></i>
+                            Upload Document
+                        </a>
+                    </div>
+                {% else %}
+                    <form method="post" id="questionForm">
+                        <div class="mb-3">
+                            <label for="document_id" class="form-label">Select Document</label>
+                            <select class="form-select" id="document_id" name="document_id" required>
+                                <option value="">Choose a lesson...</option>
+                                {% for doc in documents %}
+                                <option value="{{ doc.id }}" {% if selected_doc_id == doc.id %}selected{% endif %}>
+                                    {{ doc.lesson_title[:60] }}{% if doc.lesson_title|length > 60 %}...{% endif %}
+                                    ({{ doc.subject }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="question" class="form-label">Your Question</label>
+                            <textarea class="form-control" id="question" name="question" rows="4" 
+                                    placeholder="Ask anything about the lesson... For example: 'What is a computer?' or 'Tell me about the first generation of computers'" 
+                                    required>{{ question if question else '' }}</textarea>
+                            <div class="form-text">
+                                <i data-feather="lightbulb" class="me-1"></i>
+                                Be specific in your questions for better answers!
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary" id="askBtn">
+                            <i data-feather="send" class="me-2"></i>
+                            Ask AI Tutor
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tips & Examples -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i data-feather="help-circle" class="me-2"></i>
+                    Question Examples
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Here are some good questions you can ask:</p>
+                
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item border-0 px-0">
+                        <strong>About Facts:</strong><br>
+                        <small class="text-muted">"What is the difference between first and second generation computers?"</small>
+                    </div>
+                    <div class="list-group-item border-0 px-0">
+                        <strong>About History:</strong><br>
+                        <small class="text-muted">"Who invented the Analytical Engine and when?"</small>
+                    </div>
+                    <div class="list-group-item border-0 px-0">
+                        <strong>About Features:</strong><br>
+                        <small class="text-muted">"What are the features of UNIVAC-I computer?"</small>
+                    </div>
+                    <div class="list-group-item border-0 px-0">
+                        <strong>For Explanations:</strong><br>
+                        <small class="text-muted">"Explain how computers evolved over time"</small>
+                    </div>
+                    <div class="list-group-item border-0 px-0">
+                        <strong>For Examples:</strong><br>
+                        <small class="text-muted">"Give me examples of third generation computers"</small>
+                    </div>
+                </div>
+                
+                <div class="mt-3 p-3 bg-info bg-opacity-10 rounded">
+                    <small class="text-info">
+                        <i data-feather="star" class="me-1"></i>
+                        <strong>Tip:</strong> The AI tutor will reference specific pages where you can find the information!
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Answer Section -->
+{% if answer %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i data-feather="message-square" class="me-2"></i>
+                    AI Tutor's Answer
+                </h5>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-info">{{ answer.subject }}</span>
+                    <span class="badge bg-secondary">{{ answer.total_pages }} pages</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-muted">Your Question:</h6>
+                    <div class="p-3 bg-light bg-opacity-10 rounded">
+                        <i data-feather="help-circle" class="me-2"></i>
+                        {{ question }}
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-muted">Answer:</h6>
+                    <div class="document-content p-3 bg-success bg-opacity-10 rounded">
+                        <i data-feather="check-circle" class="me-2 text-success"></i>
+                        {{ answer.answer|nl2br|safe }}
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="askAnother()">
+                        <i data-feather="plus-circle" class="me-1"></i>
+                        Ask Another Question
+                    </button>
+                    <a href="{{ url_for('view_document', doc_id=selected_doc_id) }}" class="btn btn-outline-primary btn-sm">
+                        <i data-feather="book-open" class="me-1"></i>
+                        View Full Document
+                    </a>
+                    <a href="{{ url_for('generate_quiz', doc_id=selected_doc_id) }}" class="btn btn-outline-info btn-sm">
+                        <i data-feather="clipboard" class="me-1"></i>
+                        Generate Quiz
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const questionForm = document.getElementById('questionForm');
+    const askBtn = document.getElementById('askBtn');
+    
+    if (questionForm) {
+        questionForm.addEventListener('submit', function(e) {
+            const question = document.getElementById('question').value.trim();
+            const documentId = document.getElementById('document_id').value;
+            
+            if (!question || !documentId) {
+                e.preventDefault();
+                alert('Please select a document and enter your question.');
+                return;
+            }
+            
+            // Show loading state
+            if (askBtn) {
+                askBtn.disabled = true;
+                askBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Thinking...';
+            }
+        });
+    }
+});
+
+function askAnother() {
+    // Clear the question form
+    const questionTextarea = document.getElementById('question');
+    if (questionTextarea) {
+        questionTextarea.value = '';
+        questionTextarea.focus();
+    }
+    
+    // Scroll to form
+    document.getElementById('questionForm').scrollIntoView({
+        behavior: 'smooth'
+    });
+}
+</script>
+{% endblock %}

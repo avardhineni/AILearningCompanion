@@ -41,7 +41,15 @@
                         </a>
                     {% endif %}
                 {% else %}
-                    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                    <a href="{{ url_for('ask_question') }}" class="btn btn-primary">
+                        <i data-feather="message-circle" class="me-1"></i>
+                        Ask AI Tutor
+                    </a>
+                    <a href="{{ url_for('generate_quiz', doc_id=document.id) }}" class="btn btn-outline-info">
+                        <i data-feather="clipboard" class="me-1"></i>
+                        Generate Quiz
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
                         <i data-feather="arrow-left" class="me-1"></i>
                         Back to Home
                     </a>
