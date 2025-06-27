@@ -209,7 +209,7 @@ def ask_question():
 def ask_page():
     """Show the ask question page with AJAX"""
     documents = Document.query.order_by(Document.upload_date.desc()).all()
-    return render_template('ask_question_ajax.html', documents=documents)
+    return render_template('simple_ask.html', documents=documents)
 
 @app.route('/quiz/<int:doc_id>')
 def generate_quiz(doc_id):

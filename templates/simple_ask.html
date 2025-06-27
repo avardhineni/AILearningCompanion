@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}AI Tutor - Simple Interface{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i data-feather="message-circle" class="me-2"></i>
+                Ask Your AI Tutor
+            </h1>
+        </div>
+    </div>
+
+    {% if not documents %}
+        <div class="alert alert-info">
+            <h5>No documents available</h5>
+            <p>Please upload a document first to start asking questions.</p>
+            <a href="{{ url_for('index') }}" class="btn btn-primary">Upload Document</a>
+        </div>
+    {% else %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="document_id" class="form-label">Select Document</label>
+                            <select class="form-select" id="document_id" required>
+                                <option value="">Choose a lesson...</option>
+                                {% for doc in documents %}
+                                <option value="{{ doc.id }}">
+                                    {{ doc.lesson_title[:60] }}{% if doc.lesson_title|length > 60 %}...{% endif %} ({{ doc.subject }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="question" class="form-label">Your Question</label>
+                            <textarea class="form-control" id="question" rows="4" 
+                                    placeholder="Ask anything about the lesson..." required></textarea>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" id="askButton" onclick="askQuestion()">
+                            <i data-feather="send" class="me-2"></i>
+                            Ask AI Tutor
+                        </button>
+                        
+                        <div id="loading" class="mt-3" style="display: none;">
+                            <div class="alert alert-info">
+                                <div class="d-flex align-items-center">
+                                    <div class="spinner-border spinner-border-sm me-3"></div>
+                                    <div>AI is thinking...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Answer Display -->
+        <div class="row mt-4" id="answerArea" style="display: none;">
+            <div class="col-12">
+                <div class="card border-success" style="border-width: 2px;">
+                    <div class="card-header bg-success bg-opacity-20">
+                        <h5 class="text-success mb-0">
+                            <i data-feather="check-circle" class="me-2"></i>
+                            AI Tutor's Answer
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <strong>Your Question:</strong>
+                            <div id="questionDisplay" class="p-2 bg-light bg-opacity-10 rounded mt-1"></div>
+                        </div>
+                        <div>
+                            <strong>Answer:</strong>
+                            <div id="answerDisplay" class="p-3 bg-success bg-opacity-20 rounded mt-1" style="font-size: 1.1rem; line-height: 1.6;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+function askQuestion() {
+    const documentId = document.getElementById('document_id').value;
+    const question = document.getElementById('question').value.trim();
+    const askButton = document.getElementById('askButton');
+    const loading = document.getElementById('loading');
+    const answerArea = document.getElementById('answerArea');
+    
+    if (!documentId || !question) {
+        alert('Please select a document and enter your question.');
+        return;
+    }
+    
+    // Show loading
+    askButton.disabled = true;
+    askButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Thinking...';
+    loading.style.display = 'block';
+    answerArea.style.display = 'none';
+    
+    // Create form data
+    const formData = new FormData();
+    formData.append('document_id', documentId);
+    formData.append('question', question);
+    
+    // Make request
+    fetch('/ask', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        
+        if (data.error) {
+            alert('Error: ' + data.error);
+        } else if (data.success) {
+            // Display the answer
+            document.getElementById('questionDisplay').textContent = data.question;
+            document.getElementById('answerDisplay').innerHTML = data.answer.replace(/\n/g, '<br>');
+            
+            // Show answer area
+            answerArea.style.display = 'block';
+            
+            // Scroll to answer
+            setTimeout(() => {
+                answerArea.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        } else {
+            alert('Unexpected response format');
+            console.error('Unexpected response:', data);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Network error: ' + error.message);
+    })
+    .finally(() => {
+        // Reset button
+        askButton.disabled = false;
+        askButton.innerHTML = '<i data-feather="send" class="me-2"></i>Ask AI Tutor';
+        loading.style.display = 'none';
+        
+        // Re-initialize feather icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+    });
+}
+
+// Allow Enter key to submit
+document.getElementById('question').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.ctrlKey) {
+        askQuestion();
+    }
+});
+</script>
+{% endblock %}
