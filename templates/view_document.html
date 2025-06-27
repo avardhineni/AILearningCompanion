@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}{{ document.lesson_title }} - AI Tutor Document Processor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Document Header -->
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                        <li class="breadcrumb-item active">{{ document.original_filename }}</li>
+                    </ol>
+                </nav>
+                <h1 class="h3 mb-2">{{ document.lesson_title }}</h1>
+                <div class="d-flex gap-3 text-muted">
+                    <span><i data-feather="tag" class="me-1"></i>{{ document.subject }}</span>
+                    <span><i data-feather="file-text" class="me-1"></i>{{ document.total_pages }} page{{ 's' if document.total_pages != 1 else '' }}</span>
+                    <span><i data-feather="calendar" class="me-1"></i>{{ document.upload_date.strftime('%Y-%m-%d') }}</span>
+                </div>
+            </div>
+            <div class="btn-group">
+                {% if single_page_view and pages %}
+                    <!-- Single page navigation -->
+                    {% if prev_page %}
+                        <a href="{{ url_for('view_page', doc_id=document.id, page_num=prev_page.page_number) }}" class="btn btn-outline-secondary">
+                            <i data-feather="chevron-left" class="me-1"></i>
+                            Previous
+                        </a>
+                    {% endif %}
+                    <a href="{{ url_for('view_document', doc_id=document.id) }}" class="btn btn-outline-primary">
+                        <i data-feather="grid" class="me-1"></i>
+                        All Pages
+                    </a>
+                    {% if next_page %}
+                        <a href="{{ url_for('view_page', doc_id=document.id, page_num=next_page.page_number) }}" class="btn btn-outline-secondary">
+                            Next
+                            <i data-feather="chevron-right" class="ms-1"></i>
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                        <i data-feather="arrow-left" class="me-1"></i>
+                        Back to Home
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if pages %}
+    {% if single_page_view %}
+        <!-- Single Page View -->
+        {% set page = pages[0] %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i data-feather="file-text" class="me-2"></i>
+                            Page {{ page.page_number }}
+                        </h5>
+                        <span class="badge bg-info">{{ page.word_count }} words</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="document-content">
+                            {{ page.content|nl2br|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- All Pages View -->
+        <div class="row">
+            {% for page in pages %}
+            <div class="col-12 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i data-feather="file-text" class="me-2"></i>
+                            Page {{ page.page_number }}
+                        </h5>
+                        <div class="d-flex gap-2 align-items-center">
+                            <span class="badge bg-info">{{ page.word_count }} words</span>
+                            <a href="{{ url_for('view_page', doc_id=document.id, page_num=page.page_number) }}" 
+                               class="btn btn-sm btn-outline-primary">
+                                <i data-feather="maximize-2" class="me-1"></i>
+                                Focus
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="document-content">
+                            {% set content_preview = page.content[:500] %}
+                            {% if page.content|length > 500 %}
+                                {{ content_preview|nl2br|safe }}
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-secondary" onclick="toggleContent({{ page.id }})">
+                                        <i data-feather="chevron-down" class="me-1"></i>
+                                        Show More
+                                    </button>
+                                </div>
+                                <div id="full-content-{{ page.id }}" class="mt-3" style="display: none;">
+                                    {{ page.content[500:]|nl2br|safe }}
+                                    <div class="mt-3">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleContent({{ page.id }})">
+                                            <i data-feather="chevron-up" class="me-1"></i>
+                                            Show Less
+                                        </button>
+                                    </div>
+                                </div>
+                            {% else %}
+                                {{ page.content|nl2br|safe }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% else %}
+    <!-- No content found -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i data-feather="alert-circle" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                    <h6 class="text-muted">No content found</h6>
+                    <p class="text-muted mb-0">This document appears to be empty or could not be processed properly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Page Statistics -->
+{% if pages %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i data-feather="bar-chart-2" class="me-2"></i>
+                    Document Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="stat-item">
+                            <h4 class="mb-1">{{ pages|length }}</h4>
+                            <small class="text-muted">Total Pages</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="stat-item">
+                            <h4 class="mb-1">{{ pages|sum(attribute='word_count') }}</h4>
+                            <small class="text-muted">Total Words</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="stat-item">
+                            <h4 class="mb-1">{{ (pages|sum(attribute='word_count') / pages|length)|round|int if pages else 0 }}</h4>
+                            <small class="text-muted">Avg Words/Page</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="stat-item">
+                            <h4 class="mb-1">{{ ((pages|sum(attribute='word_count') / 200)|round|int) if pages else 0 }}</h4>
+                            <small class="text-muted">Est. Read Time (min)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<script>
+function toggleContent(pageId) {
+    const fullContent = document.getElementById(`full-content-${pageId}`);
+    const isHidden = fullContent.style.display === 'none';
+    
+    fullContent.style.display = isHidden ? 'block' : 'none';
+    
+    // Re-initialize feather icons for the toggled content
+    feather.replace();
+}
+</script>
+{% endblock %}

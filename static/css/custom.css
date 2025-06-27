@@ -1,0 +1,187 @@
+/* Custom styles for the AI Tutor Document Processor */
+
+/* Document content styling */
+.document-content {
+    line-height: 1.8;
+    font-size: 1.05rem;
+}
+
+.document-content p {
+    margin-bottom: 1rem;
+}
+
+/* Make text more readable for educational content */
+.document-content h1, 
+.document-content h2, 
+.document-content h3, 
+.document-content h4, 
+.document-content h5, 
+.document-content h6 {
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+/* Table content styling */
+.document-content table {
+    width: 100%;
+    margin: 1rem 0;
+    border-collapse: collapse;
+}
+
+.document-content td, 
+.document-content th {
+    padding: 0.75rem;
+    border: 1px solid var(--bs-border-color);
+}
+
+/* Statistics cards */
+.stat-item h4 {
+    color: var(--bs-primary);
+    font-weight: 700;
+}
+
+/* Upload progress styling */
+#uploadProgress .progress {
+    height: 8px;
+}
+
+/* File input styling */
+.form-control[type="file"] {
+    padding: 0.75rem;
+}
+
+/* Card hover effects */
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* Table row hover */
+.table-hover tbody tr:hover {
+    background-color: var(--bs-gray-800);
+}
+
+/* Button group spacing */
+.btn-group .btn {
+    border-radius: 0.375rem;
+    margin-left: 2px;
+}
+
+.btn-group .btn:first-child {
+    margin-left: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .document-content {
+        font-size: 1rem;
+    }
+    
+    .stat-item h4 {
+        font-size: 1.5rem;
+    }
+    
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        margin-left: 0;
+        margin-top: 2px;
+    }
+    
+    .btn-group .btn:first-child {
+        margin-top: 0;
+    }
+}
+
+/* Custom scrollbar for content areas */
+.document-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.document-content::-webkit-scrollbar-track {
+    background: var(--bs-gray-900);
+}
+
+.document-content::-webkit-scrollbar-thumb {
+    background: var(--bs-gray-600);
+    border-radius: 4px;
+}
+
+.document-content::-webkit-scrollbar-thumb:hover {
+    background: var(--bs-gray-500);
+}
+
+/* Alert styling adjustments */
+.alert {
+    border: none;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    border-left-color: var(--bs-success);
+}
+
+.alert-danger {
+    border-left-color: var(--bs-danger);
+}
+
+.alert-info {
+    border-left-color: var(--bs-info);
+}
+
+/* Navigation breadcrumb */
+.breadcrumb {
+    background: none;
+    padding: 0;
+    margin-bottom: 1rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    content: "›";
+    font-weight: bold;
+}
+
+/* Empty state styling */
+.text-center i[data-feather] {
+    opacity: 0.5;
+}
+
+/* Badge adjustments */
+.badge {
+    font-size: 0.75em;
+    font-weight: 500;
+}
+
+/* Form validation feedback */
+.form-control:invalid {
+    border-color: var(--bs-danger);
+}
+
+.form-control:valid {
+    border-color: var(--bs-success);
+}
+
+/* Loading animation for upload */
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.uploading {
+    animation: pulse 1.5s infinite;
+}
