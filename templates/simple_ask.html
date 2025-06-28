@@ -129,29 +129,43 @@ function askQuestion() {
     })
     .then(data => {
         console.log('Response data:', data);
+        console.log('Data keys:', Object.keys(data));
+        console.log('Success flag:', data.success);
+        console.log('Answer content:', data.answer);
         
         if (data.error) {
             alert('Error: ' + data.error);
-        } else if (data.success) {
-            // Display the answer - show complete text without truncation
-            document.getElementById('questionDisplay').textContent = data.question;
+            console.error('API Error:', data.error);
+        } else if (data.success && data.answer) {
+            // Display the question
+            const questionElement = document.getElementById('questionDisplay');
+            const answerElement = document.getElementById('answerDisplay');
             
-            // Ensure we get the complete answer text
-            const fullAnswer = data.answer || '';
-            console.log('Full answer length:', fullAnswer.length);
+            if (questionElement) {
+                questionElement.textContent = data.question || question;
+            }
             
-            document.getElementById('answerDisplay').innerHTML = fullAnswer.replace(/\n/g, '<br>');
+            // Display the answer with proper formatting
+            if (answerElement) {
+                const fullAnswer = data.answer || '';
+                console.log('Setting answer with length:', fullAnswer.length);
+                answerElement.innerHTML = fullAnswer.replace(/\n/g, '<br>');
+                console.log('Answer element innerHTML set');
+            }
             
             // Show answer area
-            answerArea.style.display = 'block';
-            
-            // Scroll to answer
-            setTimeout(() => {
-                answerArea.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
+            if (answerArea) {
+                answerArea.style.display = 'block';
+                console.log('Answer area shown');
+                
+                // Scroll to answer
+                setTimeout(() => {
+                    answerArea.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            }
         } else {
-            alert('Unexpected response format');
-            console.error('Unexpected response:', data);
+            console.error('Invalid response format:', data);
+            alert('Received invalid response from AI tutor. Please try again.');
         }
     })
     .catch(error => {
