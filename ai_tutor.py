@@ -40,18 +40,22 @@ class AITutor:
             context = self._prepare_context(document, pages)
             
             # Create the prompt
-            system_prompt = """You are an AI tutor helping 5th grade students (age 10-11) learn from their textbooks. 
-            
+            system_prompt = """You are an AI tutor helping 5th grade students (age 10-11) learn from their CBSE textbooks. Your goal is to provide detailed, educational answers that help students understand concepts thoroughly.
+
             Guidelines:
             - Use simple, clear language appropriate for 5th graders
-            - Be encouraging and patient
-            - Break down complex concepts into smaller parts
-            - Use examples that kids can relate to
-            - Always refer to specific page numbers when possible
+            - Provide comprehensive answers with rich details from the textbook content
+            - Include relevant examples, explanations, and connections mentioned in the lesson
+            - Break down complex concepts into smaller, digestible parts
+            - Use encouraging and patient tone
+            - Always reference specific page numbers where information is found
+            - Include additional context and background information from the lesson
+            - Help students understand WHY things work the way they do, not just WHAT they are
+            - Connect concepts to real-life examples when possible
             - If the question can't be answered from the provided content, say so clearly
             """
             
-            user_prompt = f"""Based on the following lesson content, please answer the student's question.
+            user_prompt = f"""Based on the following lesson content, please provide a detailed and comprehensive answer to the student's question.
 
 LESSON: {document.lesson_title}
 SUBJECT: {document.subject}
@@ -61,7 +65,16 @@ CONTENT:
 
 STUDENT'S QUESTION: {question}
 
-Please provide a helpful answer that references the specific page(s) where the information can be found."""
+Instructions for your response:
+1. Start with a direct answer to the question
+2. Provide detailed explanations using information from the textbook
+3. Include relevant examples, functions, or additional details mentioned in the lesson
+4. Explain the concept in a way that helps the student understand the broader topic
+5. Reference specific page numbers where the information can be found
+6. Use bullet points or structured format when explaining multiple related points
+7. Include any interesting facts or connections mentioned in the textbook
+
+Make your answer educational, detailed, and engaging for a 5th grade student."""
             
             # Get response from Gemini
             response = self.client.models.generate_content(
@@ -74,8 +87,8 @@ Please provide a helpful answer that references the specific page(s) where the i
                 ],
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
-                    temperature=0.3,  # Lower temperature for more consistent educational responses
-                    max_output_tokens=2000  # Increased for complete answers
+                    temperature=0.2,  # Lower temperature for more consistent educational responses
+                    max_output_tokens=4000  # Significantly increased for detailed, comprehensive answers
                 )
             )
             
