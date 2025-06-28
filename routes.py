@@ -1,6 +1,6 @@
 import os
 import uuid
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, make_response
 from werkzeug.utils import secure_filename
 from app import app, db
 from models import Document, DocumentPage
@@ -19,7 +19,11 @@ def allowed_file(filename):
 def index():
     """Home page with upload form and document list"""
     documents = Document.query.order_by(Document.upload_date.desc()).all()
-    return render_template('index.html', documents=documents)
+    response = make_response(render_template('index.html', documents=documents))
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -171,11 +175,19 @@ def delete_document(doc_id):
         db.session.commit()
         logger.info(f"Successfully deleted document from database")
         
+        # Check if this is an AJAX request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': True, 'message': f'Document "{filename}" deleted successfully.'})
+        
         flash(f'Document "{filename}" deleted successfully.', 'success')
         
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error deleting document {doc_id}: {str(e)}")
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': f'Error deleting document: {str(e)}'})
+        
         flash(f'Error deleting document: {str(e)}', 'error')
     
     return redirect(url_for('index'))

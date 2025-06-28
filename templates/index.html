@@ -147,11 +147,9 @@
                                                 <i data-feather="eye" class="me-1"></i>
                                                 View
                                             </a>
-                                            <form method="post" action="{{ url_for('delete_document', doc_id=doc.id) }}" class="d-inline delete-form" onsubmit="return handleDeleteSubmit(this, '{{ doc.lesson_title }}')">
-                                                <button type="submit" class="btn btn-outline-danger delete-btn">
-                                                    <i data-feather="trash-2"></i>
-                                                </button>
-                                            </form>
+                                            <button type="button" class="btn btn-outline-danger delete-btn" onclick="deleteDocument({{ doc.id }}, '{{ doc.lesson_title }}', this)">
+                                                <i data-feather="trash-2"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -172,25 +170,93 @@
 </div>
 
 <script>
-function handleDeleteSubmit(form, title) {
+function deleteDocument(docId, title, button) {
     if (!confirm(`Are you sure you want to delete "${title}"?`)) {
-        return false;
+        return;
     }
     
     // Show processing state
-    const button = form.querySelector('.delete-btn');
     const originalHTML = button.innerHTML;
     button.disabled = true;
     button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
     
-    // Hide the row immediately for better UX
-    const row = form.closest('tr');
+    // Get the row for UI feedback
+    const row = button.closest('tr');
     if (row) {
         row.style.opacity = '0.5';
         row.style.pointerEvents = 'none';
     }
     
-    return true;
+    // Make AJAX request
+    fetch(`/delete/${docId}`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Remove the row from the table
+            if (row) {
+                row.remove();
+            }
+            
+            // Update document count
+            const badge = document.querySelector('.card-header .badge');
+            if (badge) {
+                const currentCount = parseInt(badge.textContent.split(' ')[0]);
+                const newCount = currentCount - 1;
+                badge.textContent = `${newCount} document${newCount !== 1 ? 's' : ''}`;
+            }
+            
+            // Show success message
+            showAlert(data.message, 'success');
+        } else {
+            // Reset UI on error
+            if (row) {
+                row.style.opacity = '1';
+                row.style.pointerEvents = 'auto';
+            }
+            button.disabled = false;
+            button.innerHTML = originalHTML;
+            showAlert(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        // Reset UI on network error
+        if (row) {
+            row.style.opacity = '1';
+            row.style.pointerEvents = 'auto';
+        }
+        button.disabled = false;
+        button.innerHTML = originalHTML;
+        showAlert('Network error occurred while deleting document', 'error');
+    });
+}
+
+function showAlert(message, type) {
+    // Create alert element
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Insert at top of main content
+    const mainContent = document.querySelector('.container');
+    if (mainContent) {
+        mainContent.insertBefore(alert, mainContent.firstChild);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 5000);
+    }
 }
 </script>
 {% endblock %}
