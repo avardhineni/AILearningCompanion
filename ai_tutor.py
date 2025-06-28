@@ -43,6 +43,9 @@ class AITutor:
             system_prompt = """You are an AI tutor helping 5th grade students (age 10-11) learn from their CBSE textbooks. Your goal is to provide detailed, educational answers that help students understand concepts thoroughly.
 
             Guidelines:
+            - Support multiple languages: English, Hindi, Telugu, and other Indian languages
+            - Respond in the same language as the student's question when possible
+            - For Hindi/Telugu content, provide explanations in Hindi/Telugu or mix with English as appropriate for 5th graders
             - Use simple, clear language appropriate for 5th graders
             - Provide comprehensive answers with rich details from the textbook content
             - Include relevant examples, explanations, and connections mentioned in the lesson
@@ -53,6 +56,7 @@ class AITutor:
             - Help students understand WHY things work the way they do, not just WHAT they are
             - Connect concepts to real-life examples when possible
             - If the question can't be answered from the provided content, say so clearly
+            - For poetry/literature questions, provide detailed analysis including themes, meanings, and literary devices
             """
             
             user_prompt = f"""Based on the following lesson content, please provide a detailed and comprehensive answer to the student's question.
@@ -66,15 +70,22 @@ CONTENT:
 STUDENT'S QUESTION: {question}
 
 Instructions for your response:
-1. Start with a direct answer to the question
-2. Provide detailed explanations using information from the textbook
-3. Include relevant examples, functions, or additional details mentioned in the lesson
-4. Explain the concept in a way that helps the student understand the broader topic
-5. Reference specific page numbers where the information can be found
-6. Use bullet points or structured format when explaining multiple related points
-7. Include any interesting facts or connections mentioned in the textbook
+1. Detect the language of the question and content (English, Hindi, Telugu, etc.)
+2. Respond in the same language as the question when possible
+3. For Hindi/Telugu questions about poems or literature:
+   - Provide summary, meaning, and themes
+   - Explain difficult words and their meanings
+   - Discuss the poet's message or moral
+   - Include literary devices if mentioned
+4. Start with a direct answer to the question
+5. Provide detailed explanations using information from the textbook
+6. Include relevant examples, functions, or additional details mentioned in the lesson
+7. Explain the concept in a way that helps the student understand the broader topic
+8. Reference specific page numbers where the information can be found
+9. Use bullet points or structured format when explaining multiple related points
+10. Include any interesting facts or connections mentioned in the textbook
 
-Make your answer educational, detailed, and engaging for a 5th grade student."""
+Make your answer educational, detailed, and engaging for a 5th grade student. Handle multilingual content appropriately."""
             
             # Get response from Gemini
             response = self.client.models.generate_content(
@@ -142,7 +153,7 @@ Make your answer educational, detailed, and engaging for a 5th grade student."""
             if i <= len(number_emojis):
                 text = re.sub(f'^\\s*{i}\\. ', f'{number_emojis[i-1]} ', text, flags=re.MULTILINE)
         
-        # Add educational emojis for common words
+        # Add educational emojis for common words (English)
         text = text.replace('continents', '🌍 continents')
         text = text.replace('oceans', '🌊 oceans')
         text = text.replace('Earth', '🌎 Earth')
@@ -153,6 +164,24 @@ Make your answer educational, detailed, and engaging for a 5th grade student."""
         text = text.replace('latitude', '📏 latitude')
         text = text.replace('longitude', '📐 longitude')
         text = text.replace('coordinates', '📍 coordinates')
+        
+        # Add educational emojis for Hindi words
+        text = text.replace('कविता', '📝 कविता')
+        text = text.replace('कहानी', '📚 कहानी')
+        text = text.replace('भाषा', '🗣️ भाषा')
+        text = text.replace('शब्द', '💬 शब्द')
+        text = text.replace('अर्थ', '💡 अर्थ')
+        text = text.replace('कवि', '✍️ कवि')
+        text = text.replace('पुस्तक', '📖 पुस्तक')
+        
+        # Add educational emojis for Telugu words  
+        text = text.replace('కవిత', '📝 కవిత')
+        text = text.replace('కథ', '📚 కథ')
+        text = text.replace('భాష', '🗣️ భాష')
+        text = text.replace('పదం', '💬 పదం')
+        text = text.replace('అర్థం', '💡 అర్థం')
+        text = text.replace('కవి', '✍️ కవి')
+        text = text.replace('పుస్తకం', '📖 పుస్తకం')
         
         return text
     
