@@ -256,13 +256,17 @@ def upload_subject_file(subject):
             lesson_title = request.form.get('lesson_title', '').strip()
             
             # Process the document
+            logger.info("Starting document processing")
             processor = DocumentProcessor()
             pages = processor.extract_text_from_docx(file_path)
             
             if not pages:
+                logger.error("No pages extracted from document")
                 flash('Could not extract content from the document. Please check the file format.', 'error')
                 os.remove(file_path)
                 return redirect(url_for('upload_subject', subject=subject))
+            
+            logger.info(f"Successfully extracted {len(pages)} pages")
             
             # Extract metadata
             metadata = processor.extract_document_metadata(file_path)
@@ -276,7 +280,7 @@ def upload_subject_file(subject):
                 filename=filename,
                 original_filename=file.filename,
                 total_pages=len(pages),
-                subject=subject,  # Set the subject from URL parameter
+                subject=subject,
                 lesson_title=lesson_title,
                 chapter_number=chapter_number if chapter_number else None
             )
@@ -284,7 +288,8 @@ def upload_subject_file(subject):
             db.session.add(document)
             db.session.flush()  # Get the document ID
             
-            # Create page records
+            # Batch create page records for better performance
+            page_records = []
             for page_number, content in pages:
                 word_count = processor.count_words(content)
                 page_record = DocumentPage(
@@ -293,7 +298,9 @@ def upload_subject_file(subject):
                     content=content,
                     word_count=word_count
                 )
-                db.session.add(page_record)
+                page_records.append(page_record)
+            
+            db.session.add_all(page_records)
             
             db.session.commit()
             
@@ -302,8 +309,12 @@ def upload_subject_file(subject):
             
         except Exception as e:
             db.session.rollback()
-            if 'file_path' in locals() and os.path.exists(file_path):
-                os.remove(file_path)
+            # Clean up uploaded file if it exists
+            try:
+                if 'file_path' in locals() and os.path.exists(file_path):
+                    os.remove(file_path)
+            except:
+                pass
             logger.error(f"Error processing file: {str(e)}")
             flash(f'Error processing file: {str(e)}', 'error')
             return redirect(url_for('upload_subject', subject=subject))

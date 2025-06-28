@@ -255,19 +255,29 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
         return;
     }
 
-    // Show progress
+    // Show progress with better feedback
     document.getElementById('uploadBtn').disabled = true;
-    document.getElementById('uploadBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+    document.getElementById('uploadBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
     document.getElementById('uploadProgress').style.display = 'block';
     
-    // Simulate progress (since we can't track real progress easily)
+    // Simulate progress with more realistic timing
     let progress = 0;
     const progressBar = document.querySelector('.progress-bar');
+    const statusText = document.querySelector('#uploadProgress .text-muted');
+    
     const interval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 90) progress = 90;
+        progress += Math.random() * 20;
+        if (progress > 95) progress = 95;
         progressBar.style.width = progress + '%';
-    }, 500);
+        
+        if (progress < 30) {
+            statusText.textContent = 'Uploading document...';
+        } else if (progress < 70) {
+            statusText.textContent = 'Extracting text content...';
+        } else {
+            statusText.textContent = 'Saving to database...';
+        }
+    }, 300);
     
     // Clean up on page unload
     window.addEventListener('beforeunload', () => clearInterval(interval));

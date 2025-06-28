@@ -1,6 +1,5 @@
 from app import db
 from datetime import datetime
-from sqlalchemy import Text, DateTime, Integer, String
 
 class Document(db.Model):
     """Model to store uploaded documents metadata"""
@@ -9,9 +8,9 @@ class Document(db.Model):
     original_filename = db.Column(db.String(255), nullable=False)
     upload_date = db.Column(db.DateTime, default=datetime.utcnow)
     total_pages = db.Column(db.Integer, default=0)
-    subject = db.Column(db.String(100), nullable=False)  # Made required
+    subject = db.Column(db.String(100), nullable=False)
     lesson_title = db.Column(db.String(255))
-    chapter_number = db.Column(db.String(50))  # Added for chapter organization
+    chapter_number = db.Column(db.String(50))
     
     # Relationship with pages
     pages = db.relationship('DocumentPage', backref='document', lazy=True, cascade='all, delete-orphan')
