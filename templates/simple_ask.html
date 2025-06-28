@@ -189,7 +189,9 @@ document.getElementById('question').addEventListener('keydown', function(e) {
 // Refresh document list to catch new uploads
 function refreshDocumentList() {
     console.log('Refreshing document list...');
-    fetch('/api/documents')
+    // Add cache-busting parameter to force fresh data
+    const timestamp = new Date().getTime();
+    fetch(`/api/documents?t=${timestamp}`)
         .then(response => {
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -286,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Auto-refresh document list more frequently
-setInterval(refreshDocumentList, 5000);
+setInterval(refreshDocumentList, 3000);
 
 // Refresh on page focus (when user comes back from upload)
 window.addEventListener('focus', refreshDocumentList);

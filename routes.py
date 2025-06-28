@@ -319,6 +319,8 @@ def upload_subject_file(subject):
             db.session.add_all(page_records)
             
             db.session.commit()
+            # Force immediate session flush to ensure document is available
+            db.session.flush()
             
             logger.info(f"Upload completed successfully: Document ID {document.id}")
             flash(f'Successfully uploaded "{lesson_title}" to {subject}! Extracted {len(pages)} pages.', 'success')
