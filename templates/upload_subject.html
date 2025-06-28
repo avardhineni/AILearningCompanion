@@ -279,6 +279,13 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
         }
     }, 300);
     
+    // Auto-redirect after successful upload
+    setTimeout(() => {
+        if (progress >= 95) {
+            statusText.textContent = 'Upload complete! Redirecting...';
+        }
+    }, 2000);
+    
     // Clean up on page unload
     window.addEventListener('beforeunload', () => clearInterval(interval));
 });
