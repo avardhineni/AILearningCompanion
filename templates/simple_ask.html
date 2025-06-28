@@ -53,15 +53,6 @@
                             <i data-feather="send" class="me-2"></i>
                             Ask AI Tutor
                         </button>
-                        
-                        <div id="loading" class="mt-3" style="display: none;">
-                            <div class="alert alert-info">
-                                <div class="d-flex align-items-center">
-                                    <div class="spinner-border spinner-border-sm me-3"></div>
-                                    <div>AI is thinking...</div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -108,8 +99,7 @@ function askQuestion() {
     
     // Show loading
     askButton.disabled = true;
-    askButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Thinking...';
-    loading.style.display = 'block';
+    askButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>AI Thinking...';
     answerArea.style.display = 'none';
     
     // Create form data
@@ -176,7 +166,6 @@ function askQuestion() {
         // Reset button
         askButton.disabled = false;
         askButton.innerHTML = '<i data-feather="send" class="me-2"></i>Ask AI Tutor';
-        loading.style.display = 'none';
         
         // Re-initialize feather icons
         if (typeof feather !== 'undefined') {
