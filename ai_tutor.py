@@ -84,8 +84,9 @@ Instructions for your response:
 8. Reference specific page numbers where the information can be found
 9. Use bullet points or structured format when explaining multiple related points
 10. Include any interesting facts or connections mentioned in the textbook
+11. If the question is not related to the document content, politely explain what the document is actually about and suggest relevant questions
 
-Make your answer educational, detailed, and engaging for a 5th grade student. Handle multilingual content appropriately."""
+Make your answer educational, detailed, and engaging for a 5th grade student. Handle multilingual content appropriately. If the question doesn't match the document content, provide helpful guidance about what the lesson contains."""
             
             # Get response from Gemini
             response = self.client.models.generate_content(
