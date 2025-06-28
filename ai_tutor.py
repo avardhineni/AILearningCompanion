@@ -70,21 +70,29 @@ CONTENT:
 STUDENT'S QUESTION: {question}
 
 Instructions for your response:
-1. Detect the language of the question and content (English, Hindi, Telugu, etc.)
-2. Respond in the same language as the question when possible
-3. For Hindi/Telugu questions about poems or literature:
-   - Provide summary, meaning, and themes
+CRITICAL LANGUAGE REQUIREMENT - This MUST be followed exactly:
+- If SUBJECT is "Hindi": Respond ONLY in Hindi language (हिंदी में जवाब दें)
+- If SUBJECT is "Telugu": Respond ONLY in Telugu language (తెలుగులో మాత్రమే సమాధానం ఇవ్వండి)
+- If SUBJECT is "English", "Maths", "Science", "Social", "IT-Computers", "GK", or "Value Education": Respond ONLY in English language
+
+CHECK THE SUBJECT ABOVE AND USE THE CORRECT LANGUAGE FOR YOUR ENTIRE RESPONSE.
+
+Subject-specific guidelines:
+1. For Hindi/Telugu language subjects:
+   - Provide summary, meaning, and themes in the respective language
    - Explain difficult words and their meanings
    - Discuss the poet's message or moral
    - Include literary devices if mentioned
-4. Start with a direct answer to the question
-5. Provide detailed explanations using information from the textbook
-6. Include relevant examples, functions, or additional details mentioned in the lesson
-7. Explain the concept in a way that helps the student understand the broader topic
-8. Reference specific page numbers where the information can be found
-9. Use bullet points or structured format when explaining multiple related points
-10. Include any interesting facts or connections mentioned in the textbook
-11. If the question is not related to the document content, politely explain what the document is actually about and suggest relevant questions
+2. For all other subjects:
+   - Respond in clear, simple English
+   - Start with a direct answer to the question
+   - Provide detailed explanations using information from the textbook
+3. Include relevant examples, functions, or additional details mentioned in the lesson
+4. Explain the concept in a way that helps the student understand the broader topic
+5. Reference specific page numbers where the information can be found
+6. Use bullet points or structured format when explaining multiple related points
+7. Include any interesting facts or connections mentioned in the textbook
+8. If the question is not related to the document content, politely explain what the document is actually about and suggest relevant questions
 
 Make your answer educational, detailed, and engaging for a 5th grade student. Handle multilingual content appropriately. If the question doesn't match the document content, provide helpful guidance about what the lesson contains."""
             
