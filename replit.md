@@ -100,11 +100,12 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
-- June 28, 2025: Successfully resolved upload hanging issue across all subjects
-- Implemented robust AJAX-based upload system replacing problematic browser form submission
-- Confirmed upload functionality working for all 9 subjects with proper progress feedback
-- Enhanced user experience with automatic redirects and error handling
-- Verified AI tutor integration works correctly with uploaded documents
+- June 28, 2025: Enhanced AI tutor to provide comprehensive, detailed educational responses
+- Significantly improved prompt engineering for rich textbook-based answers
+- Increased response length capacity from 2000 to 4000 tokens for thorough explanations
+- Added structured formatting with bullet points and educational context
+- Confirmed AI tutor works correctly across all subjects (Science, Social Studies tested)
+- Successfully resolved upload hanging issue across all subjects with AJAX implementation
 - System fully operational for 5th grade CBSE curriculum across all subjects
 - June 28, 2025: Added subject-based organization system
 - Created dedicated subject pages for all 9 school subjects (English, Maths, Science, Social, Hindi, Telugu, IT-Computers, GK, Value Education)
