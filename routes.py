@@ -227,12 +227,20 @@ def view_subject(subject):
 @app.route('/subjects/<subject>/upload', methods=['POST'])
 def upload_subject_file(subject):
     """Handle file upload for a specific subject"""
+    logger.info(f"Starting upload for subject: {subject}")
+    logger.info(f"Request files: {list(request.files.keys())}")
+    logger.info(f"Request form: {dict(request.form)}")
+    
     if 'file' not in request.files:
+        logger.error("No file in request.files")
         flash('No file selected', 'error')
         return redirect(url_for('upload_subject', subject=subject))
 
     file = request.files['file']
+    logger.info(f"File received: {file.filename}")
+    
     if file.filename == '':
+        logger.error("Empty filename")
         flash('No file selected', 'error')
         return redirect(url_for('upload_subject', subject=subject))
 
