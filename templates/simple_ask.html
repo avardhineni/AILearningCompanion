@@ -201,15 +201,18 @@ function refreshDocumentList() {
         .then(data => {
             console.log('Document refresh response:', data);
             if (data.success && data.documents) {
-                // Force immediate DOM update
-                setTimeout(() => {
-                    updateDocumentDropdown(data.documents);
-                    console.log(`Document list updated with ${data.documents.length} documents`);
-                    
-                    // Log current dropdown state for debugging
-                    const select = document.getElementById('document_id');
-                    console.log('Current dropdown has', select.options.length, 'options');
-                }, 100);
+                // Immediate update without timeout
+                updateDocumentDropdown(data.documents);
+                console.log(`Document list updated with ${data.documents.length} documents`);
+                
+                // Log current dropdown state for debugging
+                const select = document.getElementById('document_id');
+                console.log('Current dropdown has', select.options.length, 'options');
+                
+                // Force browser repaint
+                select.style.visibility = 'hidden';
+                select.offsetHeight; // Force reflow
+                select.style.visibility = 'visible';
             } else {
                 console.warn('Invalid document refresh response:', data);
             }
@@ -224,18 +227,16 @@ function updateDocumentDropdown(documents) {
     console.log('Updating dropdown with documents:', documents.length);
     const select = document.getElementById('document_id');
     const currentValue = select.value;
+    const currentText = select.options[select.selectedIndex]?.text || '';
     
-    // Complete dropdown reconstruction
-    const newSelect = document.createElement('select');
-    newSelect.className = select.className;
-    newSelect.id = select.id;
-    newSelect.required = select.required;
+    // Clear all options first
+    select.innerHTML = '';
     
     // Add default option
     const defaultOption = document.createElement('option');
     defaultOption.value = '';
     defaultOption.textContent = 'Choose a lesson...';
-    newSelect.appendChild(defaultOption);
+    select.appendChild(defaultOption);
     
     // Group documents by subject
     const subjects = ['English', 'Maths', 'Science', 'Social', 'Hindi', 'Telugu', 'IT-Computers', 'GK', 'Value Education'];
@@ -257,19 +258,23 @@ function updateDocumentDropdown(documents) {
                 optgroup.appendChild(option);
             });
             
-            newSelect.appendChild(optgroup);
+            select.appendChild(optgroup);
         }
     });
     
-    // Replace the old select with new one
-    select.parentNode.replaceChild(newSelect, select);
+    // Force immediate DOM update
+    select.dispatchEvent(new Event('change', { bubbles: true }));
     
     // Restore selection if still valid
     if (currentValue) {
-        newSelect.value = currentValue;
+        select.value = currentValue;
+        // Double-check the selection took
+        if (select.value !== currentValue) {
+            console.warn('Could not restore selection:', currentValue);
+        }
     }
     
-    console.log('Dropdown completely rebuilt with', newSelect.options.length - 1, 'documents total');
+    console.log('Dropdown updated with', select.options.length - 1, 'documents, current selection:', select.value);
 }
 
 // Force refresh on page load
@@ -278,13 +283,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('refresh') === '1') {
         // Immediate refresh for new uploads
-        setTimeout(refreshDocumentList, 500);
+        setTimeout(refreshDocumentList, 200);
         // Clean up URL
         window.history.replaceState({}, document.title, window.location.pathname);
     } else {
         // Normal page load refresh
-        setTimeout(refreshDocumentList, 1000);
+        setTimeout(refreshDocumentList, 500);
     }
+    
+    // Also refresh after a short delay to catch any missed updates
+    setTimeout(refreshDocumentList, 2000);
 });
 
 // Auto-refresh document list more frequently

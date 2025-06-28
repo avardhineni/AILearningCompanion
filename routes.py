@@ -1,5 +1,6 @@
 import os
 import uuid
+from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, jsonify, make_response
 from werkzeug.utils import secure_filename
 from app import app, db
@@ -359,6 +360,7 @@ def api_documents():
     try:
         # Force session refresh to get latest data
         db.session.expire_all()
+        db.session.commit()  # Ensure any pending transactions are committed
         documents = Document.query.order_by(Document.upload_date.desc()).all()
         doc_list = []
         for doc in documents:
@@ -370,10 +372,20 @@ def api_documents():
                 'upload_date': doc.upload_date.isoformat()
             })
         
-        return jsonify({
+        from datetime import datetime
+        response = jsonify({
             'success': True,
-            'documents': doc_list
+            'documents': doc_list,
+            'count': len(doc_list),
+            'timestamp': datetime.utcnow().isoformat()
         })
+        
+        # Prevent caching
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        
+        return response
     except Exception as e:
         logger.error(f"Error fetching documents: {str(e)}")
         return jsonify({
