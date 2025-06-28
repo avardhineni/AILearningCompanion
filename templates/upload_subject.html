@@ -308,9 +308,9 @@ function uploadDocument() {
                 window.location.href = response.url;
             }, 1000);
         } else {
-            // Fallback redirect to home
+            // Redirect to AI Tutor page with the new document
             setTimeout(() => {
-                window.location.href = '{{ url_for("index") }}';
+                window.location.href = '{{ url_for("ask_page") }}';
             }, 1000);
         }
     })

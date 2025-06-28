@@ -191,5 +191,62 @@ document.getElementById('question').addEventListener('keydown', function(e) {
         askQuestion();
     }
 });
+
+// Refresh document list every 30 seconds to catch new uploads
+function refreshDocumentList() {
+    fetch('/api/documents')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateDocumentDropdown(data.documents);
+            }
+        })
+        .catch(error => {
+            console.log('Document refresh failed:', error);
+        });
+}
+
+function updateDocumentDropdown(documents) {
+    const select = document.getElementById('document_id');
+    const currentValue = select.value;
+    
+    // Clear existing options except first
+    select.innerHTML = '<option value="">Choose a lesson...</option>';
+    
+    // Group documents by subject
+    const subjects = ['English', 'Maths', 'Science', 'Social', 'Hindi', 'Telugu', 'IT-Computers', 'GK', 'Value Education'];
+    
+    subjects.forEach(subject => {
+        const subjectDocs = documents.filter(doc => doc.subject === subject);
+        if (subjectDocs.length > 0) {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = subject;
+            
+            subjectDocs.forEach(doc => {
+                const option = document.createElement('option');
+                option.value = doc.id;
+                const title = doc.lesson_title.length > 50 ? 
+                    doc.lesson_title.substring(0, 50) + '...' : 
+                    doc.lesson_title;
+                option.textContent = doc.chapter_number ? 
+                    `${doc.chapter_number} - ${title}` : title;
+                optgroup.appendChild(option);
+            });
+            
+            select.appendChild(optgroup);
+        }
+    });
+    
+    // Restore selection if still valid
+    if (currentValue) {
+        select.value = currentValue;
+    }
+}
+
+// Auto-refresh document list
+setInterval(refreshDocumentList, 30000);
+
+// Refresh on page focus (when user comes back from upload)
+window.addEventListener('focus', refreshDocumentList);
 </script>
 {% endblock %}

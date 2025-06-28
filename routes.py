@@ -351,6 +351,32 @@ def ask_page():
     documents = Document.query.order_by(Document.upload_date.desc()).all()
     return render_template('simple_ask.html', documents=documents)
 
+@app.route('/api/documents')
+def api_documents():
+    """API endpoint to get all documents for dropdown refresh"""
+    try:
+        documents = Document.query.order_by(Document.upload_date.desc()).all()
+        doc_list = []
+        for doc in documents:
+            doc_list.append({
+                'id': doc.id,
+                'subject': doc.subject,
+                'lesson_title': doc.lesson_title,
+                'chapter_number': doc.chapter_number or '',
+                'upload_date': doc.upload_date.isoformat()
+            })
+        
+        return jsonify({
+            'success': True,
+            'documents': doc_list
+        })
+    except Exception as e:
+        logger.error(f"Error fetching documents: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        })
+
 @app.route('/quiz/<int:doc_id>')
 def generate_quiz(doc_id):
     """Generate quiz questions for a document"""
