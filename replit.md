@@ -100,14 +100,20 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
-- June 28, 2025: Fixed critical document refresh issue with database session management
+- June 28, 2025: Removed Document Processing System from home page per user preference
+- Updated home page to focus on subject-based workflow with quick action cards
+- Transformed home page into educational dashboard with "Upload Lessons", "Ask Questions", and "My Lessons" sections
+- Changed terminology from "documents" to "lessons" throughout the interface for better educational context
+- Home page now directs users to Subjects tab for uploads instead of direct file upload
+- Maintained document library view for lesson management and review
+- Fixed critical document refresh issue with database session management
 - Added db.session.expire_all() to API endpoint to ensure latest documents appear immediately
 - Resolved language selection issue - AI now responds in correct language based on subject:
   * Hindi subjects → Hindi responses only
   * Telugu subjects → Telugu responses only  
   * All other subjects (Maths, Science, Social, English, IT, GK, Value Education) → English responses only
 - Enhanced dropdown refresh system with complete element reconstruction
-- Improved document upload detection with 5-second refresh intervals
+- Improved document upload detection with 3-second refresh intervals
 - Added manual refresh button and enhanced debugging for document list updates
 - Successfully resolved Hindi AI tutor functionality
 - Confirmed multilingual support working for Hindi poetry, stories, and literature
