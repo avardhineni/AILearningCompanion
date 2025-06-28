@@ -248,10 +248,22 @@ function formatFileSize(bytes) {
 
 // Form submission with progress
 document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    console.log('Form submission started');
+    
     const fileInput = document.getElementById('file');
     if (!fileInput.files[0]) {
         e.preventDefault();
         alert('Please select a file to upload');
+        return;
+    }
+    
+    console.log('File selected:', fileInput.files[0].name);
+    console.log('File size:', fileInput.files[0].size);
+    
+    // Validate file type
+    if (!fileInput.files[0].name.toLowerCase().endsWith('.docx')) {
+        e.preventDefault();
+        alert('Please select a .docx file');
         return;
     }
 
@@ -259,6 +271,8 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     document.getElementById('uploadBtn').disabled = true;
     document.getElementById('uploadBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
     document.getElementById('uploadProgress').style.display = 'block';
+    
+    console.log('Form will be submitted to:', this.action);
     
     // Simulate progress with more realistic timing
     let progress = 0;
@@ -279,15 +293,39 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
         }
     }, 300);
     
-    // Auto-redirect after successful upload
-    setTimeout(() => {
-        if (progress >= 95) {
-            statusText.textContent = 'Upload complete! Redirecting...';
+    // Set up completion check and timeout
+    let uploadCompleted = false;
+    
+    const checkCompletion = setTimeout(() => {
+        if (!uploadCompleted) {
+            progressBar.style.width = '100%';
+            statusText.textContent = 'Upload completed! Redirecting...';
+            setTimeout(() => {
+                window.location.href = '{{ url_for("index") }}';
+            }, 1000);
         }
-    }, 2000);
+    }, 8000); // Check after 8 seconds
+    
+    const uploadTimeout = setTimeout(() => {
+        if (!uploadCompleted) {
+            console.error('Upload timeout - redirecting to home');
+            clearInterval(interval);
+            clearTimeout(checkCompletion);
+            window.location.href = '{{ url_for("index") }}';
+        }
+    }, 15000); // 15 second timeout
     
     // Clean up on page unload
-    window.addEventListener('beforeunload', () => clearInterval(interval));
+    window.addEventListener('beforeunload', () => {
+        clearInterval(interval);
+        clearTimeout(uploadTimeout);
+        clearTimeout(checkCompletion);
+    });
+    
+    // Mark upload as completed when page changes
+    window.addEventListener('beforeunload', () => {
+        uploadCompleted = true;
+    });
 });
 </script>
 
