@@ -93,8 +93,10 @@ Make your answer educational, detailed, and engaging for a 5th grade student."""
             )
             
             if response.text:
+                # Make the response kid-friendly by replacing markdown with emojis
+                kid_friendly_answer = self._make_kid_friendly(response.text)
                 return {
-                    "answer": response.text,
+                    "answer": kid_friendly_answer,
                     "document_title": document.lesson_title,
                     "subject": document.subject,
                     "total_pages": len(pages)
@@ -114,6 +116,45 @@ Make your answer educational, detailed, and engaging for a 5th grade student."""
             context_parts.append(f"--- Page {page.page_number} ---\n{page.content}\n")
         
         return "\n".join(context_parts)
+    
+    def _make_kid_friendly(self, text):
+        """Convert markdown formatting to kid-friendly emojis"""
+        import re
+        
+        # Replace markdown headers with fun emojis
+        text = re.sub(r'###\s*(.+)', r'🌟 \1', text)  # ### headers become stars
+        text = re.sub(r'##\s*(.+)', r'🎯 \1', text)   # ## headers become targets
+        text = re.sub(r'#\s*(.+)', r'📚 \1', text)    # # headers become books
+        
+        # Replace bold text (**text**) with colorful emojis
+        text = re.sub(r'\*\*([^*]+)\*\*', r'✨ \1 ✨', text)
+        
+        # Replace italic text (*text*) with sparkles
+        text = re.sub(r'\*([^*]+)\*', r'💫 \1', text)
+        
+        # Add fun emojis for bullet points
+        text = re.sub(r'^\s*\*\s+', '🔸 ', text, flags=re.MULTILINE)
+        text = re.sub(r'^\s*-\s+', '🔹 ', text, flags=re.MULTILINE)
+        
+        # Add number emojis for numbered lists
+        number_emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
+        for i in range(1, 11):
+            if i <= len(number_emojis):
+                text = re.sub(f'^\\s*{i}\\. ', f'{number_emojis[i-1]} ', text, flags=re.MULTILINE)
+        
+        # Add educational emojis for common words
+        text = text.replace('continents', '🌍 continents')
+        text = text.replace('oceans', '🌊 oceans')
+        text = text.replace('Earth', '🌎 Earth')
+        text = text.replace('planet', '🪐 planet')
+        text = text.replace('geography', '🗺️ geography')
+        text = text.replace('map', '🗺️ map')
+        text = text.replace('grid', '📐 grid')
+        text = text.replace('latitude', '📏 latitude')
+        text = text.replace('longitude', '📐 longitude')
+        text = text.replace('coordinates', '📍 coordinates')
+        
+        return text
     
     def generate_quiz_questions(self, document_id, num_questions=5):
         """
@@ -188,8 +229,10 @@ Page: [Page number where answer is found]
             )
             
             if response.text:
+                # Make quiz questions kid-friendly too
+                kid_friendly_quiz = self._make_kid_friendly(response.text)
                 return {
-                    "quiz": response.text,
+                    "quiz": kid_friendly_quiz,
                     "document_title": document.lesson_title,
                     "subject": document.subject
                 }
