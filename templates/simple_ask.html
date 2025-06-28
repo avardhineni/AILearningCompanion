@@ -199,8 +199,15 @@ function refreshDocumentList() {
         .then(data => {
             console.log('Document refresh response:', data);
             if (data.success && data.documents) {
-                updateDocumentDropdown(data.documents);
-                console.log(`Document list updated with ${data.documents.length} documents`);
+                // Force immediate DOM update
+                setTimeout(() => {
+                    updateDocumentDropdown(data.documents);
+                    console.log(`Document list updated with ${data.documents.length} documents`);
+                    
+                    // Log current dropdown state for debugging
+                    const select = document.getElementById('document_id');
+                    console.log('Current dropdown has', select.options.length, 'options');
+                }, 100);
             } else {
                 console.warn('Invalid document refresh response:', data);
             }
@@ -212,11 +219,21 @@ function refreshDocumentList() {
 }
 
 function updateDocumentDropdown(documents) {
+    console.log('Updating dropdown with documents:', documents.length);
     const select = document.getElementById('document_id');
     const currentValue = select.value;
     
-    // Clear existing options except first
-    select.innerHTML = '<option value="">Choose a lesson...</option>';
+    // Complete dropdown reconstruction
+    const newSelect = document.createElement('select');
+    newSelect.className = select.className;
+    newSelect.id = select.id;
+    newSelect.required = select.required;
+    
+    // Add default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Choose a lesson...';
+    newSelect.appendChild(defaultOption);
     
     // Group documents by subject
     const subjects = ['English', 'Maths', 'Science', 'Social', 'Hindi', 'Telugu', 'IT-Computers', 'GK', 'Value Education'];
@@ -238,14 +255,19 @@ function updateDocumentDropdown(documents) {
                 optgroup.appendChild(option);
             });
             
-            select.appendChild(optgroup);
+            newSelect.appendChild(optgroup);
         }
     });
     
+    // Replace the old select with new one
+    select.parentNode.replaceChild(newSelect, select);
+    
     // Restore selection if still valid
     if (currentValue) {
-        select.value = currentValue;
+        newSelect.value = currentValue;
     }
+    
+    console.log('Dropdown completely rebuilt with', newSelect.options.length - 1, 'documents total');
 }
 
 // Force refresh on page load
@@ -264,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Auto-refresh document list more frequently
-setInterval(refreshDocumentList, 10000);
+setInterval(refreshDocumentList, 5000);
 
 // Refresh on page focus (when user comes back from upload)
 window.addEventListener('focus', refreshDocumentList);
