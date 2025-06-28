@@ -100,17 +100,22 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
-- June 28, 2025: Successfully resolved Hindi AI tutor functionality
+- June 28, 2025: Fixed critical document refresh issue with database session management
+- Added db.session.expire_all() to API endpoint to ensure latest documents appear immediately
+- Resolved language selection issue - AI now responds in correct language based on subject:
+  * Hindi subjects → Hindi responses only
+  * Telugu subjects → Telugu responses only  
+  * All other subjects (Maths, Science, Social, English, IT, GK, Value Education) → English responses only
+- Enhanced dropdown refresh system with complete element reconstruction
+- Improved document upload detection with 5-second refresh intervals
+- Added manual refresh button and enhanced debugging for document list updates
+- Successfully resolved Hindi AI tutor functionality
 - Confirmed multilingual support working for Hindi poetry, stories, and literature
 - Enhanced AI tutor responses with mixed Hindi-English formatting and educational emojis
 - Added kid-friendly emoji formatting replacing markdown asterisks and hashes  
 - Implemented automatic document list refresh for seamless user experience
 - AI tutor now properly handles story analysis, character questions, and theme discussions
 - Enhanced AI tutor to provide comprehensive, detailed educational responses
-- Significantly improved prompt engineering for rich textbook-based answers
-- Increased response length capacity from 2000 to 4000 tokens for thorough explanations
-- Added structured formatting with bullet points and educational context
-- Confirmed AI tutor works correctly across all subjects (Science, Social Studies tested)
 - Successfully resolved upload hanging issue across all subjects with AJAX implementation
 - System fully operational for 5th grade CBSE curriculum across all subjects
 - June 28, 2025: Added subject-based organization system

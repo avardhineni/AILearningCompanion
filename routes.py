@@ -355,6 +355,8 @@ def ask_page():
 def api_documents():
     """API endpoint to get all documents for dropdown refresh"""
     try:
+        # Force session refresh to get latest data
+        db.session.expire_all()
         documents = Document.query.order_by(Document.upload_date.desc()).all()
         doc_list = []
         for doc in documents:
