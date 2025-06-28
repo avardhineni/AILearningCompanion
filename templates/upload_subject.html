@@ -87,7 +87,7 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary" id="uploadBtn">
+                            <button type="button" class="btn btn-primary" id="uploadBtn" onclick="uploadDocument()">
                                 <i data-feather="upload" class="me-2"></i>
                                 Upload and Process
                             </button>
@@ -246,42 +246,41 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Form submission with progress
-document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    console.log('Form submission started');
+function uploadDocument() {
+    console.log('Upload started');
     
     const fileInput = document.getElementById('file');
     if (!fileInput.files[0]) {
-        e.preventDefault();
         alert('Please select a file to upload');
         return;
     }
     
-    console.log('File selected:', fileInput.files[0].name);
-    console.log('File size:', fileInput.files[0].size);
-    
     // Validate file type
     if (!fileInput.files[0].name.toLowerCase().endsWith('.docx')) {
-        e.preventDefault();
         alert('Please select a .docx file');
         return;
     }
 
-    // Show progress with better feedback
-    document.getElementById('uploadBtn').disabled = true;
-    document.getElementById('uploadBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    // Show progress
+    const uploadBtn = document.getElementById('uploadBtn');
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
     document.getElementById('uploadProgress').style.display = 'block';
     
-    console.log('Form will be submitted to:', this.action);
+    // Create FormData and upload via AJAX
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('chapter_number', document.getElementById('chapter_number').value);
+    formData.append('lesson_title', document.getElementById('lesson_title').value);
     
-    // Simulate progress with more realistic timing
+    // Progress simulation
     let progress = 0;
     const progressBar = document.querySelector('.progress-bar');
     const statusText = document.querySelector('#uploadProgress .text-muted');
     
     const interval = setInterval(() => {
-        progress += Math.random() * 20;
-        if (progress > 95) progress = 95;
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90;
         progressBar.style.width = progress + '%';
         
         if (progress < 30) {
@@ -291,42 +290,42 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
         } else {
             statusText.textContent = 'Saving to database...';
         }
-    }, 300);
+    }, 400);
     
-    // Set up completion check and timeout
-    let uploadCompleted = false;
-    
-    const checkCompletion = setTimeout(() => {
-        if (!uploadCompleted) {
-            progressBar.style.width = '100%';
-            statusText.textContent = 'Upload completed! Redirecting...';
+    // AJAX upload
+    fetch('{{ url_for("upload_subject_file", subject=subject) }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        clearInterval(interval);
+        progressBar.style.width = '100%';
+        statusText.textContent = 'Upload complete! Redirecting...';
+        
+        if (response.redirected) {
+            // Follow the redirect
+            setTimeout(() => {
+                window.location.href = response.url;
+            }, 1000);
+        } else {
+            // Fallback redirect to home
             setTimeout(() => {
                 window.location.href = '{{ url_for("index") }}';
             }, 1000);
         }
-    }, 8000); // Check after 8 seconds
-    
-    const uploadTimeout = setTimeout(() => {
-        if (!uploadCompleted) {
-            console.error('Upload timeout - redirecting to home');
-            clearInterval(interval);
-            clearTimeout(checkCompletion);
-            window.location.href = '{{ url_for("index") }}';
-        }
-    }, 15000); // 15 second timeout
-    
-    // Clean up on page unload
-    window.addEventListener('beforeunload', () => {
+    })
+    .catch(error => {
         clearInterval(interval);
-        clearTimeout(uploadTimeout);
-        clearTimeout(checkCompletion);
+        console.error('Upload error:', error);
+        
+        // Reset form on error
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i data-feather="upload" class="me-2"></i>Upload and Process';
+        document.getElementById('uploadProgress').style.display = 'none';
+        
+        alert('Upload failed. Please try again.');
     });
-    
-    // Mark upload as completed when page changes
-    window.addEventListener('beforeunload', () => {
-        uploadCompleted = true;
-    });
-});
+}
 </script>
 
 <style>
