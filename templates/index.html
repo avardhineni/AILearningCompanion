@@ -147,8 +147,8 @@
                                                 <i data-feather="eye" class="me-1"></i>
                                                 View
                                             </a>
-                                            <form method="post" action="{{ url_for('delete_document', doc_id=doc.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this document?')">
-                                                <button type="submit" class="btn btn-outline-danger">
+                                            <form method="post" action="{{ url_for('delete_document', doc_id=doc.id) }}" class="d-inline delete-form" onsubmit="return handleDeleteSubmit(this, '{{ doc.lesson_title }}')">
+                                                <button type="submit" class="btn btn-outline-danger delete-btn">
                                                     <i data-feather="trash-2"></i>
                                                 </button>
                                             </form>
@@ -170,4 +170,27 @@
         </div>
     </div>
 </div>
+
+<script>
+function handleDeleteSubmit(form, title) {
+    if (!confirm(`Are you sure you want to delete "${title}"?`)) {
+        return false;
+    }
+    
+    // Show processing state
+    const button = form.querySelector('.delete-btn');
+    const originalHTML = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+    
+    // Hide the row immediately for better UX
+    const row = form.closest('tr');
+    if (row) {
+        row.style.opacity = '0.5';
+        row.style.pointerEvents = 'none';
+    }
+    
+    return true;
+}
+</script>
 {% endblock %}

@@ -100,6 +100,14 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- June 28, 2025: Completely resolved upload and deletion performance issues
+- Fixed all database subject mapping and model initialization problems
+- Improved upload progress indicators with realistic status messages
+- Enhanced deletion functionality with proper frontend feedback
+- Optimized database operations using batch inserts for better performance
+- Added comprehensive logging for debugging upload and deletion processes
+- Fixed invalid feather icons causing console warnings
+- Successfully tested multi-subject upload and deletion workflows
 - June 28, 2025: Added subject-based organization system
 - Created dedicated subject pages for all 9 school subjects (English, Maths, Science, Social, Hindi, Telugu, IT-Computers, GK, Value Education)
 - Added subject-specific upload flows with chapter organization

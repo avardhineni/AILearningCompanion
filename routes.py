@@ -150,23 +150,32 @@ def api_get_pages(doc_id):
 @app.route('/delete/<int:doc_id>', methods=['POST'])
 def delete_document(doc_id):
     """Delete a document and its associated file"""
+    logger.info(f"Attempting to delete document ID: {doc_id}")
     try:
         document = Document.query.get_or_404(doc_id)
+        logger.info(f"Found document: {document.original_filename}")
+        
+        # Store filename for success message
+        filename = document.original_filename
         
         # Delete the physical file
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], document.filename)
         if os.path.exists(file_path):
             os.remove(file_path)
+            logger.info(f"Deleted file: {file_path}")
+        else:
+            logger.warning(f"File not found: {file_path}")
         
         # Delete from database (pages will be deleted automatically due to cascade)
         db.session.delete(document)
         db.session.commit()
+        logger.info(f"Successfully deleted document from database")
         
-        flash(f'Document "{document.original_filename}" deleted successfully.', 'success')
+        flash(f'Document "{filename}" deleted successfully.', 'success')
         
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error deleting document: {str(e)}")
+        logger.error(f"Error deleting document {doc_id}: {str(e)}")
         flash(f'Error deleting document: {str(e)}', 'error')
     
     return redirect(url_for('index'))
