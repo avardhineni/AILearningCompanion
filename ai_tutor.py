@@ -99,13 +99,16 @@ Make your answer educational, detailed, and engaging for a 5th grade student. Ha
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     temperature=0.2,  # Lower temperature for more consistent educational responses
-                    max_output_tokens=4000  # Significantly increased for detailed, comprehensive answers
+                    max_output_tokens=4000,  # Significantly increased for detailed, comprehensive answers
+                    response_mime_type="text/plain"  # Ensure plain text response for better handling
                 )
             )
             
             if response.text:
+                logger.info(f"AI response received for document {document_id}, length: {len(response.text)}")
                 # Make the response kid-friendly by replacing markdown with emojis
                 kid_friendly_answer = self._make_kid_friendly(response.text)
+                logger.info(f"Kid-friendly response prepared, length: {len(kid_friendly_answer)}")
                 return {
                     "answer": kid_friendly_answer,
                     "document_title": document.lesson_title,
@@ -113,6 +116,7 @@ Make your answer educational, detailed, and engaging for a 5th grade student. Ha
                     "total_pages": len(pages)
                 }
             else:
+                logger.error(f"Empty response from AI for document {document_id}")
                 return {"error": "Could not generate an answer. Please try rephrasing your question."}
                 
         except Exception as e:
