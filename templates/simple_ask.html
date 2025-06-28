@@ -25,7 +25,12 @@
                 <div class="card">
                     <div class="card-body">
                         <div class="mb-3">
-                            <label for="document_id" class="form-label">Select Document</label>
+                            <label for="document_id" class="form-label">
+                                Select Document
+                                <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="refreshDocumentList()" title="Refresh document list">
+                                    <i data-feather="refresh-cw" style="width: 14px; height: 14px;"></i>
+                                </button>
+                            </label>
                             <select class="form-select" id="document_id" required>
                                 <option value="">Choose a lesson...</option>
                                 {% for subject in ['English', 'Maths', 'Science', 'Social', 'Hindi', 'Telugu', 'IT-Computers', 'GK', 'Value Education'] %}
@@ -181,17 +186,28 @@ document.getElementById('question').addEventListener('keydown', function(e) {
     }
 });
 
-// Refresh document list every 30 seconds to catch new uploads
+// Refresh document list to catch new uploads
 function refreshDocumentList() {
+    console.log('Refreshing document list...');
     fetch('/api/documents')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.success) {
+            console.log('Document refresh response:', data);
+            if (data.success && data.documents) {
                 updateDocumentDropdown(data.documents);
+                console.log(`Document list updated with ${data.documents.length} documents`);
+            } else {
+                console.warn('Invalid document refresh response:', data);
             }
         })
         .catch(error => {
-            console.log('Document refresh failed:', error);
+            console.error('Document refresh failed:', error);
+            // Don't show error to user unless it's a persistent issue
         });
 }
 
@@ -232,10 +248,32 @@ function updateDocumentDropdown(documents) {
     }
 }
 
-// Auto-refresh document list
-setInterval(refreshDocumentList, 30000);
+// Force refresh on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if we came from upload page (refresh parameter)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('refresh') === '1') {
+        // Immediate refresh for new uploads
+        setTimeout(refreshDocumentList, 500);
+        // Clean up URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    } else {
+        // Normal page load refresh
+        setTimeout(refreshDocumentList, 1000);
+    }
+});
+
+// Auto-refresh document list more frequently
+setInterval(refreshDocumentList, 10000);
 
 // Refresh on page focus (when user comes back from upload)
 window.addEventListener('focus', refreshDocumentList);
+
+// Also refresh when page becomes visible again
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        refreshDocumentList();
+    }
+});
 </script>
 {% endblock %}
