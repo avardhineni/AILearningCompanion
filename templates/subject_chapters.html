@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}{{ subject }} Chapters - AI Tutor Document Processor{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('subjects') }}">Subjects</a></li>
+                    <li class="breadcrumb-item active">{{ subject }}</li>
+                </ol>
+            </nav>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i data-feather="book-open" class="me-2"></i>
+                        {{ subject }} Chapters
+                    </h1>
+                    <p class="text-muted mb-0">{{ documents|length }} chapter{% if documents|length != 1 %}s{% endif %} uploaded</p>
+                </div>
+                <a href="{{ url_for('upload_subject', subject=subject) }}" class="btn btn-primary">
+                    <i data-feather="plus" class="me-1"></i>
+                    Add New Chapter
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {% if not documents %}
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i data-feather="book" class="text-muted mb-3" style="width: 64px; height: 64px;"></i>
+                    <h4 class="text-muted">No {{ subject }} chapters yet</h4>
+                    <p class="text-muted mb-4">Upload your first {{ subject }} chapter to get started with AI tutoring.</p>
+                    <a href="{{ url_for('upload_subject', subject=subject) }}" class="btn btn-primary">
+                        <i data-feather="upload" class="me-1"></i>
+                        Upload First Chapter
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="row">
+            {% for doc in documents %}
+            <div class="col-lg-6 col-xl-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="flex-grow-1">
+                                {% if doc.chapter_number %}
+                                    <div class="badge bg-primary bg-opacity-20 text-primary mb-2">
+                                        {{ doc.chapter_number }}
+                                    </div>
+                                {% endif %}
+                                <h5 class="card-title">
+                                    {{ doc.lesson_title[:40] }}{% if doc.lesson_title|length > 40 %}...{% endif %}
+                                </h5>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="dropdown">
+                                    <i data-feather="more-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ url_for('view_document', doc_id=doc.id) }}">
+                                        <i data-feather="eye" class="me-1"></i> View Chapter
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('generate_quiz', doc_id=doc.id) }}">
+                                        <i data-feather="clipboard" class="me-1"></i> Generate Quiz
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form action="{{ url_for('delete_document', doc_id=doc.id) }}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this chapter?')">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i data-feather="trash-2" class="me-1"></i> Delete
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="text-muted small mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span><i data-feather="calendar" class="me-1"></i> {{ doc.upload_date.strftime('%d %b %Y') }}</span>
+                                <span><i data-feather="file-text" class="me-1"></i> {{ doc.total_pages }} pages</span>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('view_document', doc_id=doc.id) }}" class="btn btn-primary btn-sm flex-fill">
+                                <i data-feather="eye" class="me-1"></i>
+                                Read
+                            </a>
+                            <a href="{{ url_for('ask_page') }}?doc={{ doc.id }}" class="btn btn-outline-primary btn-sm flex-fill">
+                                <i data-feather="message-circle" class="me-1"></i>
+                                Ask AI
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Quick Actions Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">
+                            <i data-feather="zap" class="me-2"></i>
+                            Quick Actions for {{ subject }}
+                        </h5>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="text-center">
+                                    <i data-feather="message-circle" class="text-primary mb-2" style="width: 32px; height: 32px;"></i>
+                                    <h6>Ask Questions</h6>
+                                    <p class="text-muted small">Get instant answers about any {{ subject }} topic from your uploaded chapters.</p>
+                                    <a href="{{ url_for('ask_page') }}" class="btn btn-sm btn-primary">Start Asking</a>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="text-center">
+                                    <i data-feather="clipboard" class="text-success mb-2" style="width: 32px; height: 32px;"></i>
+                                    <h6>Practice Quizzes</h6>
+                                    <p class="text-muted small">Generate practice questions to test your knowledge of {{ subject }} concepts.</p>
+                                    {% if documents %}
+                                        <a href="{{ url_for('generate_quiz', doc_id=documents[0].id) }}" class="btn btn-sm btn-success">Create Quiz</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="text-center">
+                                    <i data-feather="plus-circle" class="text-info mb-2" style="width: 32px; height: 32px;"></i>
+                                    <h6>Add More Chapters</h6>
+                                    <p class="text-muted small">Upload additional {{ subject }} lessons to expand your learning library.</p>
+                                    <a href="{{ url_for('upload_subject', subject=subject) }}" class="btn btn-sm btn-info">Upload More</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

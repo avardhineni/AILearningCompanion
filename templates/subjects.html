@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Subjects - AI Tutor Document Processor{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="breadcrumb-item active">Subjects</li>
+                </ol>
+            </nav>
+            <h1 class="h3 mb-4">
+                <i data-feather="book-open" class="me-2"></i>
+                Choose Subject to Upload Chapter
+            </h1>
+            <p class="text-muted mb-4">Select a subject to upload lesson chapters. Keep your study materials organized by subject.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        {% set subjects = [
+            {'name': 'English', 'icon': 'book', 'color': 'primary', 'description': 'Grammar, Literature, Writing'},
+            {'name': 'Maths', 'icon': 'calculator', 'color': 'success', 'description': 'Numbers, Algebra, Geometry'},
+            {'name': 'Science', 'icon': 'atom', 'color': 'info', 'description': 'Physics, Chemistry, Biology'},
+            {'name': 'Social', 'icon': 'globe', 'color': 'warning', 'description': 'History, Geography, Civics'},
+            {'name': 'Hindi', 'icon': 'type', 'color': 'danger', 'description': 'भाषा, साहित्य, व्याकरण'},
+            {'name': 'Telugu', 'icon': 'edit', 'color': 'secondary', 'description': 'భాష, సాహిత్యం, వ్యాకరణం'},
+            {'name': 'IT-Computers', 'icon': 'monitor', 'color': 'dark', 'description': 'Technology, Programming, Digital Skills'},
+            {'name': 'GK', 'icon': 'help-circle', 'color': 'primary', 'description': 'General Knowledge, Current Affairs'},
+            {'name': 'Value Education', 'icon': 'heart', 'color': 'success', 'description': 'Ethics, Values, Life Skills'}
+        ] %}
+        
+        {% for subject in subjects %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 subject-card" data-subject="{{ subject.name }}">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i data-feather="{{ subject.icon }}" class="text-{{ subject.color }}" style="width: 48px; height: 48px;"></i>
+                    </div>
+                    <h5 class="card-title">{{ subject.name }}</h5>
+                    <p class="card-text text-muted small">{{ subject.description }}</p>
+                    
+                    <!-- Document count for this subject -->
+                    {% set subject_docs = documents|selectattr('subject', 'equalto', subject.name)|list %}
+                    {% if subject_docs %}
+                        <div class="mb-3">
+                            <span class="badge bg-{{ subject.color }} bg-opacity-20 text-{{ subject.color }}">
+                                {{ subject_docs|length }} chapter{% if subject_docs|length != 1 %}s{% endif %}
+                            </span>
+                        </div>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('upload_subject', subject=subject.name) }}" class="btn btn-{{ subject.color }} btn-sm">
+                        <i data-feather="upload" class="me-1"></i>
+                        Upload Chapter
+                    </a>
+                    
+                    {% if subject_docs %}
+                        <a href="{{ url_for('view_subject', subject=subject.name) }}" class="btn btn-outline-{{ subject.color }} btn-sm ms-2">
+                            <i data-feather="eye" class="me-1"></i>
+                            View Chapters
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if documents %}
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="mb-3">
+                <i data-feather="file-text" class="me-2"></i>
+                Recent Uploads
+            </h4>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Chapter</th>
+                            <th>Upload Date</th>
+                            <th>Pages</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in documents[:10] %}
+                        <tr>
+                            <td>
+                                <span class="badge bg-primary bg-opacity-20 text-primary">{{ doc.subject }}</span>
+                            </td>
+                            <td>
+                                <strong>{{ doc.lesson_title[:50] }}{% if doc.lesson_title|length > 50 %}...{% endif %}</strong>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ doc.upload_date.strftime('%d %b %Y') }}</small>
+                            </td>
+                            <td>
+                                <small>{{ doc.total_pages }} pages</small>
+                            </td>
+                            <td>
+                                <a href="{{ url_for('view_document', doc_id=doc.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i data-feather="eye" class="me-1"></i>
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.subject-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.subject-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.card-body {
+    padding: 2rem 1.5rem;
+}
+</style>
+{% endblock %}

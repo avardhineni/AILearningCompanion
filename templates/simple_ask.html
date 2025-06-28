@@ -28,10 +28,17 @@
                             <label for="document_id" class="form-label">Select Document</label>
                             <select class="form-select" id="document_id" required>
                                 <option value="">Choose a lesson...</option>
-                                {% for doc in documents %}
-                                <option value="{{ doc.id }}">
-                                    {{ doc.lesson_title[:60] }}{% if doc.lesson_title|length > 60 %}...{% endif %} ({{ doc.subject }})
-                                </option>
+                                {% for subject in ['English', 'Maths', 'Science', 'Social', 'Hindi', 'Telugu', 'IT-Computers', 'GK', 'Value Education'] %}
+                                    {% set subject_docs = documents|selectattr('subject', 'equalto', subject)|list %}
+                                    {% if subject_docs %}
+                                        <optgroup label="{{ subject }}">
+                                            {% for doc in subject_docs %}
+                                            <option value="{{ doc.id }}">
+                                                {% if doc.chapter_number %}{{ doc.chapter_number }} - {% endif %}{{ doc.lesson_title[:50] }}{% if doc.lesson_title|length > 50 %}...{% endif %}
+                                            </option>
+                                            {% endfor %}
+                                        </optgroup>
+                                    {% endif %}
                                 {% endfor %}
                             </select>
                         </div>

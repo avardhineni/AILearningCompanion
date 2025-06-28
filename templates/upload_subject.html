@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}Upload {{ subject }} Chapter - AI Tutor Document Processor{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('subjects') }}">Subjects</a></li>
+                    <li class="breadcrumb-item active">{{ subject }}</li>
+                </ol>
+            </nav>
+            <div class="d-flex align-items-center mb-4">
+                <h1 class="h3 mb-0 me-3">
+                    <i data-feather="upload" class="me-2"></i>
+                    Upload {{ subject }} Chapter
+                </h1>
+                <span class="badge bg-primary bg-opacity-20 text-primary">{{ subject }}</span>
+            </div>
+            <p class="text-muted mb-4">Upload a Word document (.docx) containing a {{ subject }} lesson or chapter.</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i data-feather="file-plus" class="me-2"></i>
+                        Upload New Chapter
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form action="{{ url_for('upload_subject_file', subject=subject) }}" method="post" enctype="multipart/form-data" id="uploadForm">
+                        <div class="mb-3">
+                            <label for="chapter_number" class="form-label">Chapter Number (Optional)</label>
+                            <input type="text" class="form-control" id="chapter_number" name="chapter_number" 
+                                   placeholder="e.g., Chapter 1, Unit 3, Lesson 5" maxlength="50">
+                            <div class="form-text">Help organize your chapters with numbers or titles</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="lesson_title" class="form-label">Lesson Title (Optional)</label>
+                            <input type="text" class="form-control" id="lesson_title" name="lesson_title" 
+                                   placeholder="e.g., Introduction to Computers, Photosynthesis, Ancient India" maxlength="255">
+                            <div class="form-text">This will be extracted automatically if not provided</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="file" class="form-label">Select Word Document</label>
+                            <div class="upload-area" id="uploadArea">
+                                <input type="file" class="form-control" id="file" name="file" accept=".docx" required style="display: none;">
+                                <div class="upload-placeholder text-center py-5">
+                                    <i data-feather="upload-cloud" class="text-muted mb-3" style="width: 48px; height: 48px;"></i>
+                                    <h6 class="text-muted">Drag and drop your .docx file here</h6>
+                                    <p class="text-muted mb-3">or</p>
+                                    <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('file').click();">
+                                        <i data-feather="folder" class="me-1"></i>
+                                        Browse Files
+                                    </button>
+                                    <div class="mt-3">
+                                        <small class="text-muted">
+                                            Supported format: .docx (Word Document)<br>
+                                            Maximum size: 16MB
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="file-info" id="fileInfo" style="display: none;">
+                                    <div class="d-flex align-items-center justify-content-between p-3 border rounded">
+                                        <div class="d-flex align-items-center">
+                                            <i data-feather="file-text" class="text-primary me-2"></i>
+                                            <div>
+                                                <div id="fileName" class="fw-medium"></div>
+                                                <small id="fileSize" class="text-muted"></small>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                                            <i data-feather="x" class="me-1"></i>
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary" id="uploadBtn">
+                                <i data-feather="upload" class="me-2"></i>
+                                Upload and Process
+                            </button>
+                            <a href="{{ url_for('subjects') }}" class="btn btn-outline-secondary">
+                                <i data-feather="arrow-left" class="me-1"></i>
+                                Back to Subjects
+                            </a>
+                        </div>
+
+                        <div id="uploadProgress" class="mt-3" style="display: none;">
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                            </div>
+                            <div class="text-center mt-2">
+                                <small class="text-muted">Processing document...</small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i data-feather="info" class="me-1"></i>
+                        Upload Guidelines
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-success">
+                            <i data-feather="check-circle" class="me-1"></i>
+                            Supported Files
+                        </h6>
+                        <ul class="list-unstyled small text-muted mb-0">
+                            <li>• Word Documents (.docx)</li>
+                            <li>• Maximum size: 16MB</li>
+                            <li>• Text-based content preferred</li>
+                        </ul>
+                    </div>
+
+                    <div class="mb-3">
+                        <h6 class="text-info">
+                            <i data-feather="book-open" class="me-1"></i>
+                            Best Practices
+                        </h6>
+                        <ul class="list-unstyled small text-muted mb-0">
+                            <li>• Use clear chapter/lesson titles</li>
+                            <li>• Include page numbers if possible</li>
+                            <li>• Organize content with headings</li>
+                            <li>• Keep content educational and clear</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h6 class="text-warning">
+                            <i data-feather="zap" class="me-1"></i>
+                            After Upload
+                        </h6>
+                        <ul class="list-unstyled small text-muted mb-0">
+                            <li>• Document will be processed automatically</li>
+                            <li>• Content extracted page by page</li>
+                            <li>• Ready for AI Tutor questions</li>
+                            <li>• Quiz generation available</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {% if existing_chapters %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i data-feather="book" class="me-1"></i>
+                        Existing {{ subject }} Chapters
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% for doc in existing_chapters %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <div class="fw-medium small">{{ doc.lesson_title[:30] }}{% if doc.lesson_title|length > 30 %}...{% endif %}</div>
+                            {% if doc.chapter_number %}
+                                <small class="text-muted">{{ doc.chapter_number }}</small>
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('view_document', doc_id=doc.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i data-feather="eye"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// File upload handling
+document.getElementById('file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        showFileInfo(file);
+    }
+});
+
+// Drag and drop handling
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadArea.classList.add('border-primary');
+});
+
+uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('border-primary');
+});
+
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('border-primary');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const file = files[0];
+        if (file.name.endsWith('.docx')) {
+            document.getElementById('file').files = files;
+            showFileInfo(file);
+        } else {
+            alert('Please select a .docx file');
+        }
+    }
+});
+
+function showFileInfo(file) {
+    document.querySelector('.upload-placeholder').style.display = 'none';
+    document.getElementById('fileInfo').style.display = 'block';
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = formatFileSize(file.size);
+}
+
+function clearFile() {
+    document.getElementById('file').value = '';
+    document.querySelector('.upload-placeholder').style.display = 'block';
+    document.getElementById('fileInfo').style.display = 'none';
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Form submission with progress
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const fileInput = document.getElementById('file');
+    if (!fileInput.files[0]) {
+        e.preventDefault();
+        alert('Please select a file to upload');
+        return;
+    }
+
+    // Show progress
+    document.getElementById('uploadBtn').disabled = true;
+    document.getElementById('uploadBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+    document.getElementById('uploadProgress').style.display = 'block';
+    
+    // Simulate progress (since we can't track real progress easily)
+    let progress = 0;
+    const progressBar = document.querySelector('.progress-bar');
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90;
+        progressBar.style.width = progress + '%';
+    }, 500);
+    
+    // Clean up on page unload
+    window.addEventListener('beforeunload', () => clearInterval(interval));
+});
+</script>
+
+<style>
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 0.375rem;
+    transition: border-color 0.15s ease-in-out;
+}
+
+.upload-area:hover {
+    border-color: #0d6efd;
+}
+
+.upload-area.border-primary {
+    border-color: #0d6efd !important;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+</style>
+{% endblock %}

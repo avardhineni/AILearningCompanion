@@ -100,12 +100,16 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- June 28, 2025: Added subject-based organization system
+- Created dedicated subject pages for all 9 school subjects (English, Maths, Science, Social, Hindi, Telugu, IT-Computers, GK, Value Education)
+- Added subject-specific upload flows with chapter organization
+- Enhanced database model with chapter_number field for better organization
+- Updated navigation to prioritize subject-based workflow
+- Improved AI Tutor interface with subject-grouped document selection
 - June 27, 2025: Added AI tutoring system with Google Gemini integration
 - Added question-answering feature for uploaded documents
 - Added quiz generation functionality  
 - Fixed document upload issues - documents now properly save to database
-- Added navigation links for AI Tutor features
-- Enhanced document viewer with AI tutoring buttons
 
 ## AI Features
 - **Question Answering**: Students can ask questions about uploaded lessons using natural language

@@ -205,6 +205,104 @@ def ask_question():
     
     return render_template('ask_question.html', documents=documents)
 
+@app.route('/subjects')
+def subjects():
+    """Show subjects page"""
+    documents = Document.query.order_by(Document.upload_date.desc()).all()
+    return render_template('subjects.html', documents=documents)
+
+@app.route('/subjects/<subject>')
+def upload_subject(subject):
+    """Show upload page for a specific subject"""
+    # Get existing chapters for this subject
+    existing_chapters = Document.query.filter_by(subject=subject).order_by(Document.upload_date.desc()).all()
+    return render_template('upload_subject.html', subject=subject, existing_chapters=existing_chapters)
+
+@app.route('/subjects/<subject>/view')
+def view_subject(subject):
+    """View all chapters for a specific subject"""
+    documents = Document.query.filter_by(subject=subject).order_by(Document.upload_date.desc()).all()
+    return render_template('subject_chapters.html', subject=subject, documents=documents)
+
+@app.route('/subjects/<subject>/upload', methods=['POST'])
+def upload_subject_file(subject):
+    """Handle file upload for a specific subject"""
+    if 'file' not in request.files:
+        flash('No file selected', 'error')
+        return redirect(url_for('upload_subject', subject=subject))
+
+    file = request.files['file']
+    if file.filename == '':
+        flash('No file selected', 'error')
+        return redirect(url_for('upload_subject', subject=subject))
+
+    if file and allowed_file(file.filename):
+        try:
+            # Generate secure filename
+            filename = str(uuid.uuid4()) + '.docx'
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            
+            # Get form data
+            chapter_number = request.form.get('chapter_number', '').strip()
+            lesson_title = request.form.get('lesson_title', '').strip()
+            
+            # Process the document
+            processor = DocumentProcessor()
+            pages = processor.extract_text_from_docx(file_path)
+            
+            if not pages:
+                flash('Could not extract content from the document. Please check the file format.', 'error')
+                os.remove(file_path)
+                return redirect(url_for('upload_subject', subject=subject))
+            
+            # Extract metadata
+            metadata = processor.extract_document_metadata(file_path)
+            
+            # Use provided lesson title or extract from document
+            if not lesson_title:
+                lesson_title = metadata.get('title', file.filename)
+            
+            # Create document record
+            document = Document(
+                filename=filename,
+                original_filename=file.filename,
+                total_pages=len(pages),
+                subject=subject,  # Set the subject from URL parameter
+                lesson_title=lesson_title,
+                chapter_number=chapter_number if chapter_number else None
+            )
+            
+            db.session.add(document)
+            db.session.flush()  # Get the document ID
+            
+            # Create page records
+            for page_number, content in pages:
+                word_count = processor.count_words(content)
+                page_record = DocumentPage(
+                    document_id=document.id,
+                    page_number=page_number,
+                    content=content,
+                    word_count=word_count
+                )
+                db.session.add(page_record)
+            
+            db.session.commit()
+            
+            flash(f'Successfully uploaded "{lesson_title}" to {subject}! Extracted {len(pages)} pages.', 'success')
+            return redirect(url_for('view_document', doc_id=document.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            if 'file_path' in locals() and os.path.exists(file_path):
+                os.remove(file_path)
+            logger.error(f"Error processing file: {str(e)}")
+            flash(f'Error processing file: {str(e)}', 'error')
+            return redirect(url_for('upload_subject', subject=subject))
+    else:
+        flash('Invalid file type. Please upload a .docx file.', 'error')
+        return redirect(url_for('upload_subject', subject=subject))
+
 @app.route('/ask-page')
 def ask_page():
     """Show the ask question page with AJAX"""
