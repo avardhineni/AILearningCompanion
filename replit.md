@@ -100,7 +100,14 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
-- June 29, 2025: Successfully implemented and deployed voice-based interactive tutoring system
+- June 29, 2025: Successfully completed voice-based interactive tutoring system with "Ask a Doubt" functionality
+- Replaced "Simple Explanation" feature with comprehensive doubt-answering system allowing typed and voice questions
+- Implemented real voice recognition using Web Speech API for microphone input with proper error handling
+- Added text cleaning system to remove markdown symbols (asterisks, hashes, underscores) from speech synthesis
+- Created audio control system with "Stop Audio" button for answer playback
+- Fixed speech output to sound natural without reading formatting symbols aloud
+- Enhanced AI-powered doubt resolution with context-aware answers and multilingual voice responses
+- Successfully implemented and deployed voice-based interactive tutoring system
 - Fixed critical JavaScript execution issues in Voice Reading interface
 - Resolved button state management problems with proper loading indicators
 - Implemented comprehensive error handling and debugging for voice reading API
