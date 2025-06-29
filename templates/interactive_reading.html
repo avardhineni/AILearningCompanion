@@ -166,9 +166,13 @@
                         </h6>
                         <div id="answer-text"></div>
                         <div class="mt-2">
-                            <button class="btn btn-sm btn-outline-success" onclick="playAnswer()">
+                            <button class="btn btn-sm btn-outline-success" id="play-answer-btn" onclick="playAnswer()">
                                 <i data-feather="volume-2" class="me-1"></i>
                                 Listen to Answer
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" id="stop-answer-btn" onclick="stopAnswer()" style="display: none;">
+                                <i data-feather="stop-circle" class="me-1"></i>
+                                Stop Audio
                             </button>
                         </div>
                     </div>
@@ -798,14 +802,18 @@ function getCurrentLanguage() {
     }
 }
 
+let currentAnswerAudio = null;
+
 function playAnswer() {
     if (!currentDoubtAnswer) {
         alert('No answer to play.');
         return;
     }
     
-    const playBtn = document.querySelector('#doubt-answer .btn-outline-success');
+    const playBtn = document.getElementById('play-answer-btn');
+    const stopBtn = document.getElementById('stop-answer-btn');
     const originalText = playBtn.innerHTML;
+    
     playBtn.innerHTML = '<i data-feather="loader" class="me-1"></i>Generating Audio...';
     playBtn.disabled = true;
     
@@ -825,8 +833,27 @@ function playAnswer() {
         playBtn.disabled = false;
         
         if (data.success) {
-            const audio = new Audio(data.audio_url);
-            audio.play();
+            // Stop any existing audio
+            if (currentAnswerAudio) {
+                currentAnswerAudio.pause();
+                currentAnswerAudio = null;
+            }
+            
+            currentAnswerAudio = new Audio(data.audio_url);
+            
+            // Show stop button and hide play button
+            playBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+            
+            currentAnswerAudio.play();
+            
+            // Reset buttons when audio ends
+            currentAnswerAudio.addEventListener('ended', function() {
+                playBtn.style.display = 'inline-block';
+                stopBtn.style.display = 'none';
+                currentAnswerAudio = null;
+            });
+            
         } else {
             alert('Error generating speech: ' + data.message);
         }
@@ -837,6 +864,17 @@ function playAnswer() {
         console.error('Error:', error);
         alert('Failed to generate speech. Please try again.');
     });
+}
+
+function stopAnswer() {
+    if (currentAnswerAudio) {
+        currentAnswerAudio.pause();
+        currentAnswerAudio = null;
+    }
+    
+    // Reset button visibility
+    document.getElementById('play-answer-btn').style.display = 'inline-block';
+    document.getElementById('stop-answer-btn').style.display = 'none';
 }
 </script>
 {% endblock %}

@@ -55,14 +55,36 @@ class SimpleVoiceTutor:
         """Get TTS configuration based on subject"""
         return self.voice_settings.get(subject, self.voice_settings['English'])
     
+    def clean_text_for_speech(self, text):
+        """Clean text by removing markdown symbols and formatting for speech"""
+        # Remove markdown bold and italic symbols
+        text = re.sub(r'\*+', '', text)
+        
+        # Remove markdown headers
+        text = re.sub(r'#+\s*', '', text)
+        
+        # Remove markdown underline
+        text = re.sub(r'_+', '', text)
+        
+        # Remove extra spaces
+        text = re.sub(r'\s+', ' ', text)
+        
+        # Remove special characters that don't belong in speech
+        text = re.sub(r'[^\w\s.,!?;:()\-\'"]', ' ', text)
+        
+        return text.strip()
+
     def generate_audio_file(self, text, subject):
         """Generate audio file and return the file path"""
         try:
+            # Clean text for speech
+            clean_text = self.clean_text_for_speech(text)
+            
             voice_config = self.get_voice_config(subject)
             
             # Create TTS object
             tts = gTTS(
-                text=text,
+                text=clean_text,
                 lang=voice_config['lang'],
                 tld=voice_config['tld'],
                 slow=False
