@@ -53,7 +53,7 @@
                     </div>
                     
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg" id="start-reading-btn">
+                        <button type="button" class="btn btn-primary btn-lg" id="start-reading-btn" onclick="handleStartReading()">
                             <i data-feather="play" class="me-2"></i>
                             Start Interactive Reading
                         </button>
@@ -237,6 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form submission
     readingForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        console.log('Form submitted, calling startReading');
         startReading();
     });
     
@@ -259,15 +260,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-function startReading() {
-    console.log('startReading function called');
-    const documentId = document.getElementById('document_id').value;
-    console.log('Selected document ID:', documentId);
-    
-    if (!documentId) {
-        alert('Please select a lesson');
-        return;
+function handleStartReading() {
+    console.log('handleStartReading function called');
+    try {
+        const documentId = document.getElementById('document_id').value;
+        console.log('Selected document ID:', documentId);
+        
+        if (!documentId) {
+            alert('Please select a lesson');
+            return;
+        }
+        
+        startReading(documentId);
+    } catch (error) {
+        console.error('Error in handleStartReading:', error);
+        alert('Error starting reading session');
     }
+}
+
+function startReading(documentId) {
+    console.log('startReading function called with ID:', documentId);
     
     currentDocumentId = documentId;
     showLoading(true);
@@ -283,6 +295,9 @@ function startReading() {
     })
     .then(response => {
         console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
         return response.json();
     })
     .then(data => {
@@ -290,31 +305,45 @@ function startReading() {
         showLoading(false);
         
         if (data.success) {
+            console.log('Successfully started reading session');
+            
             // Show reading interface
-            document.getElementById('lesson-selection').style.display = 'none';
-            document.getElementById('reading-interface').style.display = 'block';
+            const lessonSelection = document.getElementById('lesson-selection');
+            const readingInterface = document.getElementById('reading-interface');
+            
+            if (lessonSelection && readingInterface) {
+                lessonSelection.style.display = 'none';
+                readingInterface.style.display = 'block';
+            }
             
             // Update lesson info
-            document.getElementById('lesson-title').textContent = data.document.title;
-            document.getElementById('lesson-subject').textContent = data.document.subject;
-            document.getElementById('progress-badge').textContent = `Page 1 of ${data.document.total_pages}`;
+            const titleElement = document.getElementById('lesson-title');
+            const subjectElement = document.getElementById('lesson-subject');
+            const progressElement = document.getElementById('progress-badge');
+            
+            if (titleElement) titleElement.textContent = data.document.title;
+            if (subjectElement) subjectElement.textContent = data.document.subject;
+            if (progressElement) progressElement.textContent = `Page 1 of ${data.document.total_pages}`;
             
             isReading = true;
             
             // Speak welcome message and start reading
             if (data.welcome_message) {
+                console.log('Speaking welcome message:', data.welcome_message);
                 speakText(data.welcome_message, data.document.subject);
                 
                 // Start reading first chunk after welcome message
                 setTimeout(() => {
+                    console.log('Starting to continue reading after welcome');
                     continueReading();
                 }, 4000);
             } else {
-                // Start reading immediately if no welcome message
+                console.log('No welcome message, starting reading immediately');
                 continueReading();
             }
             
         } else {
+            console.error('API returned error:', data.message);
             alert('Error: ' + data.message);
         }
     })
