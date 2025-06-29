@@ -531,6 +531,31 @@ def api_process_response():
         logging.error(f"Error processing user response: {e}")
         return jsonify({"success": False, "message": "Failed to process response"})
 
+@app.route('/api/voice/ask-doubt', methods=['POST'])
+def api_ask_doubt():
+    """Handle student doubts during voice reading"""
+    try:
+        data = request.get_json()
+        document_id = data.get('document_id')
+        question = data.get('question')
+        
+        if not document_id or not question:
+            return jsonify({"success": False, "message": "Missing document ID or question"})
+        
+        # Get document to determine subject
+        document = Document.query.get(document_id)
+        if not document:
+            return jsonify({"success": False, "message": "Document not found"})
+        
+        voice_tutor = SimpleVoiceTutor()
+        result = voice_tutor.answer_doubt(document_id, question, document.subject)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error handling doubt: {e}")
+        return jsonify({"success": False, "message": "Failed to process doubt"})
+
 @app.route('/test-ai-direct')
 def test_ai_direct():
     """Direct test of AI functionality"""

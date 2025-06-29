@@ -118,23 +118,75 @@ class SimpleVoiceTutor:
         
         return chunks
     
-    def explain_content_in_simple_terms(self, content, subject):
-        """Explain content in child-friendly language using existing AI tutor"""
+    def answer_doubt(self, document_id, question, subject):
+        """Answer a student's doubt about the current lesson"""
         try:
-            # Keep it simple - just clean up the content for now to avoid timeouts
-            # We can make this smarter later if needed
-            explanation = content.strip()
+            # Get document context
+            document = Document.query.get(document_id)
+            if not document:
+                return {"success": False, "message": "Document not found"}
             
-            # Simple formatting improvements
-            explanation = explanation.replace('\n\n', '\n')
-            explanation = explanation.replace('  ', ' ')
+            # Get current progress to understand context
+            progress = self._load_progress()
+            doc_progress = progress.get(str(document_id), {})
+            current_page = doc_progress.get('current_page', 1)
             
-            return explanation
+            # Get current page content for context
+            page = DocumentPage.query.filter_by(
+                document_id=document_id, 
+                page_number=current_page
+            ).first()
+            
+            context = page.content if page else ""
+            
+            # Use AI tutor to answer the question
+            voice_config = self.get_voice_config(subject)
+            
+            if voice_config['lang'] == 'hi':
+                prompt = f"""
+                आप एक मददगार शिक्षक हैं जो 5वीं कक्षा के छात्र की मदद कर रहे हैं।
+                
+                पाठ का संदर्भ: {context}
+                
+                छात्र का प्रश्न: {question}
+                
+                छात्र के प्रश्न का उत्तर सरल और स्पष्ट भाषा में दें जो उनकी उम्र के अनुकूल हो।
+                """
+            elif voice_config['lang'] == 'te':
+                prompt = f"""
+                మీరు 5వ తరగతి విద్యార్థికి సహాయం చేస్తున్న సహాయకారి ఉపాధ్యాయులు.
+                
+                పాఠం సందర్భం: {context}
+                
+                విద్యార్థి ప్రశ్న: {question}
+                
+                విద్యార్థి ప్రశ్నకు వారి వయస్సుకు తగిన సరళమైన మరియు స్పష్టమైన భాషలో సమాధానం ఇవ్వండి.
+                """
+            else:
+                prompt = f"""
+                You are a helpful teacher assisting a 5th grade student.
+                
+                Lesson context: {context}
+                
+                Student's question: {question}
+                
+                Answer the student's question in simple and clear language appropriate for their age.
+                """
+            
+            response = self.ai_tutor.client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
+            
+            if response.text:
+                answer = response.text.strip()
+                return {"success": True, "answer": answer, "subject": subject}
+            else:
+                return {"success": False, "message": "Could not generate answer"}
                 
         except Exception as e:
-            logging.error(f"Content explanation error: {e}")
-        
-        return content  # Return original if explanation fails
+            logging.error(f"Doubt answering error: {e}")
+            return {"success": False, "message": f"Error: {str(e)}"}
     
     def generate_comprehension_question(self, chunk, subject):
         """Generate a comprehension question for the current chunk"""
@@ -270,9 +322,6 @@ class SimpleVoiceTutor:
             # Get current chunk
             current_chunk = chunks[progress['current_chunk']]
             
-            # Explain in simple terms
-            explained_content = self.explain_content_in_simple_terms(current_chunk, document.subject)
-            
             # Move to next chunk
             progress['current_chunk'] += 1
             
@@ -291,8 +340,7 @@ class SimpleVoiceTutor:
             
             return {
                 "success": True,
-                "content": explained_content,
-                "original_content": current_chunk,
+                "content": current_chunk,  # Return original content for reading
                 "question": question,
                 "progress": {
                     "page": progress['current_page'],

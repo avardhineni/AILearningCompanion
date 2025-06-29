@@ -127,12 +127,51 @@
                 <div id="current-content" class="mb-3">
                     Content will appear here as the lesson is read...
                 </div>
-                <div id="simplified-explanation" class="p-3 bg-info bg-opacity-10 rounded" style="display: none;">
-                    <h6 class="text-info mb-2">
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-primary" id="ask-doubt-btn" style="display: none;" onclick="showDoubtInterface()">
+                        <i data-feather="help-circle" class="me-2"></i>
+                        Ask a Doubt
+                    </button>
+                </div>
+                
+                <!-- Doubt Interface -->
+                <div id="doubt-interface" class="p-3 bg-primary bg-opacity-10 rounded mt-3" style="display: none;">
+                    <h6 class="text-primary mb-3">
                         <i data-feather="message-circle" class="me-1"></i>
-                        Simple Explanation:
+                        Ask Your Question:
                     </h6>
-                    <div id="explanation-text"></div>
+                    <div class="mb-3">
+                        <textarea id="doubt-question" class="form-control" rows="3" placeholder="Type your question here or use the microphone button to speak..."></textarea>
+                    </div>
+                    <div class="d-flex gap-2 mb-3">
+                        <button class="btn btn-success" onclick="submitDoubt()">
+                            <i data-feather="send" class="me-1"></i>
+                            Submit Question
+                        </button>
+                        <button class="btn btn-info" id="voice-doubt-btn" onclick="startVoiceDoubt()">
+                            <i data-feather="mic" class="me-1"></i>
+                            Speak Question
+                        </button>
+                        <button class="btn btn-secondary" onclick="hideDoubtInterface()">
+                            <i data-feather="x" class="me-1"></i>
+                            Cancel
+                        </button>
+                    </div>
+                    
+                    <!-- Answer Display -->
+                    <div id="doubt-answer" class="p-3 bg-success bg-opacity-10 rounded" style="display: none;">
+                        <h6 class="text-success mb-2">
+                            <i data-feather="check-circle" class="me-1"></i>
+                            Answer:
+                        </h6>
+                        <div id="answer-text"></div>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-success" onclick="playAnswer()">
+                                <i data-feather="volume-2" class="me-1"></i>
+                                Listen to Answer
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -386,11 +425,10 @@ function continueReading() {
             
             // Show content
             if (data.content) {
-                document.getElementById('current-content').innerHTML = data.original_content;
-                document.getElementById('explanation-text').innerHTML = data.content;
-                document.getElementById('simplified-explanation').style.display = 'block';
+                document.getElementById('current-content').innerHTML = data.content;
+                document.getElementById('ask-doubt-btn').style.display = 'block';
                 
-                currentContext = data.original_content;
+                currentContext = data.content;
                 
                 // Speak the content
                 speakText(data.content, getCurrentSubject());
@@ -595,6 +633,119 @@ function showLoading(show) {
             feather.replace();
         }
     }
+}
+
+// Doubt Interface Functions
+let currentDoubtAnswer = null;
+
+function showDoubtInterface() {
+    document.getElementById('doubt-interface').style.display = 'block';
+    document.getElementById('doubt-question').focus();
+    document.getElementById('doubt-answer').style.display = 'none';
+    feather.replace();
+}
+
+function hideDoubtInterface() {
+    document.getElementById('doubt-interface').style.display = 'none';
+    document.getElementById('doubt-question').value = '';
+    document.getElementById('doubt-answer').style.display = 'none';
+}
+
+function submitDoubt() {
+    const question = document.getElementById('doubt-question').value.trim();
+    if (!question) {
+        alert('Please enter your question first.');
+        return;
+    }
+    
+    if (!currentDocumentId) {
+        alert('No lesson selected. Please start a reading session first.');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = document.querySelector('#doubt-interface .btn-success');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i data-feather="loader" class="me-1"></i>Getting Answer...';
+    submitBtn.disabled = true;
+    
+    fetch('/api/voice/ask-doubt', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            document_id: currentDocumentId,
+            question: question
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        
+        if (data.success) {
+            document.getElementById('answer-text').innerHTML = data.answer;
+            document.getElementById('doubt-answer').style.display = 'block';
+            currentDoubtAnswer = {
+                text: data.answer,
+                subject: data.subject
+            };
+        } else {
+            alert('Error getting answer: ' + data.message);
+        }
+    })
+    .catch(error => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+        console.error('Error:', error);
+        alert('Failed to get answer. Please try again.');
+    });
+}
+
+function startVoiceDoubt() {
+    alert('Voice question feature will be available soon! Please type your question for now.');
+}
+
+function playAnswer() {
+    if (!currentDoubtAnswer) {
+        alert('No answer to play.');
+        return;
+    }
+    
+    const playBtn = document.querySelector('#doubt-answer .btn-outline-success');
+    const originalText = playBtn.innerHTML;
+    playBtn.innerHTML = '<i data-feather="loader" class="me-1"></i>Generating Audio...';
+    playBtn.disabled = true;
+    
+    fetch('/api/voice/speak', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            text: currentDoubtAnswer.text,
+            subject: currentDoubtAnswer.subject
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        playBtn.innerHTML = originalText;
+        playBtn.disabled = false;
+        
+        if (data.success) {
+            const audio = new Audio(data.audio_url);
+            audio.play();
+        } else {
+            alert('Error generating speech: ' + data.message);
+        }
+    })
+    .catch(error => {
+        playBtn.innerHTML = originalText;
+        playBtn.disabled = false;
+        console.error('Error:', error);
+        alert('Failed to generate speech. Please try again.');
+    });
 }
 </script>
 {% endblock %}
