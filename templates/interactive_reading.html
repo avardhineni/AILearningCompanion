@@ -704,7 +704,98 @@ function submitDoubt() {
 }
 
 function startVoiceDoubt() {
-    alert('Voice question feature will be available soon! Please type your question for now.');
+    // Check if browser supports speech recognition
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('Voice recognition is not supported in your browser. Please type your question instead.');
+        return;
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    // Configure recognition
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = getCurrentLanguage();
+    
+    const voiceBtn = document.getElementById('voice-doubt-btn');
+    const originalText = voiceBtn.innerHTML;
+    
+    // Show listening state
+    voiceBtn.innerHTML = '<i data-feather="mic" class="me-1"></i>Listening...';
+    voiceBtn.disabled = true;
+    voiceBtn.classList.add('btn-warning');
+    voiceBtn.classList.remove('btn-info');
+    
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('doubt-question').value = transcript;
+        
+        // Reset button
+        voiceBtn.innerHTML = originalText;
+        voiceBtn.disabled = false;
+        voiceBtn.classList.remove('btn-warning');
+        voiceBtn.classList.add('btn-info');
+        
+        // Auto-submit if transcript is not empty
+        if (transcript.trim()) {
+            setTimeout(() => submitDoubt(), 500);
+        }
+    };
+    
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        
+        // Reset button
+        voiceBtn.innerHTML = originalText;
+        voiceBtn.disabled = false;
+        voiceBtn.classList.remove('btn-warning');
+        voiceBtn.classList.add('btn-info');
+        
+        if (event.error === 'not-allowed') {
+            alert('Microphone access was denied. Please allow microphone access and try again.');
+        } else if (event.error === 'no-speech') {
+            alert('No speech was detected. Please try again.');
+        } else {
+            alert('Speech recognition failed. Please type your question instead.');
+        }
+    };
+    
+    recognition.onend = function() {
+        // Reset button if not already reset
+        if (voiceBtn.disabled) {
+            voiceBtn.innerHTML = originalText;
+            voiceBtn.disabled = false;
+            voiceBtn.classList.remove('btn-warning');
+            voiceBtn.classList.add('btn-info');
+        }
+    };
+    
+    // Start recognition
+    try {
+        recognition.start();
+    } catch (error) {
+        console.error('Failed to start speech recognition:', error);
+        voiceBtn.innerHTML = originalText;
+        voiceBtn.disabled = false;
+        voiceBtn.classList.remove('btn-warning');
+        voiceBtn.classList.add('btn-info');
+        alert('Failed to start voice recognition. Please type your question instead.');
+    }
+}
+
+function getCurrentLanguage() {
+    const subject = getCurrentSubject();
+    
+    // Return appropriate language code based on subject
+    switch(subject) {
+        case 'Hindi':
+            return 'hi-IN';
+        case 'Telugu':
+            return 'te-IN';
+        default:
+            return 'en-IN'; // Indian English
+    }
 }
 
 function playAnswer() {
