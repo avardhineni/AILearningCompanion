@@ -201,7 +201,7 @@ class SimpleVoiceTutor:
             )
             
             if response.text:
-                answer = response.text.strip()
+                answer = self.clean_text_for_speech(response.text.strip())
                 return {"success": True, "answer": answer, "subject": subject}
             else:
                 return {"success": False, "message": "Could not generate answer"}
@@ -341,8 +341,8 @@ class SimpleVoiceTutor:
                 
                 return self.continue_reading(document_id)
             
-            # Get current chunk
-            current_chunk = chunks[progress['current_chunk']]
+            # Get current chunk and clean it for speech
+            current_chunk = self.clean_text_for_speech(chunks[progress['current_chunk']])
             
             # Move to next chunk
             progress['current_chunk'] += 1
