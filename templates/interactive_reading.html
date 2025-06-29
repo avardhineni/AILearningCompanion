@@ -260,7 +260,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function startReading() {
+    console.log('startReading function called');
     const documentId = document.getElementById('document_id').value;
+    console.log('Selected document ID:', documentId);
+    
     if (!documentId) {
         alert('Please select a lesson');
         return;
@@ -278,8 +281,12 @@ function startReading() {
             document_id: documentId
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         showLoading(false);
         
         if (data.success) {
@@ -312,9 +319,9 @@ function startReading() {
         }
     })
     .catch(error => {
+        console.error('Fetch error:', error);
         showLoading(false);
-        console.error('Error:', error);
-        alert('Failed to start reading session');
+        alert('Failed to start reading session: ' + error.message);
     });
 }
 
