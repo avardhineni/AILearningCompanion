@@ -7,7 +7,7 @@ from app import app, db
 from models import Document, DocumentPage
 from document_processor import DocumentProcessor
 from ai_tutor import AITutor
-from voice_tutor import VoiceTutor
+from simple_voice_tutor import SimpleVoiceTutor
 import logging
 
 logger = logging.getLogger(__name__)
@@ -437,7 +437,7 @@ def api_start_reading():
             return jsonify({"success": False, "message": "Document ID required"})
         
         # Initialize voice tutor
-        voice_tutor = VoiceTutor()
+        voice_tutor = SimpleVoiceTutor()
         result = voice_tutor.start_interactive_reading(document_id)
         
         return jsonify(result)
@@ -452,14 +452,13 @@ def api_continue_reading():
     try:
         data = request.get_json()
         document_id = data.get('document_id')
-        action = data.get('action', 'continue')
         
         if not document_id:
             return jsonify({"success": False, "message": "Document ID required"})
         
         # Get existing voice tutor instance (in production, use session management)
-        voice_tutor = VoiceTutor()
-        result = voice_tutor.continue_reading(document_id, action)
+        voice_tutor = SimpleVoiceTutor()
+        result = voice_tutor.continue_reading(document_id)
         
         return jsonify(result)
         
@@ -478,7 +477,7 @@ def api_speak_text():
         if not text:
             return jsonify({"success": False, "message": "Text required"})
         
-        voice_tutor = VoiceTutor()
+        voice_tutor = SimpleVoiceTutor()
         
         # Generate TTS audio file
         voice_config = voice_tutor.get_voice_config(subject)
@@ -523,7 +522,7 @@ def api_process_response():
         if not all([document_id, user_response, question]):
             return jsonify({"success": False, "message": "Missing required data"})
         
-        voice_tutor = VoiceTutor()
+        voice_tutor = SimpleVoiceTutor()
         result = voice_tutor.process_user_response(document_id, user_response, question, context)
         
         return jsonify(result)

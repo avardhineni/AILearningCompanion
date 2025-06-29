@@ -294,15 +294,18 @@ function startReading() {
             
             isReading = true;
             
-            // Speak welcome message
+            // Speak welcome message and start reading
             if (data.welcome_message) {
                 speakText(data.welcome_message, data.document.subject);
-            }
-            
-            // Start reading first chunk
-            setTimeout(() => {
+                
+                // Start reading first chunk after welcome message
+                setTimeout(() => {
+                    continueReading();
+                }, 4000);
+            } else {
+                // Start reading immediately if no welcome message
                 continueReading();
-            }, 3000);
+            }
             
         } else {
             alert('Error: ' + data.message);
@@ -326,8 +329,7 @@ function continueReading() {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            document_id: currentDocumentId,
-            action: 'continue'
+            document_id: currentDocumentId
         })
     })
     .then(response => response.json())
