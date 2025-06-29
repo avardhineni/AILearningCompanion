@@ -7,6 +7,7 @@ from app import app, db
 from models import Document, DocumentPage
 from document_processor import DocumentProcessor
 from ai_tutor import AITutor
+from voice_tutor import VoiceTutor
 import logging
 
 logger = logging.getLogger(__name__)
@@ -417,6 +418,119 @@ def test_page():
     """Test page for AI functionality"""
     from flask import send_file
     return send_file('test_ai.html')
+
+# Voice Tutoring Routes
+@app.route('/interactive-reading')
+def interactive_reading():
+    """Show the interactive reading page"""
+    documents = Document.query.order_by(Document.upload_date.desc()).all()
+    return render_template('interactive_reading.html', documents=documents)
+
+@app.route('/api/voice/start-reading', methods=['POST'])
+def api_start_reading():
+    """Start interactive reading session"""
+    try:
+        data = request.get_json()
+        document_id = data.get('document_id')
+        
+        if not document_id:
+            return jsonify({"success": False, "message": "Document ID required"})
+        
+        # Initialize voice tutor
+        voice_tutor = VoiceTutor()
+        result = voice_tutor.start_interactive_reading(document_id)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error starting reading session: {e}")
+        return jsonify({"success": False, "message": "Failed to start reading session"})
+
+@app.route('/api/voice/continue-reading', methods=['POST'])
+def api_continue_reading():
+    """Continue or control reading session"""
+    try:
+        data = request.get_json()
+        document_id = data.get('document_id')
+        action = data.get('action', 'continue')
+        
+        if not document_id:
+            return jsonify({"success": False, "message": "Document ID required"})
+        
+        # Get existing voice tutor instance (in production, use session management)
+        voice_tutor = VoiceTutor()
+        result = voice_tutor.continue_reading(document_id, action)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error controlling reading session: {e}")
+        return jsonify({"success": False, "message": "Failed to control reading"})
+
+@app.route('/api/voice/speak', methods=['POST'])
+def api_speak_text():
+    """Convert text to speech and return audio file"""
+    try:
+        data = request.get_json()
+        text = data.get('text')
+        subject = data.get('subject', 'English')
+        
+        if not text:
+            return jsonify({"success": False, "message": "Text required"})
+        
+        voice_tutor = VoiceTutor()
+        
+        # Generate TTS audio file
+        voice_config = voice_tutor.get_voice_config(subject)
+        
+        from gtts import gTTS
+        tts = gTTS(
+            text=text,
+            lang=voice_config['lang'],
+            tld=voice_config['tld']
+        )
+        
+        # Save to temporary file and return URL
+        import uuid
+        filename = f"tts_{uuid.uuid4().hex}.mp3"
+        filepath = os.path.join('static', 'audio', filename)
+        
+        # Create audio directory if it doesn't exist
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
+        tts.save(filepath)
+        
+        return jsonify({
+            "success": True,
+            "audio_url": f"/static/audio/{filename}",
+            "message": "Audio generated successfully"
+        })
+        
+    except Exception as e:
+        logging.error(f"Error generating speech: {e}")
+        return jsonify({"success": False, "message": "Failed to generate speech"})
+
+@app.route('/api/voice/process-response', methods=['POST'])
+def api_process_response():
+    """Process user's voice response"""
+    try:
+        data = request.get_json()
+        document_id = data.get('document_id')
+        user_response = data.get('user_response')
+        question = data.get('question')
+        context = data.get('context')
+        
+        if not all([document_id, user_response, question]):
+            return jsonify({"success": False, "message": "Missing required data"})
+        
+        voice_tutor = VoiceTutor()
+        result = voice_tutor.process_user_response(document_id, user_response, question, context)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error processing user response: {e}")
+        return jsonify({"success": False, "message": "Failed to process response"})
 
 @app.route('/test-ai-direct')
 def test_ai_direct():

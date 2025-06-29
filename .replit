@@ -2,7 +2,7 @@ modules = ["python-3.11", "postgresql-16"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["openssl", "postgresql"]
+packages = ["SDL2", "SDL2_image", "SDL2_mixer", "SDL2_ttf", "ffmpeg-full", "fontconfig", "freetype", "libjpeg", "libpng", "openssl", "pkg-config", "portaudio", "portmidi", "postgresql"]
 
 [deployment]
 deploymentTarget = "autoscale"

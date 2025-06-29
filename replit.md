@@ -100,9 +100,18 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
-- June 29, 2025: Removed Quick Upload navigation option per user preference
+- June 29, 2025: Implemented comprehensive voice-based interactive tutoring system
+- Added VoiceTutor class with text-to-speech and speech recognition capabilities
+- Created interactive reading interface with lesson playback and comprehension questions
+- Integrated gTTS for multilingual speech synthesis (Hindi, Telugu, English with Indian accent)
+- Added voice-based lesson reading with pause/resume functionality
+- Implemented AI-generated comprehension questions during reading sessions
+- Added progress tracking and topic coverage monitoring
+- Created dedicated Voice Reading navigation option and interface
+- Enhanced home page with Voice Reading quick access card
+- Removed Quick Upload navigation option per user preference
 - Fixed invalid Feather icons (lightbulb → info) for better compatibility
-- Updated navigation to focus on Subjects and AI Tutor workflows only
+- Updated navigation to focus on Subjects, AI Tutor, and Voice Reading workflows
 - June 28, 2025: Removed Document Processing System from home page per user preference
 - Updated home page to focus on subject-based workflow with quick action cards
 - Transformed home page into educational dashboard with "Upload Lessons", "Ask Questions", and "My Lessons" sections
@@ -144,6 +153,16 @@ This is a Flask-based web application designed to process educational Word docum
 - **Quiz Generation**: Automatic creation of practice questions based on lesson content
 - **Age-Appropriate Responses**: Answers are tailored for 5th grade students (age 10-11)
 - **Free AI Model**: Uses Google Gemini which provides free tier access
+
+## Voice-Based Interactive Tutoring Features
+- **Text-to-Speech**: Multilingual voice synthesis with Indian accent support (Hindi, Telugu, English)
+- **Interactive Reading**: Line-by-line lesson reading with child-friendly explanations
+- **Comprehension Questions**: AI-generated questions during reading to ensure understanding
+- **Voice Controls**: Play, pause, resume, and stop functionality during lessons
+- **Progress Tracking**: Monitors reading progress and topic coverage
+- **Language-Specific Voices**: Hindi lessons use Hindi voice, Telugu lessons use Telugu voice
+- **Encouraging Feedback**: AI provides motivational responses to student answers
+- **Content Simplification**: Complex concepts explained in age-appropriate language
 
 ## Changelog
 - June 27, 2025. Initial setup and AI tutoring system completion

@@ -57,26 +57,26 @@
         </div>
     </div>
     
-    <!-- View Documents -->
+    <!-- Voice Reading -->
     <div class="col-lg-4 mb-4">
         <div class="card h-100">
             <div class="card-header">
                 <h5 class="card-title mb-0">
-                    <i data-feather="book" class="me-2"></i>
-                    My Lessons
+                    <i data-feather="volume-2" class="me-2"></i>
+                    Voice Reading
                 </h5>
             </div>
             <div class="card-body">
-                <p class="text-muted">Review uploaded lessons and manage your study materials.</p>
-                <div class="d-grid">
-                    <small class="text-muted mb-2">{{ documents|length }} lessons uploaded</small>
-                    <div class="btn-group">
-                        <a href="#documentsList" class="btn btn-outline-primary btn-sm">View All</a>
-                    </div>
-                </div>
+                <p class="text-muted">Interactive voice-based lesson reading with comprehension questions.</p>
+                <a href="{{ url_for('interactive_reading') }}" class="btn btn-info">
+                    <i data-feather="play" class="me-2"></i>
+                    Listen & Learn
+                </a>
             </div>
         </div>
     </div>
+    
+
 </div>
 
 <!-- Documents List -->

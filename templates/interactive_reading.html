@@ -1,0 +1,550 @@
+{% extends "base.html" %}
+
+{% block title %}Interactive Voice Reading - AI Tutor{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h3 mb-0">
+                <i data-feather="volume-2" class="me-2"></i>
+                Interactive Voice Reading
+            </h1>
+        </div>
+        
+        <p class="text-muted lead">
+            Choose a lesson for voice-based interactive reading. The AI tutor will read the lesson aloud, 
+            explain concepts in simple terms, and ask questions to ensure understanding.
+        </p>
+    </div>
+</div>
+
+<!-- Lesson Selection -->
+<div class="row" id="lesson-selection">
+    <div class="col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i data-feather="book-open" class="me-2"></i>
+                    Select a Lesson to Read
+                </h5>
+            </div>
+            <div class="card-body">
+                <form id="reading-form">
+                    <div class="mb-4">
+                        <label for="document_id" class="form-label">Choose Lesson</label>
+                        <select class="form-select" id="document_id" name="document_id" required>
+                            <option value="">Choose a lesson...</option>
+                            {% set subjects = ['English', 'Maths', 'Science', 'Social', 'Hindi', 'Telugu', 'IT-Computers', 'GK', 'Value Education'] %}
+                            {% for subject in subjects %}
+                                {% set subject_docs = documents | selectattr('subject', 'equalto', subject) | list %}
+                                {% if subject_docs %}
+                                    <optgroup label="{{ subject }}">
+                                        {% for doc in subject_docs %}
+                                            <option value="{{ doc.id }}" data-subject="{{ doc.subject }}">
+                                                {% if doc.chapter_number %}{{ doc.chapter_number }} - {% endif %}
+                                                {{ doc.lesson_title[:60] }}{% if doc.lesson_title|length > 60 %}...{% endif %}
+                                            </option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i data-feather="play" class="me-2"></i>
+                            Start Interactive Reading
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reading Interface -->
+<div class="row" id="reading-interface" style="display: none;">
+    <div class="col-12">
+        <!-- Current Lesson Info -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="card-title mb-0" id="lesson-title">Lesson Title</h5>
+                    <small class="text-muted" id="lesson-subject">Subject</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-info" id="progress-badge">Page 1 of 10</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Audio Player and Controls -->
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <div class="mb-3">
+                    <audio id="audio-player" controls style="width: 100%; max-width: 500px;">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+                
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    <button class="btn btn-success" id="play-btn">
+                        <i data-feather="play" class="me-1"></i>
+                        Play
+                    </button>
+                    <button class="btn btn-warning" id="pause-btn" disabled>
+                        <i data-feather="pause" class="me-1"></i>
+                        Pause
+                    </button>
+                    <button class="btn btn-info" id="continue-btn" disabled>
+                        <i data-feather="skip-forward" class="me-1"></i>
+                        Continue
+                    </button>
+                    <button class="btn btn-danger" id="stop-btn" disabled>
+                        <i data-feather="stop-circle" class="me-1"></i>
+                        Stop
+                    </button>
+                </div>
+                
+                <div class="text-muted small">
+                    <i data-feather="volume-2" class="me-1"></i>
+                    Voice-based interactive reading with comprehension questions
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content Display -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i data-feather="file-text" class="me-2"></i>
+                    Current Content
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="current-content" class="mb-3">
+                    Content will appear here as the lesson is read...
+                </div>
+                <div id="simplified-explanation" class="p-3 bg-info bg-opacity-10 rounded" style="display: none;">
+                    <h6 class="text-info mb-2">
+                        <i data-feather="message-circle" class="me-1"></i>
+                        Simple Explanation:
+                    </h6>
+                    <div id="explanation-text"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Question Interface -->
+        <div class="card" id="question-card" style="display: none;">
+            <div class="card-header">
+                <h6 class="card-title mb-0">
+                    <i data-feather="help-circle" class="me-2"></i>
+                    Comprehension Question
+                </h6>
+            </div>
+            <div class="card-body">
+                <div id="question-text" class="mb-3 p-3 bg-warning bg-opacity-10 rounded">
+                    Question will appear here...
+                </div>
+                
+                <div class="mb-3">
+                    <label for="user-response" class="form-label">Your Answer:</label>
+                    <textarea class="form-control" id="user-response" rows="3" 
+                              placeholder="Type your answer here or use the microphone button to speak..."></textarea>
+                </div>
+                
+                <div class="d-flex gap-2 mb-3">
+                    <button class="btn btn-primary" id="submit-answer-btn">
+                        <i data-feather="check" class="me-1"></i>
+                        Submit Answer
+                    </button>
+                    <button class="btn btn-outline-secondary" id="voice-input-btn">
+                        <i data-feather="mic" class="me-1"></i>
+                        Voice Input
+                    </button>
+                    <button class="btn btn-outline-info" id="skip-question-btn">
+                        <i data-feather="skip-forward" class="me-1"></i>
+                        Skip Question
+                    </button>
+                </div>
+                
+                <div id="feedback-area" style="display: none;">
+                    <div class="p-3 bg-success bg-opacity-10 rounded">
+                        <h6 class="text-success mb-2">
+                            <i data-feather="message-square" class="me-1"></i>
+                            AI Tutor Feedback:
+                        </h6>
+                        <div id="feedback-text"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Indicator -->
+<div class="text-center" id="loading-indicator" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2 text-muted">Processing...</p>
+</div>
+
+<style>
+.audio-visualizer {
+    height: 50px;
+    background: linear-gradient(90deg, #007bff, #28a745);
+    border-radius: 5px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+}
+
+.question-highlight {
+    border-left: 4px solid #ffc107;
+    background-color: rgba(255, 193, 7, 0.1);
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.speaking {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+</style>
+
+<script>
+let currentDocumentId = null;
+let currentQuestion = null;
+let currentContext = null;
+let isReading = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const readingForm = document.getElementById('reading-form');
+    const lessonSelection = document.getElementById('lesson-selection');
+    const readingInterface = document.getElementById('reading-interface');
+    const audioPlayer = document.getElementById('audio-player');
+    
+    // Form submission
+    readingForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        startReading();
+    });
+    
+    // Control buttons
+    document.getElementById('play-btn').addEventListener('click', () => playCurrentAudio());
+    document.getElementById('pause-btn').addEventListener('click', () => pauseReading());
+    document.getElementById('continue-btn').addEventListener('click', () => continueReading());
+    document.getElementById('stop-btn').addEventListener('click', () => stopReading());
+    
+    // Question handling
+    document.getElementById('submit-answer-btn').addEventListener('click', () => submitAnswer());
+    document.getElementById('voice-input-btn').addEventListener('click', () => startVoiceInput());
+    document.getElementById('skip-question-btn').addEventListener('click', () => skipQuestion());
+    
+    // Audio player events
+    audioPlayer.addEventListener('ended', () => {
+        if (isReading) {
+            continueReading();
+        }
+    });
+});
+
+function startReading() {
+    const documentId = document.getElementById('document_id').value;
+    if (!documentId) {
+        alert('Please select a lesson');
+        return;
+    }
+    
+    currentDocumentId = documentId;
+    showLoading(true);
+    
+    fetch('/api/voice/start-reading', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            document_id: documentId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        
+        if (data.success) {
+            // Show reading interface
+            document.getElementById('lesson-selection').style.display = 'none';
+            document.getElementById('reading-interface').style.display = 'block';
+            
+            // Update lesson info
+            document.getElementById('lesson-title').textContent = data.document.title;
+            document.getElementById('lesson-subject').textContent = data.document.subject;
+            document.getElementById('progress-badge').textContent = `Page 1 of ${data.document.total_pages}`;
+            
+            isReading = true;
+            
+            // Speak welcome message
+            if (data.welcome_message) {
+                speakText(data.welcome_message, data.document.subject);
+            }
+            
+            // Start reading first chunk
+            setTimeout(() => {
+                continueReading();
+            }, 3000);
+            
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        showLoading(false);
+        console.error('Error:', error);
+        alert('Failed to start reading session');
+    });
+}
+
+function continueReading() {
+    if (!currentDocumentId || !isReading) return;
+    
+    showLoading(true);
+    
+    fetch('/api/voice/continue-reading', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            document_id: currentDocumentId,
+            action: 'continue'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        
+        if (data.success) {
+            if (data.action === 'completed') {
+                showCompletionMessage();
+                return;
+            }
+            
+            // Update progress
+            if (data.progress) {
+                document.getElementById('progress-badge').textContent = 
+                    `Page ${data.progress.page} of ${data.progress.total_pages}`;
+            }
+            
+            // Show content
+            if (data.content) {
+                document.getElementById('current-content').innerHTML = data.original_content;
+                document.getElementById('explanation-text').innerHTML = data.content;
+                document.getElementById('simplified-explanation').style.display = 'block';
+                
+                currentContext = data.original_content;
+                
+                // Speak the content
+                speakText(data.content, getCurrentSubject());
+            }
+            
+            // Show question if available
+            if (data.question) {
+                currentQuestion = data.question;
+                setTimeout(() => {
+                    showQuestion(data.question);
+                }, 5000); // Show question after content is read
+            }
+            
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        showLoading(false);
+        console.error('Error:', error);
+        alert('Failed to continue reading');
+    });
+}
+
+function speakText(text, subject) {
+    showLoading(true);
+    
+    fetch('/api/voice/speak', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            text: text,
+            subject: subject
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        
+        if (data.success) {
+            const audioPlayer = document.getElementById('audio-player');
+            audioPlayer.src = data.audio_url;
+            audioPlayer.play();
+            
+            // Update button states
+            document.getElementById('play-btn').disabled = true;
+            document.getElementById('pause-btn').disabled = false;
+            document.getElementById('continue-btn').disabled = true;
+            document.getElementById('stop-btn').disabled = false;
+            
+            // Add speaking animation
+            document.getElementById('current-content').classList.add('speaking');
+            
+            audioPlayer.addEventListener('ended', function() {
+                document.getElementById('current-content').classList.remove('speaking');
+                document.getElementById('play-btn').disabled = false;
+                document.getElementById('pause-btn').disabled = true;
+                document.getElementById('continue-btn').disabled = false;
+            }, { once: true });
+            
+        } else {
+            alert('Error generating speech: ' + data.message);
+        }
+    })
+    .catch(error => {
+        showLoading(false);
+        console.error('Error:', error);
+        alert('Failed to generate speech');
+    });
+}
+
+function showQuestion(question) {
+    document.getElementById('question-text').innerHTML = question;
+    document.getElementById('question-card').style.display = 'block';
+    document.getElementById('question-card').scrollIntoView({ behavior: 'smooth' });
+    
+    // Speak the question
+    speakText(question, getCurrentSubject());
+}
+
+function submitAnswer() {
+    const userResponse = document.getElementById('user-response').value.trim();
+    if (!userResponse || !currentQuestion) {
+        alert('Please provide an answer');
+        return;
+    }
+    
+    showLoading(true);
+    
+    fetch('/api/voice/process-response', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            document_id: currentDocumentId,
+            user_response: userResponse,
+            question: currentQuestion,
+            context: currentContext
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        
+        if (data.success) {
+            // Show feedback
+            document.getElementById('feedback-text').innerHTML = data.feedback;
+            document.getElementById('feedback-area').style.display = 'block';
+            
+            // Speak feedback
+            speakText(data.feedback, getCurrentSubject());
+            
+            // Clear question after 5 seconds
+            setTimeout(() => {
+                hideQuestion();
+                continueReading();
+            }, 5000);
+            
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        showLoading(false);
+        console.error('Error:', error);
+        alert('Failed to process response');
+    });
+}
+
+function skipQuestion() {
+    hideQuestion();
+    continueReading();
+}
+
+function hideQuestion() {
+    document.getElementById('question-card').style.display = 'none';
+    document.getElementById('user-response').value = '';
+    document.getElementById('feedback-area').style.display = 'none';
+    currentQuestion = null;
+}
+
+function pauseReading() {
+    const audioPlayer = document.getElementById('audio-player');
+    audioPlayer.pause();
+    
+    document.getElementById('play-btn').disabled = false;
+    document.getElementById('pause-btn').disabled = true;
+}
+
+function playCurrentAudio() {
+    const audioPlayer = document.getElementById('audio-player');
+    audioPlayer.play();
+    
+    document.getElementById('play-btn').disabled = true;
+    document.getElementById('pause-btn').disabled = false;
+}
+
+function stopReading() {
+    isReading = false;
+    const audioPlayer = document.getElementById('audio-player');
+    audioPlayer.pause();
+    audioPlayer.currentTime = 0;
+    
+    // Reset interface
+    document.getElementById('lesson-selection').style.display = 'block';
+    document.getElementById('reading-interface').style.display = 'none';
+    
+    // Reset variables
+    currentDocumentId = null;
+    currentQuestion = null;
+    currentContext = null;
+}
+
+function startVoiceInput() {
+    alert('Voice input feature coming soon! Please type your answer for now.');
+}
+
+function getCurrentSubject() {
+    return document.getElementById('lesson-subject').textContent;
+}
+
+function showCompletionMessage() {
+    alert('Congratulations! You have completed the lesson.');
+    stopReading();
+}
+
+function showLoading(show) {
+    const indicator = document.getElementById('loading-indicator');
+    indicator.style.display = show ? 'block' : 'none';
+}
+</script>
+{% endblock %}
