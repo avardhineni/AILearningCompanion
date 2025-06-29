@@ -53,7 +53,7 @@
                     </div>
                     
                     <div class="d-grid">
-                        <button type="submit" class="btn btn-primary btn-lg">
+                        <button type="submit" class="btn btn-primary btn-lg" id="start-reading-btn">
                             <i data-feather="play" class="me-2"></i>
                             Start Interactive Reading
                         </button>
@@ -552,8 +552,20 @@ function showCompletionMessage() {
 }
 
 function showLoading(show) {
-    const indicator = document.getElementById('loading-indicator');
-    indicator.style.display = show ? 'block' : 'none';
+    const button = document.getElementById('start-reading-btn');
+    if (button) {
+        if (show) {
+            button.innerHTML = '<i data-feather="loader" class="me-2"></i>Processing...';
+            button.disabled = true;
+        } else {
+            button.innerHTML = '<i data-feather="play" class="me-2"></i>Start Interactive Reading';
+            button.disabled = false;
+        }
+        // Re-render feather icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+    }
 }
 </script>
 {% endblock %}
