@@ -100,6 +100,9 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- June 29, 2025: Removed Quick Upload navigation option per user preference
+- Fixed invalid Feather icons (lightbulb → info) for better compatibility
+- Updated navigation to focus on Subjects and AI Tutor workflows only
 - June 28, 2025: Removed Document Processing System from home page per user preference
 - Updated home page to focus on subject-based workflow with quick action cards
 - Transformed home page into educational dashboard with "Upload Lessons", "Ask Questions", and "My Lessons" sections
