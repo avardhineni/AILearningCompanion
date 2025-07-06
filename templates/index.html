@@ -128,7 +128,10 @@
                                                 <i data-feather="eye" class="me-1"></i>
                                                 View
                                             </a>
-                                            <button type="button" class="btn btn-outline-danger delete-btn" onclick="deleteDocument({{ doc.id }}, '{{ doc.lesson_title }}', this)">
+                                            <button type="button" class="btn btn-outline-danger delete-btn" 
+                                                    data-doc-id="{{ doc.id }}" 
+                                                    data-doc-title="{{ doc.lesson_title }}"
+                                                    onclick="deleteDocument(this)">
                                                 <i data-feather="trash-2"></i>
                                             </button>
                                         </div>
@@ -151,7 +154,10 @@
 </div>
 
 <script>
-function deleteDocument(docId, title, button) {
+function deleteDocument(button) {
+    const docId = button.getAttribute('data-doc-id');
+    const title = button.getAttribute('data-doc-title');
+    
     if (!confirm(`Are you sure you want to delete "${title}"?`)) {
         return;
     }
