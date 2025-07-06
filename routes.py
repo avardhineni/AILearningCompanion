@@ -556,6 +556,52 @@ def api_ask_doubt():
         logging.error(f"Error handling doubt: {e}")
         return jsonify({"success": False, "message": "Failed to process doubt"})
 
+@app.route('/api/voice/get-answer', methods=['POST'])
+def api_get_answer():
+    """Get the answer to a comprehension question"""
+    try:
+        data = request.get_json()
+        document_id = data.get('document_id')
+        question = data.get('question')
+        context = data.get('context')
+        
+        if not document_id or not question:
+            return jsonify({"success": False, "message": "Missing document ID or question"})
+        
+        # Get document to determine subject
+        document = Document.query.get(document_id)
+        if not document:
+            return jsonify({"success": False, "message": "Document not found"})
+        
+        # Use AI tutor to get the answer
+        tutor = AITutor()
+        result = tutor.ask_question(document_id, question)
+        
+        if 'error' in result:
+            return jsonify({"success": False, "message": result['error']})
+        
+        # Generate audio for the answer
+        voice_tutor = SimpleVoiceTutor()
+        clean_answer = voice_tutor.clean_text_for_speech(result['answer'])
+        
+        try:
+            audio_file = voice_tutor.generate_audio_file(clean_answer, document.subject)
+            audio_url = f"/static/audio/{os.path.basename(audio_file)}"
+        except Exception as e:
+            logging.error(f"Error generating audio: {e}")
+            audio_url = None
+        
+        return jsonify({
+            "success": True,
+            "answer": result['answer'],
+            "audio_url": audio_url,
+            "page_references": result.get('page_references', [])
+        })
+        
+    except Exception as e:
+        logging.error(f"Error getting answer: {e}")
+        return jsonify({"success": False, "message": "Failed to get answer"})
+
 @app.route('/test-ai-direct')
 def test_ai_direct():
     """Direct test of AI functionality"""

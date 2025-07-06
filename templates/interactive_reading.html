@@ -208,6 +208,10 @@
                         <i data-feather="mic" class="me-1"></i>
                         Voice Input
                     </button>
+                    <button class="btn btn-success" id="get-answer-btn">
+                        <i data-feather="lightbulb" class="me-1"></i>
+                        Click here for answer
+                    </button>
                     <button class="btn btn-outline-info" id="skip-question-btn">
                         <i data-feather="skip-forward" class="me-1"></i>
                         Skip Question
@@ -221,6 +225,20 @@
                             AI Tutor Feedback:
                         </h6>
                         <div id="feedback-text"></div>
+                    </div>
+                </div>
+                
+                <div id="answer-area" style="display: none;">
+                    <div class="p-3 bg-info bg-opacity-10 rounded">
+                        <h6 class="text-info mb-2">
+                            <i data-feather="lightbulb" class="me-1"></i>
+                            Answer:
+                        </h6>
+                        <div id="answer-text"></div>
+                        <button class="btn btn-outline-danger btn-sm mt-2" id="stop-answer-audio">
+                            <i data-feather="stop-circle" class="me-1"></i>
+                            Stop Audio
+                        </button>
                     </div>
                 </div>
             </div>
@@ -293,7 +311,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Question handling
     document.getElementById('submit-answer-btn').addEventListener('click', () => submitAnswer());
     document.getElementById('voice-input-btn').addEventListener('click', () => startVoiceInput());
+    document.getElementById('get-answer-btn').addEventListener('click', () => getAnswer());
     document.getElementById('skip-question-btn').addEventListener('click', () => skipQuestion());
+    document.getElementById('stop-answer-audio').addEventListener('click', () => stopAnswerAudio());
     
     // Audio player events
     audioPlayer.addEventListener('ended', () => {
@@ -574,7 +594,71 @@ function hideQuestion() {
     document.getElementById('question-card').style.display = 'none';
     document.getElementById('user-response').value = '';
     document.getElementById('feedback-area').style.display = 'none';
+    document.getElementById('answer-area').style.display = 'none';
     currentQuestion = null;
+}
+
+let answerAudio = null;
+
+function getAnswer() {
+    if (!currentQuestion) {
+        alert('No question available');
+        return;
+    }
+    
+    showLoading(true);
+    
+    fetch('/api/voice/get-answer', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            document_id: currentDocumentId,
+            question: currentQuestion,
+            context: currentContext
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        
+        if (data.success) {
+            // Show answer
+            document.getElementById('answer-text').innerHTML = data.answer;
+            document.getElementById('answer-area').style.display = 'block';
+            
+            // Play answer audio
+            if (data.audio_url) {
+                answerAudio = new Audio(data.audio_url);
+                answerAudio.play();
+                
+                // Continue reading after answer with 1-minute pause
+                answerAudio.addEventListener('ended', function() {
+                    setTimeout(() => {
+                        hideQuestion();
+                        continueReading();
+                    }, 60000); // 1 minute pause
+                }, { once: true });
+            }
+            
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        showLoading(false);
+        console.error('Error:', error);
+        alert('Failed to get answer');
+    });
+}
+
+function stopAnswerAudio() {
+    if (answerAudio) {
+        answerAudio.pause();
+        answerAudio.currentTime = 0;
+        answerAudio = null;
+    }
 }
 
 function pauseReading() {
