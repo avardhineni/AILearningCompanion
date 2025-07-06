@@ -594,8 +594,21 @@ function hideQuestion() {
     document.getElementById('question-card').style.display = 'none';
     document.getElementById('user-response').value = '';
     document.getElementById('feedback-area').style.display = 'none';
+    // Don't hide answer area if it's currently showing an answer
+    const answerArea = document.getElementById('answer-area');
+    if (answerArea && answerArea.style.display !== 'block') {
+        answerArea.style.display = 'none';
+    }
+    currentQuestion = null;
+}
+
+function hideAnswerAndContinue() {
+    document.getElementById('question-card').style.display = 'none';
+    document.getElementById('user-response').value = '';
+    document.getElementById('feedback-area').style.display = 'none';
     document.getElementById('answer-area').style.display = 'none';
     currentQuestion = null;
+    continueReading();
 }
 
 let answerAudio = null;
@@ -645,11 +658,28 @@ function getAnswer() {
             console.log('Answer received:', data.answer);
             
             // Show answer
-            document.getElementById('answer-text').innerHTML = data.answer;
-            document.getElementById('answer-area').style.display = 'block';
+            const answerTextElement = document.getElementById('answer-text');
+            const answerAreaElement = document.getElementById('answer-area');
             
-            // Scroll to answer area
-            document.getElementById('answer-area').scrollIntoView({ behavior: 'smooth' });
+            console.log('Answer text element:', answerTextElement);
+            console.log('Answer area element:', answerAreaElement);
+            
+            if (answerTextElement && answerAreaElement) {
+                answerTextElement.innerHTML = data.answer;
+                answerAreaElement.style.display = 'block';
+                console.log('Answer text set successfully');
+                
+                // Force refresh the display
+                answerAreaElement.style.visibility = 'visible';
+                answerAreaElement.style.opacity = '1';
+                
+                // Scroll to answer area after a short delay
+                setTimeout(() => {
+                    answerAreaElement.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            } else {
+                console.error('Answer elements not found!');
+            }
             
             // Play answer audio
             if (data.audio_url) {
@@ -662,8 +692,7 @@ function getAnswer() {
                     console.log('Answer audio ended, starting 1-minute pause before continuing');
                     setTimeout(() => {
                         console.log('1-minute pause completed, continuing reading');
-                        hideQuestion();
-                        continueReading();
+                        hideAnswerAndContinue();
                     }, 60000); // 1 minute pause
                 }, { once: true });
             } else {
@@ -671,8 +700,7 @@ function getAnswer() {
                 // If no audio, still provide 1-minute pause
                 setTimeout(() => {
                     console.log('1-minute pause completed, continuing reading');
-                    hideQuestion();
-                    continueReading();
+                    hideAnswerAndContinue();
                 }, 60000);
             }
             
