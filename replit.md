@@ -1,4 +1,4 @@
-# AI Tutor Document Processor
+# TutionBuddy - Students Smart Study Partner
 
 ## Overview
 
@@ -100,6 +100,8 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- July 6, 2025: Updated application name from "AI Tutor - Document Processor" to "TutionBuddy - Students Smart Study Partner"
+- Updated all templates, navigation, titles, and documentation to reflect the new branding
 - July 6, 2025: Removed Comprehension Question Section completely per user request
 - Eliminated all question generation during voice reading sessions for uninterrupted content delivery
 - Cleaned up JavaScript functions related to question handling (showQuestion, submitAnswer, getAnswer, skipQuestion)

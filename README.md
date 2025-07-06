@@ -1,4 +1,4 @@
-# AI Tutor - Educational Document Processing & Tutoring System
+# TutionBuddy - Students Smart Study Partner
 
 An advanced AI-powered educational platform designed for 5th grade CBSE students, supporting personalized, multilingual learning experiences across multiple academic subjects.
 
