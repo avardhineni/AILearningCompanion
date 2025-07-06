@@ -209,7 +209,7 @@
                         Voice Input
                     </button>
                     <button class="btn btn-success" id="get-answer-btn">
-                        <i data-feather="lightbulb" class="me-1"></i>
+                        <i data-feather="info" class="me-1"></i>
                         Click here for answer
                     </button>
                     <button class="btn btn-outline-info" id="skip-question-btn">
@@ -231,7 +231,7 @@
                 <div id="answer-area" style="display: none;">
                     <div class="p-3 bg-info bg-opacity-10 rounded">
                         <h6 class="text-info mb-2">
-                            <i data-feather="lightbulb" class="me-1"></i>
+                            <i data-feather="info" class="me-1"></i>
                             Answer:
                         </h6>
                         <div id="answer-text"></div>
@@ -628,6 +628,9 @@ function getAnswer() {
             document.getElementById('answer-text').innerHTML = data.answer;
             document.getElementById('answer-area').style.display = 'block';
             
+            // Scroll to answer area
+            document.getElementById('answer-area').scrollIntoView({ behavior: 'smooth' });
+            
             // Play answer audio
             if (data.audio_url) {
                 answerAudio = new Audio(data.audio_url);
@@ -635,11 +638,18 @@ function getAnswer() {
                 
                 // Continue reading after answer with 1-minute pause
                 answerAudio.addEventListener('ended', function() {
+                    console.log('Answer audio ended, starting 1-minute pause before continuing');
                     setTimeout(() => {
                         hideQuestion();
                         continueReading();
                     }, 60000); // 1 minute pause
                 }, { once: true });
+            } else {
+                // If no audio, still provide 1-minute pause
+                setTimeout(() => {
+                    hideQuestion();
+                    continueReading();
+                }, 60000);
             }
             
         } else {

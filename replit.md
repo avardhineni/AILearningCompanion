@@ -100,6 +100,9 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- July 6, 2025: Added "Click here for answer" button for comprehension questions with voice playback and 1-minute pause
+- Fixed invalid Feather icon "lightbulb" to "info" for better compatibility
+- Enhanced answer display functionality with proper text rendering and audio controls
 - June 29, 2025: Successfully completed voice-based interactive tutoring system with "Ask a Doubt" functionality
 - Replaced "Simple Explanation" feature with comprehensive doubt-answering system allowing typed and voice questions
 - Implemented real voice recognition using Web Speech API for microphone input with proper error handling
