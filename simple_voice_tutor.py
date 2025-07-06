@@ -57,6 +57,9 @@ class SimpleVoiceTutor:
     
     def clean_text_for_speech(self, text):
         """Clean text by removing markdown symbols and formatting for speech"""
+        if not text:
+            return ""
+            
         # Remove markdown bold and italic symbols
         text = re.sub(r'\*+', '', text)
         
@@ -66,13 +69,47 @@ class SimpleVoiceTutor:
         # Remove markdown underline
         text = re.sub(r'_+', '', text)
         
+        # Remove emojis and special symbols but keep basic punctuation and apostrophes
+        text = re.sub(r'[💫✨🌎🪐🔸]', '', text)
+        
         # Remove extra spaces
         text = re.sub(r'\s+', ' ', text)
         
-        # Remove special characters that don't belong in speech
-        text = re.sub(r'[^\w\s.,!?;:()\-\'"]', ' ', text)
-        
         return text.strip()
+    
+    def make_content_interactive(self, content, chunk_number, subject):
+        """Make content more interactive and engaging for voice reading"""
+        voice_config = self.get_voice_config(subject)
+        
+        # Clean the content first
+        content = self.clean_text_for_speech(content)
+        
+        # Add interactive elements based on language
+        if voice_config['lang'] == 'hi':
+            if chunk_number == 0:
+                interactive_content = f"चलिए शुरू करते हैं। {content}। क्या यह दिलचस्प नहीं है?"
+            elif chunk_number % 3 == 0:
+                interactive_content = f"अब देखते हैं। {content}। आपको यह कैसा लग रहा है?"
+            else:
+                interactive_content = f"{content}। बहुत अच्छा!"
+        elif voice_config['lang'] == 'te':
+            if chunk_number == 0:
+                interactive_content = f"మొదలుపెట్టండి। {content}। ఇది ఆసక్తికరంగా లేదా?"
+            elif chunk_number % 3 == 0:
+                interactive_content = f"ఇప్పుడు చూడండి। {content}। మీకు ఇది ఎలా అనిపిస్తుంది?"
+            else:
+                interactive_content = f"{content}। చాలా బాగుంది!"
+        else:
+            if chunk_number == 0:
+                interactive_content = f"Let's begin. {content}. Isn't this interesting?"
+            elif chunk_number % 3 == 0:
+                interactive_content = f"Now let's see. {content}. How does this sound to you?"
+            elif chunk_number % 4 == 0:
+                interactive_content = f"Here's something fascinating. {content}. Amazing, right?"
+            else:
+                interactive_content = f"{content}. Great!"
+        
+        return interactive_content
 
     def generate_audio_file(self, text, subject):
         """Generate audio file and return the file path"""
@@ -259,11 +296,11 @@ class SimpleVoiceTutor:
         voice_config = self.get_voice_config(subject)
         
         if voice_config['lang'] == 'hi':
-            return f"नमस्ते! आज हम '{lesson_title}' पाठ पढ़ेंगे। क्या आप तैयार हैं?"
+            return f"नमस्ते! आज हम {lesson_title} नाम का पाठ पढ़ेंगे। क्या आप तैयार हैं सीखने के लिए? चलिए शुरू करते हैं!"
         elif voice_config['lang'] == 'te':
-            return f"నమస్కారం! ఈ రోజు మనం '{lesson_title}' పాఠాన్ని చదువుకుందాం। మీరు సిద్ధంగా ఉన్నారా?"
+            return f"నమస్కారం! ఈ రోజు మనం {lesson_title} అనే పాఠాన్ని చదువుకుందాం। మీరు నేర్చుకోవడానికి సిద్ధంగా ఉన్నారా? మొదలుపెట్టండి!"
         else:
-            return f"Hello! Today we will read the lesson '{lesson_title}'. Are you ready to learn?"
+            return f"Hello! Today we will read the lesson {lesson_title}. Are you ready to learn? Let's begin our learning journey together!"
     
     def continue_reading(self, document_id):
         """Continue the reading session"""
@@ -300,8 +337,9 @@ class SimpleVoiceTutor:
                 
                 return self.continue_reading(document_id)
             
-            # Get current chunk and clean it for speech
-            current_chunk = self.clean_text_for_speech(chunks[progress['current_chunk']])
+            # Get current chunk and make it interactive
+            raw_chunk = chunks[progress['current_chunk']]
+            current_chunk = self.make_content_interactive(raw_chunk, progress['current_chunk'], subject)
             
             # Move to next chunk
             progress['current_chunk'] += 1
