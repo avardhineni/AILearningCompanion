@@ -100,7 +100,12 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
-- July 6, 2025: Added "Click here for answer" button for comprehension questions with voice playback and 1-minute pause
+- July 6, 2025: Removed Comprehension Question Section completely per user request
+- Eliminated all question generation during voice reading sessions for uninterrupted content delivery
+- Cleaned up JavaScript functions related to question handling (showQuestion, submitAnswer, getAnswer, skipQuestion)
+- Updated SimpleVoiceTutor to focus purely on content reading without interrupting questions
+- Maintained "Ask a Doubt" functionality for student-initiated questions
+- Previously attempted: Added "Click here for answer" button for comprehension questions with voice playback and 1-minute pause
 - Fixed invalid Feather icon "lightbulb" to "info" for better compatibility
 - Enhanced answer display functionality with proper text rendering and audio controls
 - June 29, 2025: Successfully completed voice-based interactive tutoring system with "Ask a Doubt" functionality

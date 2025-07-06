@@ -180,69 +180,7 @@
             </div>
         </div>
         
-        <!-- Question Interface -->
-        <div class="card" id="question-card" style="display: none;">
-            <div class="card-header">
-                <h6 class="card-title mb-0">
-                    <i data-feather="help-circle" class="me-2"></i>
-                    Comprehension Question
-                </h6>
-            </div>
-            <div class="card-body">
-                <div id="question-text" class="mb-3 p-3 bg-warning bg-opacity-10 rounded">
-                    Question will appear here...
-                </div>
-                
-                <div class="mb-3">
-                    <label for="user-response" class="form-label">Your Answer:</label>
-                    <textarea class="form-control" id="user-response" rows="3" 
-                              placeholder="Type your answer here or use the microphone button to speak..."></textarea>
-                </div>
-                
-                <div class="d-flex gap-2 mb-3">
-                    <button class="btn btn-primary" id="submit-answer-btn">
-                        <i data-feather="check" class="me-1"></i>
-                        Submit Answer
-                    </button>
-                    <button class="btn btn-outline-secondary" id="voice-input-btn">
-                        <i data-feather="mic" class="me-1"></i>
-                        Voice Input
-                    </button>
-                    <button class="btn btn-success" id="get-answer-btn">
-                        <i data-feather="info" class="me-1"></i>
-                        Click here for answer
-                    </button>
-                    <button class="btn btn-outline-info" id="skip-question-btn">
-                        <i data-feather="skip-forward" class="me-1"></i>
-                        Skip Question
-                    </button>
-                </div>
-                
-                <div id="feedback-area" style="display: none;">
-                    <div class="p-3 bg-success bg-opacity-10 rounded">
-                        <h6 class="text-success mb-2">
-                            <i data-feather="message-square" class="me-1"></i>
-                            AI Tutor Feedback:
-                        </h6>
-                        <div id="feedback-text"></div>
-                    </div>
-                </div>
-                
-                <div id="answer-area" style="display: none;">
-                    <div class="p-3 bg-info bg-opacity-10 rounded">
-                        <h6 class="text-info mb-2">
-                            <i data-feather="info" class="me-1"></i>
-                            Answer:
-                        </h6>
-                        <div id="answer-text"></div>
-                        <button class="btn btn-outline-danger btn-sm mt-2" id="stop-answer-audio">
-                            <i data-feather="stop-circle" class="me-1"></i>
-                            Stop Audio
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+
     </div>
 </div>
 
@@ -285,8 +223,6 @@
 
 <script>
 let currentDocumentId = null;
-let currentQuestion = null;
-let currentContext = null;
 let isReading = false;
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -308,12 +244,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('continue-btn').addEventListener('click', () => continueReading());
     document.getElementById('stop-btn').addEventListener('click', () => stopReading());
     
-    // Question handling
-    document.getElementById('submit-answer-btn').addEventListener('click', () => submitAnswer());
-    document.getElementById('voice-input-btn').addEventListener('click', () => startVoiceInput());
-    document.getElementById('get-answer-btn').addEventListener('click', () => getAnswer());
-    document.getElementById('skip-question-btn').addEventListener('click', () => skipQuestion());
-    document.getElementById('stop-answer-audio').addEventListener('click', () => stopAnswerAudio());
+
+
     
     // Audio player events
     audioPlayer.addEventListener('ended', () => {
@@ -452,18 +384,8 @@ function continueReading() {
                 document.getElementById('current-content').innerHTML = data.content;
                 document.getElementById('ask-doubt-btn').style.display = 'block';
                 
-                currentContext = data.content;
-                
                 // Speak the content
                 speakText(data.content, getCurrentSubject());
-            }
-            
-            // Show question if available
-            if (data.question) {
-                currentQuestion = data.question;
-                setTimeout(() => {
-                    showQuestion(data.question);
-                }, 5000); // Show question after content is read
             }
             
         } else {
@@ -526,209 +448,11 @@ function speakText(text, subject) {
     });
 }
 
-function showQuestion(question) {
-    document.getElementById('question-text').innerHTML = question;
-    document.getElementById('question-card').style.display = 'block';
-    document.getElementById('question-card').scrollIntoView({ behavior: 'smooth' });
-    
-    // Speak the question
-    speakText(question, getCurrentSubject());
-}
 
-function submitAnswer() {
-    const userResponse = document.getElementById('user-response').value.trim();
-    if (!userResponse || !currentQuestion) {
-        alert('Please provide an answer');
-        return;
-    }
-    
-    showLoading(true);
-    
-    fetch('/api/voice/process-response', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            document_id: currentDocumentId,
-            user_response: userResponse,
-            question: currentQuestion,
-            context: currentContext
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        showLoading(false);
-        
-        if (data.success) {
-            // Show feedback
-            document.getElementById('feedback-text').innerHTML = data.feedback;
-            document.getElementById('feedback-area').style.display = 'block';
-            
-            // Speak feedback
-            speakText(data.feedback, getCurrentSubject());
-            
-            // Clear question after 5 seconds
-            setTimeout(() => {
-                hideQuestion();
-                continueReading();
-            }, 5000);
-            
-        } else {
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        showLoading(false);
-        console.error('Error:', error);
-        alert('Failed to process response');
-    });
-}
 
-function skipQuestion() {
-    hideQuestion();
-    continueReading();
-}
 
-function hideQuestion() {
-    document.getElementById('question-card').style.display = 'none';
-    document.getElementById('user-response').value = '';
-    document.getElementById('feedback-area').style.display = 'none';
-    // Don't hide answer area if it's currently showing an answer
-    const answerArea = document.getElementById('answer-area');
-    if (answerArea && answerArea.style.display !== 'block') {
-        answerArea.style.display = 'none';
-    }
-    currentQuestion = null;
-}
 
-function hideAnswerAndContinue() {
-    document.getElementById('question-card').style.display = 'none';
-    document.getElementById('user-response').value = '';
-    document.getElementById('feedback-area').style.display = 'none';
-    document.getElementById('answer-area').style.display = 'none';
-    currentQuestion = null;
-    continueReading();
-}
 
-let answerAudio = null;
-
-function getAnswer() {
-    if (!currentQuestion) {
-        alert('No question available');
-        return;
-    }
-    
-    console.log('Getting answer for question:', currentQuestion);
-    console.log('Document ID:', currentDocumentId);
-    
-    showLoading(true);
-    
-    // Change button to show processing state
-    const getAnswerBtn = document.getElementById('get-answer-btn');
-    const originalText = getAnswerBtn.innerHTML;
-    getAnswerBtn.disabled = true;
-    getAnswerBtn.innerHTML = '<i data-feather="loader" class="me-1"></i> Processing...';
-    
-    fetch('/api/voice/get-answer', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            document_id: currentDocumentId,
-            question: currentQuestion,
-            context: currentContext
-        })
-    })
-    .then(response => {
-        console.log('Response status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Response data:', data);
-        showLoading(false);
-        
-        // Reset button
-        getAnswerBtn.disabled = false;
-        getAnswerBtn.innerHTML = originalText;
-        feather.replace();
-        
-        if (data.success) {
-            console.log('Answer received:', data.answer);
-            
-            // Show answer
-            const answerTextElement = document.getElementById('answer-text');
-            const answerAreaElement = document.getElementById('answer-area');
-            
-            console.log('Answer text element:', answerTextElement);
-            console.log('Answer area element:', answerAreaElement);
-            
-            if (answerTextElement && answerAreaElement) {
-                answerTextElement.innerHTML = data.answer;
-                answerAreaElement.style.display = 'block';
-                console.log('Answer text set successfully');
-                
-                // Force refresh the display
-                answerAreaElement.style.visibility = 'visible';
-                answerAreaElement.style.opacity = '1';
-                
-                // Scroll to answer area after a short delay
-                setTimeout(() => {
-                    answerAreaElement.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
-            } else {
-                console.error('Answer elements not found!');
-            }
-            
-            // Play answer audio
-            if (data.audio_url) {
-                console.log('Playing answer audio:', data.audio_url);
-                answerAudio = new Audio(data.audio_url);
-                answerAudio.play();
-                
-                // Continue reading after answer with 1-minute pause
-                answerAudio.addEventListener('ended', function() {
-                    console.log('Answer audio ended, starting 1-minute pause before continuing');
-                    setTimeout(() => {
-                        console.log('1-minute pause completed, continuing reading');
-                        hideAnswerAndContinue();
-                    }, 60000); // 1 minute pause
-                }, { once: true });
-            } else {
-                console.log('No audio URL provided, starting 1-minute pause');
-                // If no audio, still provide 1-minute pause
-                setTimeout(() => {
-                    console.log('1-minute pause completed, continuing reading');
-                    hideAnswerAndContinue();
-                }, 60000);
-            }
-            
-        } else {
-            console.error('API error:', data.message);
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        showLoading(false);
-        console.error('Network error:', error);
-        
-        // Reset button on error
-        getAnswerBtn.disabled = false;
-        getAnswerBtn.innerHTML = originalText;
-        feather.replace();
-        
-        alert('Failed to get answer: ' + error.message);
-    });
-}
-
-function stopAnswerAudio() {
-    if (answerAudio) {
-        answerAudio.pause();
-        answerAudio.currentTime = 0;
-        answerAudio = null;
-    }
-}
 
 function pauseReading() {
     const audioPlayer = document.getElementById('audio-player');

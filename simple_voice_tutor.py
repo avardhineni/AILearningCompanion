@@ -210,48 +210,7 @@ class SimpleVoiceTutor:
             logging.error(f"Doubt answering error: {e}")
             return {"success": False, "message": f"Error: {str(e)}"}
     
-    def generate_comprehension_question(self, chunk, subject):
-        """Generate a comprehension question for the current chunk"""
-        try:
-            voice_config = self.get_voice_config(subject)
-            
-            if voice_config['lang'] == 'hi':
-                prompt = f"""
-                इस पाठ्य सामग्री के आधार पर एक सरल समझ का प्रश्न बनाएं जो 5वीं कक्षा के छात्र के लिए उपयुक्त हो।
-                
-                पाठ्य सामग्री: {chunk}
-                
-                केवल प्रश्न दें।
-                """
-            elif voice_config['lang'] == 'te':
-                prompt = f"""
-                ఈ పాఠ్య విషయం ఆధారంగా 5వ తరగతి విద్యార్థికి తగిన ఒక సరళమైన అవగాహన ప్రశ్న రూపొందించండి।
-                
-                పాఠ్య విషయం: {chunk}
-                
-                కేవలం ప్రశ్న మాత్రమే ఇవ్వండి।
-                """
-            else:
-                prompt = f"""
-                Based on this content, create a simple comprehension question suitable for a 5th grade student.
-                
-                Content: {chunk}
-                
-                Provide only the question.
-                """
-            
-            response = self.ai_tutor.client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
-            
-            if response.text:
-                return response.text.strip()
-                
-        except Exception as e:
-            logging.error(f"Question generation error: {e}")
-        
-        return None
+
     
     def start_interactive_reading(self, document_id):
         """Start interactive reading session for a document"""
@@ -351,19 +310,9 @@ class SimpleVoiceTutor:
             all_progress[str(document_id)] = progress
             self._save_progress(all_progress)
             
-            # Generate comprehension question occasionally
-            should_ask_question = (progress['current_chunk'] % 3 == 0)  # Every 3rd chunk
-            question = None
-            
-            if should_ask_question:
-                question = self.generate_comprehension_question(current_chunk, document.subject)
-                if question:
-                    progress['questions_asked'] += 1
-            
             return {
                 "success": True,
                 "content": current_chunk,  # Return original content for reading
-                "question": question,
                 "progress": {
                     "page": progress['current_page'],
                     "total_pages": document.total_pages,
