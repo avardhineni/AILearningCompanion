@@ -606,7 +606,16 @@ function getAnswer() {
         return;
     }
     
+    console.log('Getting answer for question:', currentQuestion);
+    console.log('Document ID:', currentDocumentId);
+    
     showLoading(true);
+    
+    // Change button to show processing state
+    const getAnswerBtn = document.getElementById('get-answer-btn');
+    const originalText = getAnswerBtn.innerHTML;
+    getAnswerBtn.disabled = true;
+    getAnswerBtn.innerHTML = '<i data-feather="loader" class="me-1"></i> Processing...';
     
     fetch('/api/voice/get-answer', {
         method: 'POST',
@@ -619,11 +628,22 @@ function getAnswer() {
             context: currentContext
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         showLoading(false);
         
+        // Reset button
+        getAnswerBtn.disabled = false;
+        getAnswerBtn.innerHTML = originalText;
+        feather.replace();
+        
         if (data.success) {
+            console.log('Answer received:', data.answer);
+            
             // Show answer
             document.getElementById('answer-text').innerHTML = data.answer;
             document.getElementById('answer-area').style.display = 'block';
@@ -633,6 +653,7 @@ function getAnswer() {
             
             // Play answer audio
             if (data.audio_url) {
+                console.log('Playing answer audio:', data.audio_url);
                 answerAudio = new Audio(data.audio_url);
                 answerAudio.play();
                 
@@ -640,26 +661,36 @@ function getAnswer() {
                 answerAudio.addEventListener('ended', function() {
                     console.log('Answer audio ended, starting 1-minute pause before continuing');
                     setTimeout(() => {
+                        console.log('1-minute pause completed, continuing reading');
                         hideQuestion();
                         continueReading();
                     }, 60000); // 1 minute pause
                 }, { once: true });
             } else {
+                console.log('No audio URL provided, starting 1-minute pause');
                 // If no audio, still provide 1-minute pause
                 setTimeout(() => {
+                    console.log('1-minute pause completed, continuing reading');
                     hideQuestion();
                     continueReading();
                 }, 60000);
             }
             
         } else {
+            console.error('API error:', data.message);
             alert('Error: ' + data.message);
         }
     })
     .catch(error => {
         showLoading(false);
-        console.error('Error:', error);
-        alert('Failed to get answer');
+        console.error('Network error:', error);
+        
+        // Reset button on error
+        getAnswerBtn.disabled = false;
+        getAnswerBtn.innerHTML = originalText;
+        feather.replace();
+        
+        alert('Failed to get answer: ' + error.message);
     });
 }
 
