@@ -339,7 +339,7 @@ class SimpleVoiceTutor:
             
             # Get current chunk and make it interactive
             raw_chunk = chunks[progress['current_chunk']]
-            current_chunk = self.make_content_interactive(raw_chunk, progress['current_chunk'], subject)
+            current_chunk = self.make_content_interactive(raw_chunk, progress['current_chunk'], document.subject)
             
             # Move to next chunk
             progress['current_chunk'] += 1
