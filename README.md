@@ -9,7 +9,7 @@ An advanced AI-powered educational platform designed for 5th grade CBSE students
 - **Subject-Based Organization**: Organized by 9 CBSE subjects (English, Maths, Science, Social, Hindi, Telugu, IT-Computers, GK, Value Education)
 - **Document Processing**: Automatic extraction and page-by-page storage of Word documents (.docx)
 - **AI-Powered Tutoring**: Interactive question-answering system using Google Gemini AI
-- **Voice-Based Interactive Reading**: Text-to-speech lesson playback with comprehension questions
+- **Voice-Based Interactive Reading**: Text-to-speech lesson playback with interactive conversational elements and doubt resolution
 - **Quiz Generation**: Automatic creation of practice questions based on lesson content
 - **Kid-Friendly Interface**: Age-appropriate responses with educational emojis and simple language
 
@@ -117,9 +117,10 @@ gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
 1. Navigate to the **Voice Reading** page
 2. Select a lesson from the dropdown menu
 3. Click "Start Interactive Reading" to begin
-4. Listen to the AI tutor read the lesson aloud
-5. Answer comprehension questions during the session
+4. Listen to the AI tutor read the lesson aloud with interactive conversational elements
+5. Use "Ask a Doubt" feature to clarify concepts during reading
 6. Use playback controls (play, pause, stop) as needed
+7. Enjoy uninterrupted content delivery with engaging conversational phrases
 
 ### Language Support
 - **Hindi subjects**: AI responds in Hindi with educational context, voice reading uses Hindi TTS
@@ -147,8 +148,10 @@ gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
 ### Voice Reading Interface
 - Interactive lesson playback with audio controls
 - Real-time progress tracking and page indicators
-- Comprehension questions during reading sessions
+- "Ask a Doubt" feature for on-demand clarifications
 - Multilingual text-to-speech with appropriate accents
+- Conversational elements to enhance engagement ("Let's begin", "Isn't this interesting?")
+- Uninterrupted content delivery without forced comprehension questions
 
 ## 🔧 Technical Implementation
 
@@ -178,32 +181,50 @@ gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
 
 ## 🌟 Key Achievements
 
+### Latest Improvements (July 2025)
+- **Seamless Voice Reading**: Fixed critical bugs preventing lesson content delivery after welcome messages
+- **Enhanced User Engagement**: Added conversational elements making voice reading more interactive and natural
+- **Streamlined Experience**: Removed interrupting comprehension questions for uninterrupted learning flow
+- **Professional Rebranding**: Updated to "TutionBuddy - Students Smart Study Partner" across all interfaces
+- **Improved Text Processing**: Enhanced speech synthesis with better punctuation handling and readability
+
 ### Multilingual Education Support
-- Successfully implemented Hindi and Telugu language support
+- Successfully implemented Hindi and Telugu language support with authentic voice pronunciation
 - Created intelligent language routing based on subject matter
-- Developed kid-friendly response formatting system
+- Developed kid-friendly response formatting system with educational emojis
+- Implemented language-specific conversational phrases for enhanced engagement
 
 ### User Experience Enhancements
-- Resolved document refresh synchronization issues
-- Implemented subject-based organization system
-- Created intuitive educational dashboard interface
-- Added real-time upload progress and feedback
+- Resolved document refresh synchronization issues with real-time updates
+- Implemented subject-based organization system matching CBSE curriculum
+- Created intuitive educational dashboard interface with quick access cards
+- Added comprehensive "Ask a Doubt" feature replacing forced comprehension checks
+- Enhanced voice reading with natural conversational flow and interactive elements
 
 ### Technical Optimizations
 - Enhanced database session management for immediate updates
-- Implemented comprehensive error handling and logging
-- Created robust file upload and processing pipeline
+- Implemented comprehensive error handling and logging systems
+- Created robust file upload and processing pipeline with progress tracking
 - Optimized API response caching and browser refresh mechanisms
+- Fixed critical voice reading continuation bugs and session management
 
 ## 📝 Development History
 
-### Recent Updates (June 2025)
+### Recent Updates (July 2025)
+- **Application Rebranding**: Updated name from "AI Tutor - Document Processor" to "TutionBuddy - Students Smart Study Partner"
+- **Interactive Voice Enhancement**: Added conversational elements like "Let's begin", "Isn't this interesting?", "Amazing, right!" to make reading more engaging
+- **Text Cleaning Improvements**: Fixed apostrophe handling and enhanced speech readability by preserving punctuation
+- **Comprehension Questions Removal**: Completely removed comprehension question section for uninterrupted content delivery per user feedback
+- **Bug Fixes**: Resolved critical "subject variable not defined" error in voice reading continuation
+- **Multilingual Interactive Elements**: Enhanced Telugu, Hindi, and English voice reading with language-specific conversational phrases
+
+### Major Updates (June 2025)
 - **Voice Reading System Implementation**: Added comprehensive text-to-speech functionality with multilingual support
-- **Interactive Audio Playback**: Created voice-controlled lesson reading with comprehension questions
+- **Interactive Audio Playback**: Created voice-controlled lesson reading with natural conversational flow
 - **gTTS Integration**: Implemented Google Text-to-Speech for Hindi, Telugu, and English voices
 - **Persistent Session Management**: Added file-based progress tracking for voice reading sessions
 - **Audio File Management**: Dynamic MP3 generation and browser-compatible audio controls
-- **Document Processing System Removal**: Streamlined interface to focus on subject-based uploads
+- **Ask a Doubt Feature**: Implemented comprehensive doubt-answering system replacing simple explanations
 - **Language Response Fix**: Resolved AI language detection and response issues
 - **Dropdown Refresh Enhancement**: Implemented real-time document list synchronization
 - **UI/UX Improvements**: Transformed interface terminology from "documents" to "lessons"
@@ -239,10 +260,11 @@ PGDATABASE=database_name
 
 ### Core Voice Features
 - **Multilingual Text-to-Speech**: Supports Hindi, Telugu, and English with appropriate regional accents
-- **Interactive Reading Sessions**: AI tutor reads lessons aloud with natural pacing and intonation
-- **Real-time Comprehension Questions**: AI generates questions during reading to ensure understanding
+- **Interactive Reading Sessions**: AI tutor reads lessons aloud with conversational elements and natural pacing
+- **Ask a Doubt Feature**: Student-initiated question system for on-demand clarifications during reading
 - **Persistent Session Management**: Tracks reading progress across browser sessions
 - **Audio Controls**: Play, pause, resume, and stop functionality for flexible learning
+- **Conversational Engagement**: Interactive phrases like "Let's begin", "Isn't this interesting?", "Amazing, right!" in multiple languages
 
 ### Voice Technology Stack
 - **gTTS (Google Text-to-Speech)**: Reliable cloud-based TTS service with multilingual support
@@ -256,11 +278,11 @@ PGDATABASE=database_name
 - **English/Other Subjects**: Uses English with Indian accent (`en-in` TLD) for familiar pronunciation
 
 ### Interactive Learning Flow
-1. **Welcome Message**: Personalized greeting based on lesson title and subject
+1. **Welcome Message**: Personalized greeting based on lesson title and subject with engaging language
 2. **Content Chunking**: Breaks lessons into digestible segments for better comprehension
-3. **Simplified Explanations**: AI converts complex concepts into child-friendly language
-4. **Comprehension Checks**: Regular questions to ensure understanding and engagement
-5. **Progress Tracking**: Monitors completion status and topic coverage
+3. **Conversational Reading**: AI adds interactive elements like "Let's begin", "Isn't this interesting?" during content delivery
+4. **On-Demand Support**: "Ask a Doubt" feature allows students to clarify concepts without interrupting flow
+5. **Progress Tracking**: Monitors completion status and topic coverage with persistent session management
 
 ## 📊 Project Statistics
 
