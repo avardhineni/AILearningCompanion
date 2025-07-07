@@ -269,6 +269,18 @@ def upload_subject_file(subject):
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
             
+            # Ensure file is fully written and readable
+            import time
+            time.sleep(0.1)  # Small delay to ensure file is fully written
+            
+            # Verify file exists and is readable
+            if not os.path.exists(file_path):
+                logger.error(f"File not found after upload: {file_path}")
+                flash('File upload failed - file not found', 'error')
+                return redirect(url_for('upload_subject', subject=subject))
+            
+            logger.info(f"File uploaded successfully: {file_path} (size: {os.path.getsize(file_path)} bytes)")
+            
             # Get form data
             chapter_number = request.form.get('chapter_number', '').strip()
             lesson_title = request.form.get('lesson_title', '').strip()

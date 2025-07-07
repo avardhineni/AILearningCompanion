@@ -1,4 +1,5 @@
 import logging
+import os
 from docx import Document as DocxDocument
 from docx.shared import Inches
 import re
@@ -26,6 +27,21 @@ class DocumentProcessor:
             list: List of tuples (page_number, content)
         """
         try:
+            logger.info(f"Starting document processing: {file_path}")
+            
+            # Verify file exists and is readable
+            if not os.path.exists(file_path):
+                logger.error(f"File not found: {file_path}")
+                raise FileNotFoundError(f"Document file not found: {file_path}")
+            
+            # Check file size
+            file_size = os.path.getsize(file_path)
+            logger.info(f"File size: {file_size} bytes")
+            
+            if file_size == 0:
+                logger.error(f"File is empty: {file_path}")
+                raise ValueError(f"Document file is empty: {file_path}")
+            
             doc = DocxDocument(file_path)
             pages = []
             current_page = 1
