@@ -628,3 +628,8 @@ def test_ai_direct():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)})
+
+@app.route('/test-upload')
+def test_upload_page():
+    """Simple upload test page"""
+    return render_template('simple_upload_test.html')
