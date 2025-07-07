@@ -239,7 +239,7 @@ def upload_subject(subject):
     """Show upload page for a specific subject"""
     # Get existing chapters for this subject
     existing_chapters = Document.query.filter_by(subject=subject).order_by(Document.upload_date.desc()).all()
-    return render_template('upload_subject.html', subject=subject, existing_chapters=existing_chapters)
+    return render_template('upload_subject_fixed.html', subject=subject, existing_chapters=existing_chapters)
 
 @app.route('/subjects/<subject>/view')
 def view_subject(subject):
