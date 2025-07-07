@@ -633,3 +633,8 @@ def test_ai_direct():
 def test_upload_page():
     """Simple upload test page"""
     return render_template('simple_upload_test.html')
+
+@app.route('/subjects/<subject>/simple-upload')
+def simple_upload_subject(subject):
+    """Simple upload page for specific subject"""
+    return render_template('simple_upload_subject.html', subject=subject)
