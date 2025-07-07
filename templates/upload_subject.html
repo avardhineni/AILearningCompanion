@@ -34,7 +34,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ url_for('upload_subject_file', subject=subject) }}" method="post" enctype="multipart/form-data" id="uploadForm" onsubmit="return validateAndSubmit()">
+                    <form action="{{ url_for('upload_subject_file', subject=subject) }}" method="post" enctype="multipart/form-data" id="uploadForm">
                         <div class="mb-3">
                             <label for="chapter_number" class="form-label">Chapter Number (Optional)</label>
                             <input type="text" class="form-control" id="chapter_number" name="chapter_number" 
@@ -246,23 +246,21 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Simple form validation and submission
-function validateAndSubmit() {
-    console.log('Form validation started');
-    
+// Simple form submission handler
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
     const fileInput = document.getElementById('file');
     if (!fileInput.files[0]) {
+        e.preventDefault();
         alert('Please select a file to upload');
-        return false;
+        return;
     }
     
     // Validate file type
     if (!fileInput.files[0].name.toLowerCase().endsWith('.docx')) {
+        e.preventDefault();
         alert('Please select a .docx file');
-        return false;
+        return;
     }
-
-    console.log('File validation passed, submitting form');
 
     // Show progress
     const uploadBtn = document.getElementById('uploadBtn');
@@ -272,15 +270,6 @@ function validateAndSubmit() {
     // Show upload progress
     if (document.getElementById('uploadProgress')) {
         document.getElementById('uploadProgress').style.display = 'block';
-    }
-    
-    return true; // Allow form submission
-}
-
-// Also add event listener for backward compatibility
-document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    if (!validateAndSubmit()) {
-        e.preventDefault();
     }
 });
 </script>
