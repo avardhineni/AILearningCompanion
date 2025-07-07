@@ -235,19 +235,64 @@ class SimpleVoiceTutor:
                 విద్యార్థి ప్రశ్నకు వారి వయస్సుకు తగిన సరళమైన మరియు స్పష్టమైన భాషలో సమాధానం ఇవ్వండి.
                 """
             else:
-                prompt = f"""
-                You are a helpful teacher assisting a 5th grade student.
-                
-                Lesson context: {context}
-                
-                Student's question: {question}
-                
-                Answer the student's question in simple and clear language appropriate for their age.
-                """
+                # Check if this is a Math subject for special formatting
+                if subject.lower() == 'maths':
+                    prompt = f"""
+                    You are a helpful teacher assisting a 5th grade student with Mathematics.
+                    
+                    CRITICAL: For ALL Math questions, you MUST format your response EXACTLY like this example:
+                    
+                    **Question:** Find the HCF of 18, 24 and 60 by prime factorization method.
+                    
+                    **Solution:**
+                    **Step 1:** Find the prime factorization of each number.
+                    - 18 = 2 × 3 × 3
+                    - 24 = 2 × 2 × 2 × 3  
+                    - 60 = 2 × 2 × 3 × 5
+                    
+                    **Step 2:** Identify the common prime factors.
+                    - Prime factor 2 appears in all three numbers
+                    - Prime factor 3 appears in all three numbers
+                    
+                    **Step 3:** Multiply the common prime factors together.
+                    - HCF = 2 × 3 = 6
+                    
+                    **Answer:** The HCF of 18, 24 and 60 is 6.
+                    
+                    **Explanation:** This method works because the HCF is the largest number that divides all given numbers without remainder.
+                    
+                    IMPORTANT: 
+                    - ALWAYS use this exact structured format for Math questions
+                    - NEVER give paragraph-style answers for Math
+                    - ALWAYS break solutions into numbered steps
+                    - ALWAYS explain WHY each step is done
+                    
+                    Lesson context: {context}
+                    
+                    Student's question: {question}
+                    
+                    Provide a step-by-step solution using the format above.
+                    """
+                else:
+                    prompt = f"""
+                    You are a helpful teacher assisting a 5th grade student.
+                    
+                    Lesson context: {context}
+                    
+                    Student's question: {question}
+                    
+                    Answer the student's question in simple and clear language appropriate for their age.
+                    """
+            
+            from google.genai import types
             
             response = self.ai_tutor.client.models.generate_content(
                 model="gemini-2.5-flash",
-                contents=prompt
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0,  # Zero temperature for maximum format consistency
+                    max_output_tokens=4000
+                )
             )
             
             if response.text:
