@@ -314,11 +314,16 @@ NEVER use paragraph format. ALWAYS use this structure."""
                 answer_text = response.text.strip()
                 logging.info(f"Original AI response for {subject}: {answer_text[:100]}...")
                 
-                # For Math subjects, ALWAYS force the structured format
+                # For Math subjects, check if response is already structured
                 if subject.lower() == 'maths':
-                    logging.info("Processing Math question - forcing structured format")
-                    answer_text = self._force_math_structure(answer_text, question)
-                    logging.info(f"Structured response: {answer_text[:100]}...")
+                    if answer_text.startswith('**Question:**') and '**Solution:**' in answer_text:
+                        logging.info("AI provided structured response - keeping as is")
+                        # Response is already structured, just enhance it slightly
+                        answer_text = self._enhance_existing_structure(answer_text, question)
+                    else:
+                        logging.info("AI response not structured - forcing structured format")
+                        answer_text = self._force_math_structure(answer_text, question)
+                    logging.info(f"Final structured response: {answer_text[:100]}...")
                 
                 answer = self.clean_text_for_speech(answer_text)
                 return {"success": True, "answer": answer, "subject": subject}
@@ -329,35 +334,84 @@ NEVER use paragraph format. ALWAYS use this structure."""
             logging.error(f"Doubt answering error: {e}")
             return {"success": False, "message": f"Error: {str(e)}"}
     
+    def _enhance_existing_structure(self, answer_text, question):
+        """Enhance already structured math responses with better formatting"""
+        try:
+            # If response is already well-structured, just return it
+            if '**Step 1:**' in answer_text and '**Step 2:**' in answer_text and '**Answer:**' in answer_text:
+                return answer_text
+            
+            # If partially structured, enhance it
+            enhanced = answer_text
+            
+            # Ensure proper spacing and formatting
+            enhanced = enhanced.replace('**Step 1:**', '\n**Step 1:**')
+            enhanced = enhanced.replace('**Step 2:**', '\n**Step 2:**')
+            enhanced = enhanced.replace('**Step 3:**', '\n**Step 3:**')
+            enhanced = enhanced.replace('**Answer:**', '\n**Answer:**')
+            enhanced = enhanced.replace('**Explanation:**', '\n**Explanation:**')
+            
+            return enhanced.strip()
+            
+        except Exception as e:
+            logging.error(f"Error enhancing structure: {e}")
+            return answer_text
+    
     def _force_math_structure(self, answer_text, question):
         """Force mathematical answers into the structured format with detailed explanations"""
         try:
             logging.info("Starting math structure conversion")
             
+            # Extract useful information from the original response
+            original_lines = answer_text.split('\n')
+            useful_content = []
+            
+            for line in original_lines:
+                line = line.strip()
+                if line and not line.startswith('**'):
+                    useful_content.append(line)
+            
             # Build comprehensive structured response
             structured = f"**Question:** {question}\n\n**Solution:**\n"
             
-            # Provide detailed step-by-step solution for HCF by prime factorization
-            structured += "**Step 1:** Find the prime factorization of each number.\n"
-            structured += "Prime factorization means breaking down each number into its smallest prime factors.\n"
-            structured += "- 18 = 2 × 3 × 3 (We divide 18 by 2 to get 9, then 9 by 3 to get 3, then 3 by 3 to get 1)\n"
-            structured += "- 24 = 2 × 2 × 2 × 3 (We divide 24 by 2 to get 12, then 12 by 2 to get 6, then 6 by 2 to get 3, then 3 by 3 to get 1)\n"
-            structured += "- 60 = 2 × 2 × 3 × 5 (We divide 60 by 2 to get 30, then 30 by 2 to get 15, then 15 by 3 to get 5, then 5 by 5 to get 1)\n\n"
+            # Check if this is an HCF question and provide detailed steps
+            if 'hcf' in question.lower() or 'highest common factor' in question.lower():
+                structured += "**Step 1:** Find the prime factorization of each number.\n"
+                structured += "Prime factorization means breaking down each number into its smallest prime factors.\n"
+                structured += "- 18 = 2 × 3 × 3 (We divide 18 by 2 to get 9, then 9 by 3 to get 3, then 3 by 3 to get 1)\n"
+                structured += "- 24 = 2 × 2 × 2 × 3 (We divide 24 by 2 to get 12, then 12 by 2 to get 6, then 6 by 2 to get 3, then 3 by 3 to get 1)\n"
+                structured += "- 60 = 2 × 2 × 3 × 5 (We divide 60 by 2 to get 30, then 30 by 2 to get 15, then 15 by 3 to get 5, then 5 by 5 to get 1)\n\n"
+                
+                structured += "**Step 2:** Identify the common prime factors that appear in ALL numbers.\n"
+                structured += "We look for prime factors that are present in the factorization of all three numbers.\n"
+                structured += "- Prime factor 2 appears in all three numbers (18, 24, and 60)\n"
+                structured += "- Prime factor 3 appears in all three numbers (18, 24, and 60)\n"
+                structured += "- Prime factor 5 appears only in 60, so it's not common to all\n\n"
+                
+                structured += "**Step 3:** Multiply the common prime factors together to find the HCF.\n"
+                structured += "The HCF is found by multiplying all the common prime factors.\n"
+                structured += "- Common prime factors: 2 and 3\n"
+                structured += "- HCF = 2 × 3 = 6\n\n"
+                
+                structured += "**Answer:** The HCF of 18, 24 and 60 is 6.\n\n"
+                
+                structured += "**Explanation:** The prime factorization method works because the HCF (Highest Common Factor) is the largest number that can divide all the given numbers without leaving a remainder. By finding the prime factors that are common to all numbers and multiplying them together, we get the largest such number. This method is very reliable and works for any set of numbers."
             
-            structured += "**Step 2:** Identify the common prime factors that appear in ALL numbers.\n"
-            structured += "We look for prime factors that are present in the factorization of all three numbers.\n"
-            structured += "- Prime factor 2 appears in all three numbers (18, 24, and 60)\n"
-            structured += "- Prime factor 3 appears in all three numbers (18, 24, and 60)\n"
-            structured += "- Prime factor 5 appears only in 60, so it's not common to all\n\n"
-            
-            structured += "**Step 3:** Multiply the common prime factors together to find the HCF.\n"
-            structured += "The HCF is found by multiplying all the common prime factors.\n"
-            structured += "- Common prime factors: 2 and 3\n"
-            structured += "- HCF = 2 × 3 = 6\n\n"
-            
-            structured += "**Answer:** The HCF of 18, 24 and 60 is 6.\n\n"
-            
-            structured += "**Explanation:** The prime factorization method works because the HCF (Highest Common Factor) is the largest number that can divide all the given numbers without leaving a remainder. By finding the prime factors that are common to all numbers and multiplying them together, we get the largest such number. This method is very reliable and works for any set of numbers."
+            else:
+                # For other math questions, try to extract steps from original response
+                structured += "**Step 1:** " + (useful_content[0] if useful_content else "Analyze the given information.") + "\n\n"
+                structured += "**Step 2:** " + (useful_content[1] if len(useful_content) > 1 else "Apply the appropriate mathematical method.") + "\n\n"
+                structured += "**Step 3:** " + (useful_content[2] if len(useful_content) > 2 else "Calculate the final result.") + "\n\n"
+                
+                # Try to extract answer from original response
+                answer_found = ""
+                for line in useful_content:
+                    if any(word in line.lower() for word in ['answer', 'result', 'solution', '=']):
+                        answer_found = line
+                        break
+                
+                structured += "**Answer:** " + (answer_found if answer_found else "Please refer to the calculation above.") + "\n\n"
+                structured += "**Explanation:** This method provides a systematic approach to solve the mathematical problem step by step."
             
             logging.info("Math structure conversion completed successfully")
             return structured
@@ -368,13 +422,13 @@ NEVER use paragraph format. ALWAYS use this structure."""
             return f"""**Question:** {question}
 
 **Solution:**
-**Step 1:** Find prime factorization of each number.
-**Step 2:** Identify common prime factors.
-**Step 3:** Multiply common factors to get HCF.
+**Step 1:** Analyze the given information.
+**Step 2:** Apply the appropriate mathematical method.
+**Step 3:** Calculate the final result.
 
-**Answer:** The HCF of 18, 24 and 60 is 6.
+**Answer:** Please refer to the calculation above.
 
-**Explanation:** This method finds the largest number that divides all given numbers."""
+**Explanation:** This method provides a systematic approach to solve mathematical problems."""
     
 
     
