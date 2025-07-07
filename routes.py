@@ -239,7 +239,7 @@ def upload_subject(subject):
     """Show upload page for a specific subject"""
     # Get existing chapters for this subject
     existing_chapters = Document.query.filter_by(subject=subject).order_by(Document.upload_date.desc()).all()
-    return render_template('upload_subject_fixed.html', subject=subject, existing_chapters=existing_chapters)
+    return render_template('upload_subject.html', subject=subject, existing_chapters=existing_chapters)
 
 @app.route('/subjects/<subject>/view')
 def view_subject(subject):
@@ -251,9 +251,6 @@ def view_subject(subject):
 def upload_subject_file(subject):
     """Handle file upload for a specific subject"""
     logger.info(f"Starting upload for subject: {subject}")
-    logger.info(f"Request method: {request.method}")
-    logger.info(f"Request files: {list(request.files.keys())}")
-    logger.info(f"Request form: {dict(request.form)}")
     
     if 'file' not in request.files:
         flash('No file selected', 'error')
@@ -266,24 +263,11 @@ def upload_subject_file(subject):
         return redirect(url_for('upload_subject', subject=subject))
 
     if file and allowed_file(file.filename):
-        logger.info(f"File validation passed for: {file.filename}")
         try:
             # Generate secure filename
             filename = str(uuid.uuid4()) + '.docx'
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
-            
-            # Ensure file is fully written and readable
-            import time
-            time.sleep(0.1)  # Small delay to ensure file is fully written
-            
-            # Verify file exists and is readable
-            if not os.path.exists(file_path):
-                logger.error(f"File not found after upload: {file_path}")
-                flash('File upload failed - file not found', 'error')
-                return redirect(url_for('upload_subject', subject=subject))
-            
-            logger.info(f"File uploaded successfully: {file_path} (size: {os.path.getsize(file_path)} bytes)")
             
             # Get form data
             chapter_number = request.form.get('chapter_number', '').strip()
@@ -359,7 +343,6 @@ def upload_subject_file(subject):
             except:
                 pass
             logger.error(f"Error processing file: {str(e)}")
-            logger.error(f"Full traceback:", exc_info=True)
             flash(f'Error processing file: {str(e)}', 'error')
             return redirect(url_for('upload_subject', subject=subject))
     else:
@@ -628,40 +611,3 @@ def test_ai_direct():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)})
-
-@app.route('/test-upload')
-def test_upload_page():
-    """Simple upload test page"""
-    return render_template('simple_upload_test.html')
-
-@app.route('/subjects/<subject>/simple-upload')
-def simple_upload_subject(subject):
-    """Simple upload page for specific subject"""
-    return render_template('simple_upload_subject.html', subject=subject)
-
-@app.route('/subjects/<subject>/quick-upload')
-def quick_upload_form(subject):
-    """Minimal quick upload form"""
-    return f'''<!DOCTYPE html>
-<html><head><title>Quick Upload - {subject}</title>
-<link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet"></head>
-<body class="container mt-5">
-<div class="card">
-<div class="card-header"><h4>Quick Upload - {subject}</h4></div>
-<div class="card-body">
-<form action="/subjects/{subject}/upload" method="post" enctype="multipart/form-data">
-<div class="mb-3">
-<label>Chapter Number:</label>
-<input type="text" name="chapter_number" class="form-control" placeholder="Chapter 1">
-</div>
-<div class="mb-3">
-<label>Lesson Title:</label>
-<input type="text" name="lesson_title" class="form-control" placeholder="Lesson title">
-</div>
-<div class="mb-3">
-<label>File:</label>
-<input type="file" name="file" class="form-control" accept=".docx" required>
-</div>
-<button type="submit" class="btn btn-primary">Upload Now</button>
-<a href="/subjects/{subject}/view" class="btn btn-secondary">Back</a>
-</form></div></div></body></html>'''

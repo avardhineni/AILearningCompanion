@@ -100,19 +100,12 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
-- July 7, 2025: SUCCESSFULLY RESOLVED English Subject upload issues - FINAL SOLUTION
-- Created minimal quick upload form bypassing all JavaScript complexity (Document ID 51 uploaded successfully)
-- Replaced all upload buttons in subject pages to use working quick upload route
-- Fixed complex JavaScript interference that was causing form submission failures in main templates
-- Confirmed upload functionality works perfectly through direct HTML form approach
-- Enhanced debugging with comprehensive error logging and timeout protection
-- All subject upload buttons now redirect to /subjects/{subject}/quick-upload for reliable uploads
-- SUCCESSFULLY RESOLVED GK Subject upload issues
-- Fixed race condition in file upload by replacing AJAX with traditional form submission
-- Added comprehensive file validation and error handling with size verification
-- Enhanced document processor with proper file existence and size checks
-- Resolved 0-byte file uploads that were preventing document processing
-- Math question formatting system continues working with comprehensive explanations
+- July 7, 2025: SUCCESSFULLY RESOLVED Math question formatting with comprehensive explanations
+- Implemented separate display and speech text processing to preserve formatting
+- Added detailed step-by-step explanations for each mathematical operation
+- Enhanced HCF prime factorization with sub-step breakdowns and verification examples
+- Fixed display formatting issues causing paragraph collapse in Math responses
+- Created HTML formatting system for proper line breaks and bold text display
 - July 6, 2025: Updated application name from "AI Tutor - Document Processor" to "TutionBuddy - Students Smart Study Partner"
 - Updated all templates, navigation, titles, and documentation to reflect the new branding
 - July 6, 2025: Removed Comprehension Question Section completely per user request

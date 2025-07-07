@@ -21,7 +21,7 @@
                     </h1>
                     <p class="text-muted mb-0">{{ documents|length }} chapter{% if documents|length != 1 %}s{% endif %} uploaded</p>
                 </div>
-                <a href="{{ url_for('quick_upload_form', subject=subject) }}" class="btn btn-primary">
+                <a href="{{ url_for('upload_subject', subject=subject) }}" class="btn btn-primary">
                     <i data-feather="plus" class="me-1"></i>
                     Add New Chapter
                 </a>
@@ -36,7 +36,7 @@
                     <i data-feather="book" class="text-muted mb-3" style="width: 64px; height: 64px;"></i>
                     <h4 class="text-muted">No {{ subject }} chapters yet</h4>
                     <p class="text-muted mb-4">Upload your first {{ subject }} chapter to get started with AI tutoring.</p>
-                    <a href="{{ url_for('quick_upload_form', subject=subject) }}" class="btn btn-primary">
+                    <a href="{{ url_for('upload_subject', subject=subject) }}" class="btn btn-primary">
                         <i data-feather="upload" class="me-1"></i>
                         Upload First Chapter
                     </a>
@@ -139,7 +139,7 @@
                                     <i data-feather="plus-circle" class="text-info mb-2" style="width: 32px; height: 32px;"></i>
                                     <h6>Add More Chapters</h6>
                                     <p class="text-muted small">Upload additional {{ subject }} lessons to expand your learning library.</p>
-                                    <a href="{{ url_for('quick_upload_form', subject=subject) }}" class="btn btn-sm btn-info">Upload More</a>
+                                    <a href="{{ url_for('upload_subject', subject=subject) }}" class="btn btn-sm btn-info">Upload More</a>
                                 </div>
                             </div>
                         </div>
