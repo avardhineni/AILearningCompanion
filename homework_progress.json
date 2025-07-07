@@ -1,0 +1,42 @@
+{
+  "homework_sessions": [
+    {
+      "session_id": "hw_20250707_203626",
+      "subject": "Science",
+      "task_description": "Chapter 1 - Long Answer Questions \nSlip Test tomorrow",
+      "start_time": "2025-07-07T20:36:26.675585",
+      "questions": [],
+      "current_question": {
+        "text": "Explain about Malnutrition",
+        "attempts": [],
+        "hints_used": 3,
+        "start_time": "2025-07-07T20:37:24.040232"
+      },
+      "status": "active"
+    },
+    {
+      "session_id": "hw_20250707_204419",
+      "subject": "Science",
+      "task_description": "Chapter 1 - Long Answer Questions Read",
+      "start_time": "2025-07-07T20:44:19.318752",
+      "questions": [],
+      "current_question": {
+        "text": "Explain about Malnutrition?",
+        "attempts": [],
+        "hints_used": 1,
+        "start_time": "2025-07-07T20:44:39.508546"
+      },
+      "status": "active"
+    }
+  ],
+  "worksheet_sessions": [],
+  "performance_data": {},
+  "hint_usage": {
+    "Science": {
+      "1": 2,
+      "2": 1,
+      "3": 1
+    }
+  },
+  "subject_strengths": {}
+}

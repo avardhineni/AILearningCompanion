@@ -60,6 +60,30 @@
             background: linear-gradient(90deg, #28a745, #17a2b8);
             transition: width 0.3s ease;
         }
+        
+        .speech-indicator {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .mic-button {
+            transition: all 0.2s ease;
+        }
+        
+        .mic-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .voice-controls {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -238,7 +262,7 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <h6 class="fw-bold mb-3">
-                                        <i data-feather="lightbulb" class="me-2"></i>Need a Hint?
+                                        <i data-feather="info" class="me-2"></i>Need a Hint?
                                     </h6>
                                     <div class="mb-3">
                                         <div id="hint-levels" class="mb-3"></div>
@@ -249,7 +273,22 @@
                                     
                                     <div id="hint-display" class="d-none">
                                         <div class="alert alert-warning">
-                                            <div id="hint-text"></div>
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div class="flex-grow-1">
+                                                    <div id="hint-text"></div>
+                                                </div>
+                                                <button class="btn btn-sm btn-outline-warning ms-2" onclick="speakHint()" id="speak-hint-btn">
+                                                    <i data-feather="volume-2" class="me-1"></i>Listen
+                                                </button>
+                                            </div>
+                                            <div id="tts-controls" class="d-none">
+                                                <button class="btn btn-sm btn-outline-secondary me-2" onclick="pauseSpeech()" id="pause-speech-btn">
+                                                    <i data-feather="pause" class="me-1"></i>Pause
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary" onclick="stopSpeech()" id="stop-speech-btn">
+                                                    <i data-feather="stop-circle" class="me-1"></i>Stop
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -259,8 +298,33 @@
                                         <i data-feather="edit" class="me-2"></i>Your Answer
                                     </h6>
                                     <div class="mb-3">
-                                        <textarea class="form-control" id="student-answer" rows="4" 
-                                                 placeholder="Write your answer here..."></textarea>
+                                        <div class="position-relative">
+                                            <textarea class="form-control" id="student-answer" rows="4" 
+                                                     placeholder="Write your answer here or click the microphone to speak..."></textarea>
+                                            <button class="btn btn-outline-primary position-absolute top-0 end-0 m-2 mic-button" 
+                                                    onclick="startSpeechRecognition()" id="mic-btn" title="Speak your answer">
+                                                <i data-feather="mic" class="me-1"></i>Speak
+                                            </button>
+                                        </div>
+                                        <div id="speech-status" class="d-none">
+                                            <div class="alert alert-info mt-2">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <div>
+                                                        <i data-feather="mic" class="me-2"></i>
+                                                        <span id="speech-status-text">Listening...</span>
+                                                    </div>
+                                                    <button class="btn btn-sm btn-outline-secondary" onclick="stopSpeechRecognition()">
+                                                        <i data-feather="stop-circle" class="me-1"></i>Stop
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="speech-error" class="d-none">
+                                            <div class="alert alert-warning mt-2">
+                                                <i data-feather="alert-triangle" class="me-2"></i>
+                                                <span id="speech-error-text">Microphone access needed for voice input</span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <button class="btn btn-success" onclick="submitAnswer()">
                                         <i data-feather="check" class="me-2"></i>Submit Answer
@@ -330,9 +394,320 @@
         let sessionType = 'homework';
         let hintsUsed = 0;
         let attemptsCount = 0;
+        let currentHintText = '';
+        let speechSynthesis = null;
+        let speechRecognition = null;
+        let isListening = false;
 
         // Initialize Feather icons
         feather.replace();
+
+        // Initialize Speech APIs
+        function initializeSpeechAPIs() {
+            // Text-to-Speech setup
+            if ('speechSynthesis' in window) {
+                speechSynthesis = window.speechSynthesis;
+            } else {
+                console.warn('Text-to-Speech not supported in this browser');
+            }
+
+            // Speech-to-Text setup
+            if ('webkitSpeechRecognition' in window) {
+                speechRecognition = new webkitSpeechRecognition();
+                speechRecognition.continuous = true;
+                speechRecognition.interimResults = true;
+                speechRecognition.lang = 'en-IN'; // Indian English accent
+                
+                speechRecognition.onstart = function() {
+                    isListening = true;
+                    document.getElementById('speech-status').classList.remove('d-none');
+                    document.getElementById('speech-error').classList.add('d-none');
+                    document.getElementById('speech-status-text').textContent = 'Listening... Speak now!';
+                    document.getElementById('mic-btn').innerHTML = '<i data-feather="mic-off" class="me-1"></i>Listening...';
+                    document.getElementById('mic-btn').disabled = true;
+                    feather.replace();
+                };
+                
+                speechRecognition.onresult = function(event) {
+                    let finalTranscript = '';
+                    let interimTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                    
+                    // Update the textarea with recognized text
+                    const answerTextarea = document.getElementById('student-answer');
+                    if (finalTranscript) {
+                        answerTextarea.value = (answerTextarea.value + ' ' + finalTranscript).trim();
+                    }
+                    
+                    // Show interim results
+                    if (interimTranscript) {
+                        document.getElementById('speech-status-text').textContent = 
+                            'Hearing: "' + interimTranscript + '"';
+                    }
+                };
+                
+                speechRecognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                    showSpeechError(event.error);
+                    stopSpeechRecognition();
+                };
+                
+                speechRecognition.onend = function() {
+                    stopSpeechRecognition();
+                };
+                
+            } else if ('SpeechRecognition' in window) {
+                // Standard Speech Recognition API
+                speechRecognition = new SpeechRecognition();
+                speechRecognition.continuous = true;
+                speechRecognition.interimResults = true;
+                speechRecognition.lang = 'en-IN';
+                
+                // Same event handlers as above
+                speechRecognition.onstart = function() {
+                    isListening = true;
+                    document.getElementById('speech-status').classList.remove('d-none');
+                    document.getElementById('speech-error').classList.add('d-none');
+                    document.getElementById('speech-status-text').textContent = 'Listening... Speak now!';
+                    document.getElementById('mic-btn').innerHTML = '<i data-feather="mic-off" class="me-1"></i>Listening...';
+                    document.getElementById('mic-btn').disabled = true;
+                    feather.replace();
+                };
+                
+                speechRecognition.onresult = function(event) {
+                    let finalTranscript = '';
+                    let interimTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        const transcript = event.results[i][0].transcript;
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                    
+                    const answerTextarea = document.getElementById('student-answer');
+                    if (finalTranscript) {
+                        answerTextarea.value = (answerTextarea.value + ' ' + finalTranscript).trim();
+                    }
+                    
+                    if (interimTranscript) {
+                        document.getElementById('speech-status-text').textContent = 
+                            'Hearing: "' + interimTranscript + '"';
+                    }
+                };
+                
+                speechRecognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                    showSpeechError(event.error);
+                    stopSpeechRecognition();
+                };
+                
+                speechRecognition.onend = function() {
+                    stopSpeechRecognition();
+                };
+            } else {
+                console.warn('Speech-to-Text not supported in this browser');
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSpeechAPIs();
+        });
+
+        // Text-to-Speech Functions
+        function speakHint() {
+            if (!speechSynthesis) {
+                alert('Text-to-speech is not supported in your browser');
+                return;
+            }
+
+            // Stop any ongoing speech
+            speechSynthesis.cancel();
+
+            // Get the hint text
+            const hintText = document.getElementById('hint-text').innerText;
+            if (!hintText) {
+                alert('No hint text to speak');
+                return;
+            }
+
+            // Create speech synthesis utterance
+            const utterance = new SpeechSynthesisUtterance(hintText);
+            
+            // Configure voice settings for child-friendly speech
+            utterance.rate = 0.8; // Slightly slower for better comprehension
+            utterance.pitch = 1.1; // Slightly higher pitch for friendlier tone
+            utterance.volume = 0.9;
+
+            // Try to use Indian English voice if available
+            const voices = speechSynthesis.getVoices();
+            const indianVoice = voices.find(voice => 
+                voice.lang === 'en-IN' || 
+                voice.name.includes('Indian') || 
+                voice.name.includes('India')
+            );
+            
+            if (indianVoice) {
+                utterance.voice = indianVoice;
+            } else {
+                // Fallback to English voice
+                const englishVoice = voices.find(voice => 
+                    voice.lang.startsWith('en') && voice.name.includes('Female')
+                );
+                if (englishVoice) {
+                    utterance.voice = englishVoice;
+                }
+            }
+
+            // Event handlers
+            utterance.onstart = function() {
+                document.getElementById('speak-hint-btn').innerHTML = 
+                    '<i data-feather="volume-x" class="me-1"></i>Speaking...';
+                document.getElementById('speak-hint-btn').disabled = true;
+                document.getElementById('tts-controls').classList.remove('d-none');
+                feather.replace();
+            };
+
+            utterance.onend = function() {
+                document.getElementById('speak-hint-btn').innerHTML = 
+                    '<i data-feather="volume-2" class="me-1"></i>Listen';
+                document.getElementById('speak-hint-btn').disabled = false;
+                document.getElementById('tts-controls').classList.add('d-none');
+                feather.replace();
+            };
+
+            utterance.onerror = function(event) {
+                console.error('Speech synthesis error:', event.error);
+                document.getElementById('speak-hint-btn').innerHTML = 
+                    '<i data-feather="volume-2" class="me-1"></i>Listen';
+                document.getElementById('speak-hint-btn').disabled = false;
+                document.getElementById('tts-controls').classList.add('d-none');
+                feather.replace();
+            };
+
+            // Store current hint text and speak it
+            currentHintText = hintText;
+            speechSynthesis.speak(utterance);
+        }
+
+        function pauseSpeech() {
+            if (speechSynthesis) {
+                speechSynthesis.pause();
+                document.getElementById('pause-speech-btn').innerHTML = 
+                    '<i data-feather="play" class="me-1"></i>Resume';
+                document.getElementById('pause-speech-btn').onclick = resumeSpeech;
+                feather.replace();
+            }
+        }
+
+        function resumeSpeech() {
+            if (speechSynthesis) {
+                speechSynthesis.resume();
+                document.getElementById('pause-speech-btn').innerHTML = 
+                    '<i data-feather="pause" class="me-1"></i>Pause';
+                document.getElementById('pause-speech-btn').onclick = pauseSpeech;
+                feather.replace();
+            }
+        }
+
+        function stopSpeech() {
+            if (speechSynthesis) {
+                speechSynthesis.cancel();
+                document.getElementById('speak-hint-btn').innerHTML = 
+                    '<i data-feather="volume-2" class="me-1"></i>Listen';
+                document.getElementById('speak-hint-btn').disabled = false;
+                document.getElementById('tts-controls').classList.add('d-none');
+                feather.replace();
+            }
+        }
+
+        // Speech-to-Text Functions
+        function startSpeechRecognition() {
+            if (!speechRecognition) {
+                showSpeechError('not-supported');
+                return;
+            }
+
+            if (isListening) {
+                stopSpeechRecognition();
+                return;
+            }
+
+            try {
+                // Stop any ongoing speech synthesis
+                if (speechSynthesis) {
+                    speechSynthesis.cancel();
+                }
+
+                speechRecognition.start();
+            } catch (error) {
+                console.error('Error starting speech recognition:', error);
+                showSpeechError('permission-denied');
+            }
+        }
+
+        function stopSpeechRecognition() {
+            if (speechRecognition && isListening) {
+                speechRecognition.stop();
+            }
+            
+            isListening = false;
+            document.getElementById('speech-status').classList.add('d-none');
+            document.getElementById('mic-btn').innerHTML = '<i data-feather="mic" class="me-1"></i>Speak';
+            document.getElementById('mic-btn').disabled = false;
+            feather.replace();
+        }
+
+        function showSpeechError(errorType) {
+            let errorMessage = '';
+            
+            switch(errorType) {
+                case 'not-supported':
+                    errorMessage = 'Voice input is not supported in your browser. Please type your answer instead.';
+                    break;
+                case 'permission-denied':
+                    errorMessage = 'Microphone access denied. Please allow microphone access and try again.';
+                    break;
+                case 'no-speech':
+                    errorMessage = 'No speech was detected. Please try speaking closer to the microphone.';
+                    break;
+                case 'audio-capture':
+                    errorMessage = 'Microphone not available. Please check your microphone and try again.';
+                    break;
+                case 'network':
+                    errorMessage = 'Network error occurred. Please check your internet connection.';
+                    break;
+                default:
+                    errorMessage = 'Voice input error. Please try again or type your answer.';
+            }
+            
+            document.getElementById('speech-error-text').textContent = errorMessage;
+            document.getElementById('speech-error').classList.remove('d-none');
+            document.getElementById('speech-status').classList.add('d-none');
+            
+            // Hide error after 5 seconds
+            setTimeout(() => {
+                document.getElementById('speech-error').classList.add('d-none');
+            }, 5000);
+        }
+
+        // Load voices when they become available
+        if (speechSynthesis) {
+            speechSynthesis.onvoiceschanged = function() {
+                console.log('Voices loaded:', speechSynthesis.getVoices().length);
+            };
+        }
 
         function startHomeworkSession() {
             sessionType = 'homework';
@@ -431,9 +806,28 @@
             document.getElementById('evaluation-results').classList.add('d-none');
             document.getElementById('student-answer').value = '';
             
+            // Reset speech-related elements
+            document.getElementById('speech-status').classList.add('d-none');
+            document.getElementById('speech-error').classList.add('d-none');
+            document.getElementById('tts-controls').classList.add('d-none');
+            
+            // Stop any ongoing speech
+            if (speechSynthesis) {
+                speechSynthesis.cancel();
+            }
+            if (isListening) {
+                stopSpeechRecognition();
+            }
+            
+            // Reset microphone button
+            document.getElementById('mic-btn').innerHTML = '<i data-feather="mic" class="me-1"></i>Speak';
+            document.getElementById('mic-btn').disabled = false;
+            
             hintsUsed = 0;
             attemptsCount = 0;
+            currentHintText = '';
             updateHintLevels();
+            feather.replace();
         }
 
         async function submitQuestion() {
@@ -513,6 +907,16 @@
         function displayHint(hintData) {
             document.getElementById('hint-text').innerHTML = hintData.hint_text.replace(/\n/g, '<br>');
             document.getElementById('hint-display').classList.remove('d-none');
+            
+            // Store the hint text for speech synthesis
+            currentHintText = hintData.hint_text;
+            
+            // Reset speech controls
+            document.getElementById('speak-hint-btn').innerHTML = 
+                '<i data-feather="volume-2" class="me-1"></i>Listen';
+            document.getElementById('speak-hint-btn').disabled = false;
+            document.getElementById('tts-controls').classList.add('d-none');
+            feather.replace();
         }
 
         function updateHintLevels() {
