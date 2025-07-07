@@ -72,6 +72,8 @@ class AITutor:
 LESSON: {document.lesson_title}
 SUBJECT: {document.subject}
 
+IMPORTANT: The SUBJECT is "{document.subject}" - if this is "Maths", you MUST use the structured format with **Question:**, **Solution:**, **Step 1:**, **Step 2:**, etc. DO NOT use paragraph format for Math questions.
+
 CONTENT:
 {context}
 
@@ -86,7 +88,8 @@ CRITICAL LANGUAGE REQUIREMENT - This MUST be followed exactly:
 CHECK THE SUBJECT ABOVE AND USE THE CORRECT LANGUAGE FOR YOUR ENTIRE RESPONSE.
 
 CRITICAL FOR MATHEMATICS QUESTIONS:
-If the SUBJECT is "Maths", you MUST format your response exactly as follows:
+If the SUBJECT is "Maths", you MUST format your response EXACTLY as follows (this is MANDATORY):
+
 **Question:** [Restate the question clearly]
 
 **Solution:**
@@ -98,7 +101,12 @@ If the SUBJECT is "Maths", you MUST format your response exactly as follows:
 
 **Explanation:** [Why this method works and what concept it teaches]
 
-Remember: For Math questions, NEVER give just a final answer. Always show complete step-by-step working with explanations for each step.
+MATHEMATICS FORMATTING RULES:
+- NEVER give paragraph-style answers for Math questions
+- ALWAYS use the exact format above with bold headings
+- ALWAYS break down the solution into numbered steps
+- ALWAYS explain WHY each step is done
+- ALWAYS show complete calculations
 
 Subject-specific guidelines:
 1. For Hindi/Telugu language subjects:
@@ -107,24 +115,7 @@ Subject-specific guidelines:
    - Discuss the poet's message or moral
    - Include literary devices if mentioned
 
-2. For MATHS subjects (CRITICAL - Must follow this exact format):
-   - ALWAYS provide step-by-step solutions with clear explanations
-   - Format your response as follows:
-     * **Question:** [Restate the question clearly]
-     * **Solution:** [Provide step-by-step solution]
-     * **Step 1:** [First step with detailed explanation of WHY we do this]
-     * **Step 2:** [Second step with detailed explanation of WHY we do this]
-     * **Step 3:** [Continue until complete with explanations for each step]
-     * **Answer:** [Final answer clearly stated]
-     * **Explanation:** [Why this method works and what concept it teaches]
-   - Always explain the REASONING behind each step
-   - Use simple mathematical language appropriate for 5th graders
-   - Include examples from the textbook when available
-   - Connect to real-life applications when possible
-   - Show all calculations clearly
-   - Explain mathematical concepts and rules being used
-
-3. For Science/Social/Other subjects:
+2. For Science/Social/Other subjects:
    - Respond in clear, simple English
    - Start with a direct answer to the question
    - Provide detailed explanations using information from the textbook
@@ -148,7 +139,7 @@ Make your answer educational, detailed, and engaging for a 5th grade student. Ha
                 ],
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
-                    temperature=0.2,  # Lower temperature for more consistent educational responses
+                    temperature=0.1,  # Very low temperature for strict format compliance
                     max_output_tokens=4000,  # Significantly increased for detailed, comprehensive answers
                     response_mime_type="text/plain"  # Ensure plain text response for better handling
                 )
