@@ -251,6 +251,9 @@ def view_subject(subject):
 def upload_subject_file(subject):
     """Handle file upload for a specific subject"""
     logger.info(f"Starting upload for subject: {subject}")
+    logger.info(f"Request method: {request.method}")
+    logger.info(f"Request files: {list(request.files.keys())}")
+    logger.info(f"Request form: {dict(request.form)}")
     
     if 'file' not in request.files:
         flash('No file selected', 'error')
@@ -263,6 +266,7 @@ def upload_subject_file(subject):
         return redirect(url_for('upload_subject', subject=subject))
 
     if file and allowed_file(file.filename):
+        logger.info(f"File validation passed for: {file.filename}")
         try:
             # Generate secure filename
             filename = str(uuid.uuid4()) + '.docx'
@@ -355,6 +359,7 @@ def upload_subject_file(subject):
             except:
                 pass
             logger.error(f"Error processing file: {str(e)}")
+            logger.error(f"Full traceback:", exc_info=True)
             flash(f'Error processing file: {str(e)}', 'error')
             return redirect(url_for('upload_subject', subject=subject))
     else:

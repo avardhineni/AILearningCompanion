@@ -246,8 +246,10 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Form submission handling
+// Form submission handling with better error handling
 document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    console.log('Form submission started');
+    
     const fileInput = document.getElementById('file');
     if (!fileInput.files[0]) {
         e.preventDefault();
@@ -262,6 +264,8 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
         return;
     }
 
+    console.log('File validation passed, submitting form');
+
     // Show progress
     const uploadBtn = document.getElementById('uploadBtn');
     uploadBtn.disabled = true;
@@ -271,6 +275,16 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     if (document.getElementById('uploadProgress')) {
         document.getElementById('uploadProgress').style.display = 'block';
     }
+    
+    // Add timeout to reset button if upload takes too long
+    setTimeout(function() {
+        if (uploadBtn.disabled) {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i data-feather="upload" class="me-2"></i>Upload and Process';
+            feather.replace();
+            alert('Upload is taking longer than expected. Please try again or refresh the page.');
+        }
+    }, 30000); // 30 second timeout
 });
 </script>
 
