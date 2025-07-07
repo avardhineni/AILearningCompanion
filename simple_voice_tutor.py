@@ -69,11 +69,18 @@ class SimpleVoiceTutor:
         # Remove markdown underline
         text = re.sub(r'_+', '', text)
         
-        # Remove single quotes around numbers (math content) to prevent "backfoot" pronunciation
-        text = re.sub(r"'(\d+(?:,\d+)*(?:\.\d+)?)'", r'\1', text)
+        # Remove ALL single quotes to prevent "backfoot" pronunciation issues in math content
+        # This is aggressive but necessary for clear speech in mathematical contexts
+        text = text.replace("'", "")
         
-        # Remove standalone single quotes that might cause pronunciation issues
-        text = re.sub(r"(?<!\w)'(?!\w)", '', text)
+        # Also remove backticks that might cause similar issues
+        text = text.replace("`", "")
+        
+        # Clean up mathematical symbols for better speech
+        text = re.sub(r'\s*<--\s*', ' becomes ', text)
+        text = re.sub(r'\s*------\s*', ' equals ', text)
+        text = re.sub(r'\s*x\s*', ' times ', text)
+        text = re.sub(r'\s*=\s*', ' equals ', text)
         
         # Remove emojis and special symbols but keep basic punctuation
         text = re.sub(r'[💫✨🌎🪐🔸]', '', text)
