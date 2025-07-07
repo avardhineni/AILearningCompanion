@@ -87,7 +87,7 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-primary" id="uploadBtn" onclick="uploadDocument()">
+                            <button type="submit" class="btn btn-primary" id="uploadBtn">
                                 <i data-feather="upload" class="me-2"></i>
                                 Upload and Process
                             </button>
@@ -246,17 +246,18 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-function uploadDocument() {
-    console.log('Upload started');
-    
+// Form submission handling
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
     const fileInput = document.getElementById('file');
     if (!fileInput.files[0]) {
+        e.preventDefault();
         alert('Please select a file to upload');
         return;
     }
     
     // Validate file type
     if (!fileInput.files[0].name.toLowerCase().endsWith('.docx')) {
+        e.preventDefault();
         alert('Please select a .docx file');
         return;
     }
@@ -265,67 +266,12 @@ function uploadDocument() {
     const uploadBtn = document.getElementById('uploadBtn');
     uploadBtn.disabled = true;
     uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
-    document.getElementById('uploadProgress').style.display = 'block';
     
-    // Create FormData and upload via AJAX
-    const formData = new FormData();
-    formData.append('file', fileInput.files[0]);
-    formData.append('chapter_number', document.getElementById('chapter_number').value);
-    formData.append('lesson_title', document.getElementById('lesson_title').value);
-    
-    // Progress simulation
-    let progress = 0;
-    const progressBar = document.querySelector('.progress-bar');
-    const statusText = document.querySelector('#uploadProgress .text-muted');
-    
-    const interval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 90) progress = 90;
-        progressBar.style.width = progress + '%';
-        
-        if (progress < 30) {
-            statusText.textContent = 'Uploading document...';
-        } else if (progress < 70) {
-            statusText.textContent = 'Extracting text content...';
-        } else {
-            statusText.textContent = 'Saving to database...';
-        }
-    }, 400);
-    
-    // AJAX upload
-    fetch('{{ url_for("upload_subject_file", subject=subject) }}', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        clearInterval(interval);
-        progressBar.style.width = '100%';
-        statusText.textContent = 'Upload complete! Redirecting...';
-        
-        if (response.redirected) {
-            // Follow the redirect
-            setTimeout(() => {
-                window.location.href = response.url;
-            }, 1000);
-        } else {
-            // Force immediate navigation to AI Tutor page with cache busting
-            setTimeout(() => {
-                window.location.replace('{{ url_for("ask_page") }}?refresh=1&t=' + Date.now());
-            }, 1000);
-        }
-    })
-    .catch(error => {
-        clearInterval(interval);
-        console.error('Upload error:', error);
-        
-        // Reset form on error
-        uploadBtn.disabled = false;
-        uploadBtn.innerHTML = '<i data-feather="upload" class="me-2"></i>Upload and Process';
-        document.getElementById('uploadProgress').style.display = 'none';
-        
-        alert('Upload failed. Please try again.');
-    });
-}
+    // Show upload progress (optional)
+    if (document.getElementById('uploadProgress')) {
+        document.getElementById('uploadProgress').style.display = 'block';
+    }
+});
 </script>
 
 <style>
