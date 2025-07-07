@@ -246,8 +246,33 @@
                             <i data-feather="help-circle" class="me-2"></i>Enter Your Question
                         </h6>
                         <div class="mb-3">
-                            <textarea class="form-control" id="homework-question" rows="3" 
-                                     placeholder="Type your homework question here..."></textarea>
+                            <div class="position-relative">
+                                <textarea class="form-control" id="homework-question" rows="3" 
+                                         placeholder="Type your homework question here or click the microphone to speak..."></textarea>
+                                <button class="btn btn-outline-secondary position-absolute top-0 end-0 m-2 mic-button" 
+                                        onclick="startQuestionSpeechRecognition()" id="question-mic-btn" title="Speak your question">
+                                    <i data-feather="mic" class="me-1"></i>Speak
+                                </button>
+                            </div>
+                            <div id="question-speech-status" class="d-none">
+                                <div class="alert alert-info mt-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i data-feather="mic" class="me-2"></i>
+                                            <span id="question-speech-status-text">Listening for your question...</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="stopQuestionSpeechRecognition()">
+                                            <i data-feather="stop-circle" class="me-1"></i>Stop
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="question-speech-error" class="d-none">
+                                <div class="alert alert-warning mt-2">
+                                    <i data-feather="alert-triangle" class="me-2"></i>
+                                    <span id="question-speech-error-text">Microphone access needed for voice input</span>
+                                </div>
+                            </div>
                         </div>
                         <div class="text-end">
                             <button class="btn btn-primary" onclick="submitQuestion()">
@@ -398,6 +423,8 @@
         let speechSynthesis = null;
         let speechRecognition = null;
         let isListening = false;
+        let questionSpeechRecognition = null;
+        let isQuestionListening = false;
 
         // Initialize Feather icons
         feather.replace();
@@ -1138,6 +1165,151 @@
             currentSession = null;
             currentQuestion = null;
         });
+        // Question Speech Recognition Functions
+        function startQuestionSpeechRecognition() {
+            // Initialize question speech recognition if not already done
+            if (!questionSpeechRecognition) {
+                if ('webkitSpeechRecognition' in window) {
+                    questionSpeechRecognition = new webkitSpeechRecognition();
+                    questionSpeechRecognition.continuous = true;
+                    questionSpeechRecognition.interimResults = true;
+                    questionSpeechRecognition.lang = 'en-IN';
+                    
+                    questionSpeechRecognition.onstart = function() {
+                        isQuestionListening = true;
+                        document.getElementById('question-speech-status').classList.remove('d-none');
+                        document.getElementById('question-speech-error').classList.add('d-none');
+                        document.getElementById('question-speech-status-text').textContent = 'Listening for your question... Speak now!';
+                        document.getElementById('question-mic-btn').innerHTML = '<i data-feather="mic-off" class="me-1"></i>Listening...';
+                        document.getElementById('question-mic-btn').disabled = true;
+                        feather.replace();
+                    };
+                    
+                    questionSpeechRecognition.onresult = function(event) {
+                        let finalTranscript = '';
+                        let interimTranscript = '';
+                        
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += transcript;
+                            } else {
+                                interimTranscript += transcript;
+                            }
+                        }
+                        
+                        if (finalTranscript) {
+                            document.getElementById('homework-question').value = finalTranscript;
+                            stopQuestionSpeechRecognition();
+                        }
+                    };
+                    
+                    questionSpeechRecognition.onerror = function(event) {
+                        console.error('Question speech recognition error:', event.error);
+                        showQuestionSpeechError(event.error);
+                        stopQuestionSpeechRecognition();
+                    };
+                    
+                    questionSpeechRecognition.onend = function() {
+                        stopQuestionSpeechRecognition();
+                    };
+                } else if ('SpeechRecognition' in window) {
+                    questionSpeechRecognition = new SpeechRecognition();
+                    questionSpeechRecognition.continuous = true;
+                    questionSpeechRecognition.interimResults = true;
+                    questionSpeechRecognition.lang = 'en-IN';
+                    
+                    questionSpeechRecognition.onstart = function() {
+                        isQuestionListening = true;
+                        document.getElementById('question-speech-status').classList.remove('d-none');
+                        document.getElementById('question-speech-error').classList.add('d-none');
+                        document.getElementById('question-speech-status-text').textContent = 'Listening for your question... Speak now!';
+                        document.getElementById('question-mic-btn').innerHTML = '<i data-feather="mic-off" class="me-1"></i>Listening...';
+                        document.getElementById('question-mic-btn').disabled = true;
+                        feather.replace();
+                    };
+                    
+                    questionSpeechRecognition.onresult = function(event) {
+                        let finalTranscript = '';
+                        let interimTranscript = '';
+                        
+                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                            const transcript = event.results[i][0].transcript;
+                            if (event.results[i].isFinal) {
+                                finalTranscript += transcript;
+                            } else {
+                                interimTranscript += transcript;
+                            }
+                        }
+                        
+                        if (finalTranscript) {
+                            document.getElementById('homework-question').value = finalTranscript;
+                            stopQuestionSpeechRecognition();
+                        }
+                    };
+                    
+                    questionSpeechRecognition.onerror = function(event) {
+                        console.error('Question speech recognition error:', event.error);
+                        showQuestionSpeechError(event.error);
+                        stopQuestionSpeechRecognition();
+                    };
+                    
+                    questionSpeechRecognition.onend = function() {
+                        stopQuestionSpeechRecognition();
+                    };
+                } else {
+                    showQuestionSpeechError('Speech recognition not supported in this browser');
+                    return;
+                }
+            }
+            
+            if (isQuestionListening) {
+                return;
+            }
+            
+            try {
+                questionSpeechRecognition.start();
+            } catch (error) {
+                console.error('Error starting question speech recognition:', error);
+                showQuestionSpeechError('Could not start voice recognition. Please check microphone permissions.');
+            }
+        }
+
+        function stopQuestionSpeechRecognition() {
+            if (questionSpeechRecognition && isQuestionListening) {
+                questionSpeechRecognition.stop();
+                isQuestionListening = false;
+                document.getElementById('question-speech-status').classList.add('d-none');
+                document.getElementById('question-mic-btn').innerHTML = '<i data-feather="mic" class="me-1"></i>Speak';
+                document.getElementById('question-mic-btn').disabled = false;
+                feather.replace();
+            }
+        }
+
+        function showQuestionSpeechError(error) {
+            document.getElementById('question-speech-error').classList.remove('d-none');
+            document.getElementById('question-speech-status').classList.add('d-none');
+            
+            let errorMessage = 'Voice recognition not available';
+            switch(error) {
+                case 'not-allowed':
+                    errorMessage = 'Microphone access denied. Please enable microphone permissions.';
+                    break;
+                case 'no-speech':
+                    errorMessage = 'No speech detected. Please speak clearly.';
+                    break;
+                case 'audio-capture':
+                    errorMessage = 'Microphone not available. Please check your microphone.';
+                    break;
+                case 'network':
+                    errorMessage = 'Network error. Please check your internet connection.';
+                    break;
+                default:
+                    errorMessage = 'Voice recognition not available in this browser. Please type your question.';
+            }
+            
+            document.getElementById('question-speech-error-text').textContent = errorMessage;
+        }
     </script>
 </body>
 </html>

@@ -41,13 +41,43 @@
         "start_time": "2025-07-07T20:53:37.260540"
       },
       "status": "active"
+    },
+    {
+      "session_id": "hw_20250707_210010",
+      "subject": "Science",
+      "task_description": "Chapter 1 Long Answer Questions",
+      "start_time": "2025-07-07T21:00:10.026587",
+      "questions": [],
+      "current_question": {
+        "text": "Explain about Malnutrition?",
+        "attempts": [
+          {
+            "response": "Mallu freshness deficiency of nutrients",
+            "timestamp": "2025-07-07T21:01:44.089455",
+            "evaluation": {
+              "evaluation_text": "I need to review this more carefully.",
+              "evaluation_level": "incorrect",
+              "subject": "Science",
+              "timestamp": "2025-07-07T21:01:44.089444"
+            }
+          }
+        ],
+        "hints_used": 1,
+        "start_time": "2025-07-07T21:00:43.879825"
+      },
+      "status": "active"
     }
   ],
   "worksheet_sessions": [],
-  "performance_data": {},
+  "performance_data": {
+    "Science": {
+      "correct": 0,
+      "total": 1
+    }
+  },
   "hint_usage": {
     "Science": {
-      "1": 3,
+      "1": 4,
       "2": 2,
       "3": 2
     }
