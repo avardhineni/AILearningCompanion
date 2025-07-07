@@ -69,7 +69,13 @@ class SimpleVoiceTutor:
         # Remove markdown underline
         text = re.sub(r'_+', '', text)
         
-        # Remove emojis and special symbols but keep basic punctuation and apostrophes
+        # Remove single quotes around numbers (math content) to prevent "backfoot" pronunciation
+        text = re.sub(r"'(\d+(?:,\d+)*(?:\.\d+)?)'", r'\1', text)
+        
+        # Remove standalone single quotes that might cause pronunciation issues
+        text = re.sub(r"(?<!\w)'(?!\w)", '', text)
+        
+        # Remove emojis and special symbols but keep basic punctuation
         text = re.sub(r'[💫✨🌎🪐🔸]', '', text)
         
         # Remove extra spaces
