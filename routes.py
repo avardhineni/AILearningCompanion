@@ -638,3 +638,30 @@ def test_upload_page():
 def simple_upload_subject(subject):
     """Simple upload page for specific subject"""
     return render_template('simple_upload_subject.html', subject=subject)
+
+@app.route('/subjects/<subject>/quick-upload')
+def quick_upload_form(subject):
+    """Minimal quick upload form"""
+    return f'''<!DOCTYPE html>
+<html><head><title>Quick Upload - {subject}</title>
+<link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet"></head>
+<body class="container mt-5">
+<div class="card">
+<div class="card-header"><h4>Quick Upload - {subject}</h4></div>
+<div class="card-body">
+<form action="/subjects/{subject}/upload" method="post" enctype="multipart/form-data">
+<div class="mb-3">
+<label>Chapter Number:</label>
+<input type="text" name="chapter_number" class="form-control" placeholder="Chapter 1">
+</div>
+<div class="mb-3">
+<label>Lesson Title:</label>
+<input type="text" name="lesson_title" class="form-control" placeholder="Lesson title">
+</div>
+<div class="mb-3">
+<label>File:</label>
+<input type="file" name="file" class="form-control" accept=".docx" required>
+</div>
+<button type="submit" class="btn btn-primary">Upload Now</button>
+<a href="/subjects/{subject}/view" class="btn btn-secondary">Back</a>
+</form></div></div></body></html>'''
