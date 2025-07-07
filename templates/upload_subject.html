@@ -34,7 +34,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ url_for('upload_subject_file', subject=subject) }}" method="post" enctype="multipart/form-data" id="uploadForm">
+                    <form action="{{ url_for('upload_subject_file', subject=subject) }}" method="post" enctype="multipart/form-data" id="uploadForm" onsubmit="return validateAndSubmit()">
                         <div class="mb-3">
                             <label for="chapter_number" class="form-label">Chapter Number (Optional)</label>
                             <input type="text" class="form-control" id="chapter_number" name="chapter_number" 
@@ -246,22 +246,20 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// Form submission handling with better error handling
-document.getElementById('uploadForm').addEventListener('submit', function(e) {
-    console.log('Form submission started');
+// Simple form validation and submission
+function validateAndSubmit() {
+    console.log('Form validation started');
     
     const fileInput = document.getElementById('file');
     if (!fileInput.files[0]) {
-        e.preventDefault();
         alert('Please select a file to upload');
-        return;
+        return false;
     }
     
     // Validate file type
     if (!fileInput.files[0].name.toLowerCase().endsWith('.docx')) {
-        e.preventDefault();
         alert('Please select a .docx file');
-        return;
+        return false;
     }
 
     console.log('File validation passed, submitting form');
@@ -271,20 +269,19 @@ document.getElementById('uploadForm').addEventListener('submit', function(e) {
     uploadBtn.disabled = true;
     uploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
     
-    // Show upload progress (optional)
+    // Show upload progress
     if (document.getElementById('uploadProgress')) {
         document.getElementById('uploadProgress').style.display = 'block';
     }
     
-    // Add timeout to reset button if upload takes too long
-    setTimeout(function() {
-        if (uploadBtn.disabled) {
-            uploadBtn.disabled = false;
-            uploadBtn.innerHTML = '<i data-feather="upload" class="me-2"></i>Upload and Process';
-            feather.replace();
-            alert('Upload is taking longer than expected. Please try again or refresh the page.');
-        }
-    }, 30000); // 30 second timeout
+    return true; // Allow form submission
+}
+
+// Also add event listener for backward compatibility
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    if (!validateAndSubmit()) {
+        e.preventDefault();
+    }
 });
 </script>
 
