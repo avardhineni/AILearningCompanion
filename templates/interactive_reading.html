@@ -569,7 +569,7 @@ function submitDoubt() {
             document.getElementById('answer-text').innerHTML = data.answer;
             document.getElementById('doubt-answer').style.display = 'block';
             currentDoubtAnswer = {
-                text: data.answer,
+                text: data.speech_text || data.answer,
                 subject: data.subject
             };
         } else {

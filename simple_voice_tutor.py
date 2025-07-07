@@ -325,14 +325,32 @@ NEVER use paragraph format. ALWAYS use this structure."""
                         answer_text = self._force_math_structure(answer_text, question)
                     logging.info(f"Final structured response: {answer_text[:100]}...")
                 
-                answer = self.clean_text_for_speech(answer_text)
-                return {"success": True, "answer": answer, "subject": subject}
+                # For display, preserve formatting but clean for speech
+                display_answer = self._format_for_display(answer_text)
+                speech_answer = self.clean_text_for_speech(answer_text)
+                return {"success": True, "answer": display_answer, "speech_text": speech_answer, "subject": subject}
             else:
                 return {"success": False, "message": "Could not generate answer"}
                 
         except Exception as e:
             logging.error(f"Doubt answering error: {e}")
             return {"success": False, "message": f"Error: {str(e)}"}
+    
+    def _format_for_display(self, text):
+        """Format text for display while preserving structure"""
+        if not text:
+            return ""
+        
+        # Convert markdown bold to HTML for better display
+        text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
+        
+        # Convert line breaks to HTML line breaks
+        text = text.replace('\n', '<br>')
+        
+        # Ensure proper spacing around sections
+        text = re.sub(r'<br><br>', '<br><br>', text)
+        
+        return text
     
     def _enhance_existing_structure(self, answer_text, question):
         """Enhance already structured math responses with better formatting"""
