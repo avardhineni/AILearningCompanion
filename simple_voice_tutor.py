@@ -395,25 +395,43 @@ NEVER use paragraph format. ALWAYS use this structure."""
             # Check if this is an HCF question and provide detailed steps
             if 'hcf' in question.lower() or 'highest common factor' in question.lower():
                 structured += "**Step 1:** Find the prime factorization of each number.\n"
-                structured += "Prime factorization means breaking down each number into its smallest prime factors.\n"
-                structured += "- 18 = 2 × 3 × 3 (We divide 18 by 2 to get 9, then 9 by 3 to get 3, then 3 by 3 to get 1)\n"
-                structured += "- 24 = 2 × 2 × 2 × 3 (We divide 24 by 2 to get 12, then 12 by 2 to get 6, then 6 by 2 to get 3, then 3 by 3 to get 1)\n"
-                structured += "- 60 = 2 × 2 × 3 × 5 (We divide 60 by 2 to get 30, then 30 by 2 to get 15, then 15 by 3 to get 5, then 5 by 5 to get 1)\n\n"
+                structured += "Prime factorization means breaking down each number into its smallest prime factors (numbers that can only be divided by 1 and themselves).\n\n"
+                structured += "**For 18:**\n"
+                structured += "- Start with 18 ÷ 2 = 9 (2 is the smallest prime factor)\n"
+                structured += "- Then 9 ÷ 3 = 3 (3 is the next prime factor)\n"
+                structured += "- Finally 3 ÷ 3 = 1 (we're done when we reach 1)\n"
+                structured += "- So 18 = 2 × 3 × 3\n\n"
+                
+                structured += "**For 24:**\n"
+                structured += "- Start with 24 ÷ 2 = 12\n"
+                structured += "- Then 12 ÷ 2 = 6\n"
+                structured += "- Then 6 ÷ 2 = 3\n"
+                structured += "- Finally 3 ÷ 3 = 1\n"
+                structured += "- So 24 = 2 × 2 × 2 × 3\n\n"
+                
+                structured += "**For 60:**\n"
+                structured += "- Start with 60 ÷ 2 = 30\n"
+                structured += "- Then 30 ÷ 2 = 15\n"
+                structured += "- Then 15 ÷ 3 = 5\n"
+                structured += "- Finally 5 ÷ 5 = 1\n"
+                structured += "- So 60 = 2 × 2 × 3 × 5\n\n"
                 
                 structured += "**Step 2:** Identify the common prime factors that appear in ALL numbers.\n"
-                structured += "We look for prime factors that are present in the factorization of all three numbers.\n"
-                structured += "- Prime factor 2 appears in all three numbers (18, 24, and 60)\n"
-                structured += "- Prime factor 3 appears in all three numbers (18, 24, and 60)\n"
-                structured += "- Prime factor 5 appears only in 60, so it's not common to all\n\n"
+                structured += "Now we compare the prime factorizations to find which prime factors appear in every number:\n\n"
+                structured += "- **Prime factor 2:** Appears in 18 (once), 24 (three times), and 60 (twice)\n"
+                structured += "- **Prime factor 3:** Appears in 18 (twice), 24 (once), and 60 (once)\n"
+                structured += "- **Prime factor 5:** Appears only in 60, so it's NOT common to all numbers\n\n"
+                structured += "**Important:** For HCF, we take the LOWEST power of each common prime factor.\n\n"
                 
                 structured += "**Step 3:** Multiply the common prime factors together to find the HCF.\n"
-                structured += "The HCF is found by multiplying all the common prime factors.\n"
-                structured += "- Common prime factors: 2 and 3\n"
-                structured += "- HCF = 2 × 3 = 6\n\n"
+                structured += "We multiply the common prime factors using their lowest powers:\n\n"
+                structured += "- Prime factor 2 appears at least once in all numbers, so we use 2¹ = 2\n"
+                structured += "- Prime factor 3 appears at least once in all numbers, so we use 3¹ = 3\n"
+                structured += "- Therefore: HCF = 2 × 3 = 6\n\n"
                 
                 structured += "**Answer:** The HCF of 18, 24 and 60 is 6.\n\n"
                 
-                structured += "**Explanation:** The prime factorization method works because the HCF (Highest Common Factor) is the largest number that can divide all the given numbers without leaving a remainder. By finding the prime factors that are common to all numbers and multiplying them together, we get the largest such number. This method is very reliable and works for any set of numbers."
+                structured += "**Explanation:** The prime factorization method works because the HCF (Highest Common Factor) is the largest number that can divide all the given numbers without leaving a remainder. By finding the prime factors that are common to all numbers and multiplying them together using their lowest powers, we get the largest such number. This method is very reliable and works for any set of numbers. You can verify: 18÷6=3, 24÷6=4, 60÷6=10, all with no remainder!"
             
             else:
                 # For other math questions, try to extract steps from original response
