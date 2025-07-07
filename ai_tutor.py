@@ -88,18 +88,26 @@ CRITICAL LANGUAGE REQUIREMENT - This MUST be followed exactly:
 CHECK THE SUBJECT ABOVE AND USE THE CORRECT LANGUAGE FOR YOUR ENTIRE RESPONSE.
 
 CRITICAL FOR MATHEMATICS QUESTIONS:
-If the SUBJECT is "Maths", you MUST format your response EXACTLY as follows (this is MANDATORY):
+If the SUBJECT is "Maths", you MUST format your response EXACTLY like this example (this is MANDATORY):
 
-**Question:** [Restate the question clearly]
+**Question:** Find the HCF of 18, 24 and 60 by prime factorization method.
 
 **Solution:**
-**Step 1:** [First step with detailed explanation of WHY we do this]
-**Step 2:** [Second step with detailed explanation of WHY we do this]
-**Step 3:** [Continue until complete with explanations for each step]
+**Step 1:** Find the prime factorization of each number. We break down each number into its prime factors.
+- 18 = 2 × 3 × 3
+- 24 = 2 × 2 × 2 × 3  
+- 60 = 2 × 2 × 3 × 5
 
-**Answer:** [Final answer clearly stated]
+**Step 2:** Identify the common prime factors. Look for prime factors that appear in all three numbers.
+- Prime factor 2 appears in all three numbers
+- Prime factor 3 appears in all three numbers
 
-**Explanation:** [Why this method works and what concept it teaches]
+**Step 3:** Multiply the common prime factors together to get the HCF.
+- HCF = 2 × 3 = 6
+
+**Answer:** The HCF of 18, 24 and 60 is 6.
+
+**Explanation:** This method works because the HCF is the largest number that divides all given numbers without remainder. By finding common prime factors, we identify the largest such number.
 
 MATHEMATICS FORMATTING RULES:
 - NEVER give paragraph-style answers for Math questions
@@ -107,6 +115,7 @@ MATHEMATICS FORMATTING RULES:
 - ALWAYS break down the solution into numbered steps
 - ALWAYS explain WHY each step is done
 - ALWAYS show complete calculations
+- DO NOT write long paragraphs - use structured format only
 
 Subject-specific guidelines:
 1. For Hindi/Telugu language subjects:
@@ -126,7 +135,9 @@ Subject-specific guidelines:
 6. Include any interesting facts or connections mentioned in the textbook
 7. If the question is not related to the document content, politely explain what the document is actually about and suggest relevant questions
 
-Make your answer educational, detailed, and engaging for a 5th grade student. Handle multilingual content appropriately. If the question doesn't match the document content, provide helpful guidance about what the lesson contains."""
+Make your answer educational, detailed, and engaging for a 5th grade student. Handle multilingual content appropriately. If the question doesn't match the document content, provide helpful guidance about what the lesson contains.
+
+FINAL REMINDER FOR MATHS: If subject is "Maths", you MUST start your response with "**Question:**" followed by "**Solution:**" followed by "**Step 1:**" etc. DO NOT write paragraphs for Math questions."""
             
             # Get response from Gemini
             response = self.client.models.generate_content(
@@ -139,7 +150,7 @@ Make your answer educational, detailed, and engaging for a 5th grade student. Ha
                 ],
                 config=types.GenerateContentConfig(
                     system_instruction=system_prompt,
-                    temperature=0.1,  # Very low temperature for strict format compliance
+                    temperature=0,  # Zero temperature for maximum format consistency
                     max_output_tokens=4000,  # Significantly increased for detailed, comprehensive answers
                     response_mime_type="text/plain"  # Ensure plain text response for better handling
                 )
