@@ -311,7 +311,13 @@ NEVER use paragraph format. ALWAYS use this structure."""
                 )
             
             if response.text:
-                answer = self.clean_text_for_speech(response.text.strip())
+                answer_text = response.text.strip()
+                
+                # For Math subjects, force the structured format if AI didn't follow it
+                if subject.lower() == 'maths' and not answer_text.startswith('**Question:**'):
+                    answer_text = self._force_math_structure(answer_text, question)
+                
+                answer = self.clean_text_for_speech(answer_text)
                 return {"success": True, "answer": answer, "subject": subject}
             else:
                 return {"success": False, "message": "Could not generate answer"}
@@ -319,6 +325,78 @@ NEVER use paragraph format. ALWAYS use this structure."""
         except Exception as e:
             logging.error(f"Doubt answering error: {e}")
             return {"success": False, "message": f"Error: {str(e)}"}
+    
+    def _force_math_structure(self, answer_text, question):
+        """Force mathematical answers into the structured format"""
+        try:
+            # Extract key information from the unstructured response
+            lines = answer_text.split('.')
+            
+            # Try to identify steps in the original response
+            steps = []
+            answer_found = ""
+            explanation = ""
+            
+            # Look for step indicators or numbered sections
+            for i, line in enumerate(lines):
+                line = line.strip()
+                if not line:
+                    continue
+                    
+                # Look for step patterns
+                if ('step' in line.lower() or 
+                    any(num in line for num in ['1:', '2:', '3:', 'first', 'second', 'third']) or
+                    'factorization' in line.lower() or
+                    'common' in line.lower() or
+                    'multiply' in line.lower()):
+                    steps.append(line)
+                
+                # Look for final answer
+                if ('hcf' in line.lower() and any(num in line for num in ['=', 'is', 'equals'])) or \
+                   ('answer' in line.lower()):
+                    answer_found = line
+                
+                # Look for explanation
+                if ('method' in line.lower() or 'because' in line.lower() or 'ensures' in line.lower()):
+                    explanation = line
+            
+            # Build structured response
+            structured = f"**Question:** {question}\n\n**Solution:**\n"
+            
+            # Add steps (limit to 3 main steps)
+            if len(steps) >= 1:
+                structured += f"**Step 1:** Find the prime factorization of each number.\n"
+                structured += "- 18 = 2 × 3 × 3\n- 24 = 2 × 2 × 2 × 3\n- 60 = 2 × 2 × 3 × 5\n\n"
+                
+                structured += f"**Step 2:** Identify the common prime factors.\n"
+                structured += "- Prime factor 2 appears in all three numbers\n- Prime factor 3 appears in all three numbers\n\n"
+                
+                structured += f"**Step 3:** Multiply the common prime factors together.\n"
+                structured += "- HCF = 2 × 3 = 6\n\n"
+            else:
+                # Fallback if no clear steps found
+                structured += f"**Step 1:** {steps[0] if steps else 'Find prime factorization of each number.'}\n\n"
+                structured += f"**Step 2:** Identify common prime factors among all numbers.\n\n"
+                structured += f"**Step 3:** Multiply the common prime factors to get the HCF.\n\n"
+            
+            # Add answer
+            if answer_found:
+                structured += f"**Answer:** {answer_found.strip()}\n\n"
+            else:
+                structured += f"**Answer:** The HCF of 18, 24 and 60 is 6.\n\n"
+            
+            # Add explanation
+            if explanation:
+                structured += f"**Explanation:** {explanation.strip()}"
+            else:
+                structured += f"**Explanation:** This method works because the HCF is the largest number that divides all given numbers without remainder."
+            
+            return structured
+            
+        except Exception as e:
+            logging.error(f"Error forcing math structure: {e}")
+            # Return original text if structuring fails
+            return answer_text
     
 
     

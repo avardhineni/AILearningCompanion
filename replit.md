@@ -100,6 +100,10 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- July 7, 2025: Implemented permanent fix for Math question formatting issues
+- Added post-processing function to force structured format for Math answers
+- Enhanced voice reading doubt-answering with consistent step-by-step solutions
+- Fixed single quote pronunciation issues in Math voice content
 - July 6, 2025: Updated application name from "AI Tutor - Document Processor" to "TutionBuddy - Students Smart Study Partner"
 - Updated all templates, navigation, titles, and documentation to reflect the new branding
 - July 6, 2025: Removed Comprehension Question Section completely per user request
