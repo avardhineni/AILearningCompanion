@@ -56,39 +56,71 @@ class SimpleVoiceTutor:
         return self.voice_settings.get(subject, self.voice_settings['English'])
     
     def clean_text_for_speech(self, text):
-        """Clean text by removing markdown symbols and formatting for speech"""
+        """
+        Clean text by removing formatting symbols that sound confusing when spoken aloud.
+        This function ensures that markdown symbols, HTML entities, and other formatting
+        characters are removed or replaced with spoken equivalents for clear TTS.
+        
+        Args:
+            text (str): The text to clean for speech synthesis
+            
+        Returns:
+            str: Cleaned text suitable for TTS without confusing symbols
+        """
         if not text:
             return ""
-            
-        # Remove markdown bold and italic symbols
-        text = re.sub(r'\*+', '', text)
         
-        # Remove markdown headers
-        text = re.sub(r'#+\s*', '', text)
+        cleaned_text = text
         
-        # Remove markdown underline
-        text = re.sub(r'_+', '', text)
+        # Remove markdown formatting symbols that don't need to be spoken
+        cleaned_text = re.sub(r'\*\*(.*?)\*\*', r'\1', cleaned_text)  # Remove bold **text**
+        cleaned_text = re.sub(r'\*(.*?)\*', r'\1', cleaned_text)      # Remove italic *text*
+        cleaned_text = re.sub(r'__(.*?)__', r'\1', cleaned_text)      # Remove bold underline __text__
+        cleaned_text = re.sub(r'_(.*?)_', r'\1', cleaned_text)        # Remove italic underline _text_
+        cleaned_text = re.sub(r'#{1,6}\s?', '', cleaned_text)         # Remove markdown headers ###
+        cleaned_text = re.sub(r'`{1,3}(.*?)`{1,3}', r'\1', cleaned_text)  # Remove code blocks ```text```
+        
+        # Remove other formatting symbols that don't add meaning when spoken
+        cleaned_text = re.sub(r'[*#_`~\[\]]', '', cleaned_text)       # Remove remaining formatting symbols
+        cleaned_text = re.sub(r'\s{2,}', ' ', cleaned_text)           # Replace multiple spaces with single space
+        cleaned_text = re.sub(r'\n{2,}', '\n', cleaned_text)          # Replace multiple newlines with single newline
+        
+        # Clean up common HTML entities and tags if any slipped through
+        cleaned_text = re.sub(r'<[^>]*>', '', cleaned_text)           # Remove HTML tags
+        cleaned_text = re.sub(r'&nbsp;', ' ', cleaned_text)           # Replace non-breaking spaces
+        cleaned_text = re.sub(r'&amp;', 'and', cleaned_text)          # Replace &amp; with 'and'
+        cleaned_text = re.sub(r'&lt;', 'less than', cleaned_text)     # Replace &lt; with readable text
+        cleaned_text = re.sub(r'&gt;', 'greater than', cleaned_text)  # Replace &gt; with readable text
         
         # Remove ALL single quotes to prevent "backfoot" pronunciation issues in math content
         # This is aggressive but necessary for clear speech in mathematical contexts
-        text = text.replace("'", "")
+        cleaned_text = cleaned_text.replace("'", "")
         
-        # Also remove backticks that might cause similar issues
-        text = text.replace("`", "")
-        
-        # Clean up mathematical symbols for better speech
-        text = re.sub(r'\s*<--\s*', ' becomes ', text)
-        text = re.sub(r'\s*------\s*', ' equals ', text)
-        text = re.sub(r'\s*x\s*', ' times ', text)
-        text = re.sub(r'\s*=\s*', ' equals ', text)
+        # Clean up mathematical symbols for better speech (make them sound natural)
+        cleaned_text = re.sub(r'\s*÷\s*', ' divided by ', cleaned_text)
+        cleaned_text = re.sub(r'\s*×\s*', ' multiplied by ', cleaned_text)
+        cleaned_text = re.sub(r'\s*-\s*', ' minus ', cleaned_text)
+        cleaned_text = re.sub(r'\s*\+\s*', ' plus ', cleaned_text)
+        cleaned_text = re.sub(r'\s*<--\s*', ' becomes ', cleaned_text)
+        cleaned_text = re.sub(r'\s*------\s*', ' equals ', cleaned_text)
+        cleaned_text = re.sub(r'\s*x\s*', ' times ', cleaned_text)
+        cleaned_text = re.sub(r'\s*=\s*', ' equals ', cleaned_text)
         
         # Remove emojis and special symbols but keep basic punctuation
-        text = re.sub(r'[💫✨🌎🪐🔸]', '', text)
+        cleaned_text = re.sub(r'[💫✨🌎🪐🔸🎯⭐🔍📚💡🎉🌟]', '', cleaned_text)
         
-        # Remove extra spaces
-        text = re.sub(r'\s+', ' ', text)
+        # Add natural pauses for better comprehension by ensuring proper spacing
+        cleaned_text = re.sub(r'\.', '. ', cleaned_text)              # Ensure space after periods
+        cleaned_text = re.sub(r',', ', ', cleaned_text)               # Ensure space after commas
+        cleaned_text = re.sub(r':', ': ', cleaned_text)               # Ensure space after colons
+        cleaned_text = re.sub(r';', '; ', cleaned_text)               # Ensure space after semicolons
+        cleaned_text = re.sub(r'\?', '? ', cleaned_text)              # Ensure space after question marks
+        cleaned_text = re.sub(r'!', '! ', cleaned_text)               # Ensure space after exclamation marks
         
-        return text.strip()
+        # Clean up any double spaces created by the above operations
+        cleaned_text = re.sub(r'\s{2,}', ' ', cleaned_text).strip()
+        
+        return cleaned_text
     
     def make_content_interactive(self, content, chunk_number, subject):
         """Make content more interactive and engaging for voice reading"""

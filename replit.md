@@ -102,12 +102,15 @@ This is a Flask-based web application designed to process educational Word docum
 ## Recent Changes
 - July 7, 2025: SUCCESSFULLY ENHANCED Homework Assistant with Voice Interaction Capabilities
 - Added Text-to-Speech (TTS) for listening to hints with child-friendly voice settings
-- Implemented Speech-to-Text (STT) for spoken answer input with Indian English accent support
+- Implemented advanced text cleaning for TTS to remove confusing formatting symbols (*, #, _, etc.)
+- Created comprehensive speech text preprocessing that removes markdown symbols and HTML entities
+- Added Speech-to-Text (STT) for spoken answer input with Indian English accent support
 - Created comprehensive browser-native voice interface with fallback error handling
 - Added voice controls (play, pause, stop) for hint reading with visual feedback
 - Integrated microphone button for hands-free answer input with real-time transcription
 - Enhanced accessibility for kids who prefer listening/speaking over typing/reading
 - Included proper error messages and fallback instructions for unsupported browsers
+- Updated both frontend and backend TTS cleaning functions for consistent experience
 - July 7, 2025: SUCCESSFULLY IMPLEMENTED Homework & Worksheet Assistant feature
 - Added comprehensive adaptive hint system with 5 progressive levels (gentle nudge → complete explanation)
 - Created full database schema for tracking homework sessions, questions, attempts, and hints

@@ -526,6 +526,55 @@
         });
 
         // Text-to-Speech Functions
+        
+        /**
+         * Clean text for speech synthesis by removing formatting symbols that sound confusing when spoken
+         * @param {string} text - The text to clean
+         * @returns {string} - Cleaned text suitable for TTS
+         */
+        function cleanTextForSpeech(text) {
+            if (!text) return '';
+            
+            let cleanedText = text;
+            
+            // Remove markdown formatting symbols that don't need to be spoken
+            cleanedText = cleanedText.replace(/\*\*(.*?)\*\*/g, '$1'); // Remove bold markdown **text**
+            cleanedText = cleanedText.replace(/\*(.*?)\*/g, '$1');     // Remove italic markdown *text*
+            cleanedText = cleanedText.replace(/__(.*?)__/g, '$1');     // Remove bold underline __text__
+            cleanedText = cleanedText.replace(/_(.*?)_/g, '$1');       // Remove italic underline _text_
+            cleanedText = cleanedText.replace(/#{1,6}\s?/g, '');       // Remove markdown headers ### 
+            cleanedText = cleanedText.replace(/`{1,3}(.*?)`{1,3}/g, '$1'); // Remove code blocks ```text```
+            
+            // Remove other formatting symbols that don't add meaning when spoken
+            cleanedText = cleanedText.replace(/[*#_`~\[\]]/g, '');     // Remove remaining formatting symbols
+            cleanedText = cleanedText.replace(/\s{2,}/g, ' ');         // Replace multiple spaces with single space
+            cleanedText = cleanedText.replace(/\n{2,}/g, '\n');        // Replace multiple newlines with single newline
+            
+            // Clean up common HTML entities and tags if any slipped through
+            cleanedText = cleanedText.replace(/<[^>]*>/g, '');         // Remove HTML tags
+            cleanedText = cleanedText.replace(/&nbsp;/g, ' ');         // Replace non-breaking spaces
+            cleanedText = cleanedText.replace(/&amp;/g, 'and');       // Replace &amp; with 'and'
+            cleanedText = cleanedText.replace(/&lt;/g, 'less than');   // Replace &lt; with readable text
+            cleanedText = cleanedText.replace(/&gt;/g, 'greater than'); // Replace &gt; with readable text
+            
+            // Normalize whitespace and trim
+            cleanedText = cleanedText.trim();
+            cleanedText = cleanedText.replace(/\s+/g, ' ');
+            
+            // Add natural pauses for better comprehension by replacing certain punctuation
+            cleanedText = cleanedText.replace(/\./g, '. ');            // Ensure space after periods
+            cleanedText = cleanedText.replace(/,/g, ', ');             // Ensure space after commas
+            cleanedText = cleanedText.replace(/:/g, ': ');             // Ensure space after colons
+            cleanedText = cleanedText.replace(/;/g, '; ');             // Ensure space after semicolons
+            cleanedText = cleanedText.replace(/\?/g, '? ');            // Ensure space after question marks
+            cleanedText = cleanedText.replace(/!/g, '! ');             // Ensure space after exclamation marks
+            
+            // Clean up any double spaces created by the above operations
+            cleanedText = cleanedText.replace(/\s{2,}/g, ' ').trim();
+            
+            return cleanedText;
+        }
+
         function speakHint() {
             if (!speechSynthesis) {
                 alert('Text-to-speech is not supported in your browser');
@@ -536,14 +585,19 @@
             speechSynthesis.cancel();
 
             // Get the hint text
-            const hintText = document.getElementById('hint-text').innerText;
-            if (!hintText) {
+            const rawHintText = document.getElementById('hint-text').innerText;
+            if (!rawHintText) {
                 alert('No hint text to speak');
                 return;
             }
 
-            // Create speech synthesis utterance
-            const utterance = new SpeechSynthesisUtterance(hintText);
+            // Clean the text for speech synthesis
+            const cleanedHintText = cleanTextForSpeech(rawHintText);
+            console.log('Original text:', rawHintText);
+            console.log('Cleaned text for TTS:', cleanedHintText);
+
+            // Create speech synthesis utterance with cleaned text
+            const utterance = new SpeechSynthesisUtterance(cleanedHintText);
             
             // Configure voice settings for child-friendly speech
             utterance.rate = 0.8; // Slightly slower for better comprehension

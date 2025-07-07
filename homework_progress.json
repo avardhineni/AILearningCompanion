@@ -27,15 +27,29 @@
         "start_time": "2025-07-07T20:44:39.508546"
       },
       "status": "active"
+    },
+    {
+      "session_id": "hw_20250707_205316",
+      "subject": "Science",
+      "task_description": "Chapter 1 Long Answer Questions",
+      "start_time": "2025-07-07T20:53:16.098618",
+      "questions": [],
+      "current_question": {
+        "text": "Explain about MalNutrition",
+        "attempts": [],
+        "hints_used": 3,
+        "start_time": "2025-07-07T20:53:37.260540"
+      },
+      "status": "active"
     }
   ],
   "worksheet_sessions": [],
   "performance_data": {},
   "hint_usage": {
     "Science": {
-      "1": 2,
-      "2": 1,
-      "3": 1
+      "1": 3,
+      "2": 2,
+      "3": 2
     }
   },
   "subject_strengths": {}
