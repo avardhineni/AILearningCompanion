@@ -57,6 +57,14 @@ class AITutor:
             - Connect concepts to real-life examples when possible
             - If the question can't be answered from the provided content, say so clearly
             - For poetry/literature questions, provide detailed analysis including themes, meanings, and literary devices
+
+            CRITICAL FOR MATHEMATICS:
+            - For ALL Math questions, you MUST provide step-by-step solutions with detailed explanations
+            - Never give just a final answer - always show the complete working
+            - Explain the reasoning behind each step
+            - Use proper mathematical formatting with clear steps
+            - Help students understand the concept, not just get the answer
+            - Include why each mathematical rule or method is used
             """
             
             user_prompt = f"""Based on the following lesson content, please provide a detailed and comprehensive answer to the student's question.
@@ -77,22 +85,55 @@ CRITICAL LANGUAGE REQUIREMENT - This MUST be followed exactly:
 
 CHECK THE SUBJECT ABOVE AND USE THE CORRECT LANGUAGE FOR YOUR ENTIRE RESPONSE.
 
+CRITICAL FOR MATHEMATICS QUESTIONS:
+If the SUBJECT is "Maths", you MUST format your response exactly as follows:
+**Question:** [Restate the question clearly]
+
+**Solution:**
+**Step 1:** [First step with detailed explanation of WHY we do this]
+**Step 2:** [Second step with detailed explanation of WHY we do this]
+**Step 3:** [Continue until complete with explanations for each step]
+
+**Answer:** [Final answer clearly stated]
+
+**Explanation:** [Why this method works and what concept it teaches]
+
+Remember: For Math questions, NEVER give just a final answer. Always show complete step-by-step working with explanations for each step.
+
 Subject-specific guidelines:
 1. For Hindi/Telugu language subjects:
    - Provide summary, meaning, and themes in the respective language
    - Explain difficult words and their meanings
    - Discuss the poet's message or moral
    - Include literary devices if mentioned
-2. For all other subjects:
+
+2. For MATHS subjects (CRITICAL - Must follow this exact format):
+   - ALWAYS provide step-by-step solutions with clear explanations
+   - Format your response as follows:
+     * **Question:** [Restate the question clearly]
+     * **Solution:** [Provide step-by-step solution]
+     * **Step 1:** [First step with detailed explanation of WHY we do this]
+     * **Step 2:** [Second step with detailed explanation of WHY we do this]
+     * **Step 3:** [Continue until complete with explanations for each step]
+     * **Answer:** [Final answer clearly stated]
+     * **Explanation:** [Why this method works and what concept it teaches]
+   - Always explain the REASONING behind each step
+   - Use simple mathematical language appropriate for 5th graders
+   - Include examples from the textbook when available
+   - Connect to real-life applications when possible
+   - Show all calculations clearly
+   - Explain mathematical concepts and rules being used
+
+3. For Science/Social/Other subjects:
    - Respond in clear, simple English
    - Start with a direct answer to the question
    - Provide detailed explanations using information from the textbook
-3. Include relevant examples, functions, or additional details mentioned in the lesson
-4. Explain the concept in a way that helps the student understand the broader topic
+   - Use bullet points or structured format when explaining multiple related points
+
+4. Include relevant examples, functions, or additional details mentioned in the lesson
 5. Reference specific page numbers where the information can be found
-6. Use bullet points or structured format when explaining multiple related points
-7. Include any interesting facts or connections mentioned in the textbook
-8. If the question is not related to the document content, politely explain what the document is actually about and suggest relevant questions
+6. Include any interesting facts or connections mentioned in the textbook
+7. If the question is not related to the document content, politely explain what the document is actually about and suggest relevant questions
 
 Make your answer educational, detailed, and engaging for a 5th grade student. Handle multilingual content appropriately. If the question doesn't match the document content, provide helpful guidance about what the lesson contains."""
             
