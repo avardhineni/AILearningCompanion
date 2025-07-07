@@ -4,10 +4,11 @@ from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, jsonify, make_response
 from werkzeug.utils import secure_filename
 from app import app, db
-from models import Document, DocumentPage
+from models import Document, DocumentPage, HomeworkSession, HomeworkQuestion, HomeworkAttempt, HomeworkHint, StudentProgress
 from document_processor import DocumentProcessor
 from ai_tutor import AITutor
 from simple_voice_tutor import SimpleVoiceTutor
+from homework_assistant import HomeworkAssistant
 import logging
 
 logger = logging.getLogger(__name__)
@@ -611,3 +612,114 @@ def test_ai_direct():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)})
+
+
+# ========== HOMEWORK & WORKSHEET ASSISTANT ROUTES ==========
+
+@app.route('/homework')
+def homework():
+    """Show the homework assistant page"""
+    return render_template('homework.html')
+
+@app.route('/api/homework/start-session', methods=['POST'])
+def api_start_homework_session():
+    """Start a new homework session"""
+    try:
+        data = request.get_json()
+        subject = data.get('subject')
+        task_description = data.get('task_description')
+        
+        if not subject or not task_description:
+            return jsonify({"success": False, "message": "Subject and task description are required"})
+        
+        homework_assistant = HomeworkAssistant()
+        result = homework_assistant.start_homework_session(subject, task_description)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error starting homework session: {e}")
+        return jsonify({"success": False, "message": "Failed to start homework session"})
+
+@app.route('/api/homework/start-worksheet', methods=['POST'])
+def api_start_worksheet_session():
+    """Start a new worksheet session"""
+    try:
+        data = request.get_json()
+        subject = data.get('subject')
+        
+        if not subject:
+            return jsonify({"success": False, "message": "Subject is required"})
+        
+        homework_assistant = HomeworkAssistant()
+        result = homework_assistant.start_worksheet_session(subject)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error starting worksheet session: {e}")
+        return jsonify({"success": False, "message": "Failed to start worksheet session"})
+
+@app.route('/api/homework/process-question', methods=['POST'])
+def api_process_homework_question():
+    """Process a homework question with hint system"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        question = data.get('question')
+        student_response = data.get('student_response')
+        request_hint = data.get('request_hint', False)
+        
+        if not session_id or not question:
+            return jsonify({"success": False, "message": "Session ID and question are required"})
+        
+        homework_assistant = HomeworkAssistant()
+        result = homework_assistant.process_homework_question(
+            session_id, question, student_response, request_hint
+        )
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error processing homework question: {e}")
+        return jsonify({"success": False, "message": "Failed to process question"})
+
+@app.route('/api/homework/complete-session', methods=['POST'])
+def api_complete_homework_session():
+    """Complete a homework session and generate summary"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        
+        if not session_id:
+            return jsonify({"success": False, "message": "Session ID is required"})
+        
+        homework_assistant = HomeworkAssistant()
+        result = homework_assistant.generate_homework_summary(session_id)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error completing homework session: {e}")
+        return jsonify({"success": False, "message": "Failed to complete session"})
+
+@app.route('/api/homework/progress-report', methods=['GET'])
+def api_get_progress_report():
+    """Get student progress report for parents/teachers"""
+    try:
+        homework_assistant = HomeworkAssistant()
+        result = homework_assistant.get_student_progress_report()
+        
+        return jsonify({
+            "success": True,
+            "progress_report": result
+        })
+        
+    except Exception as e:
+        logging.error(f"Error generating progress report: {e}")
+        return jsonify({"success": False, "message": "Failed to generate progress report"})
+
+@app.route('/progress-report')
+def progress_report():
+    """Show the progress report page"""
+    return render_template('progress_report.html')
