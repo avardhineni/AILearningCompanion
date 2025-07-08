@@ -10,7 +10,7 @@ class AITutor:
     
     def __init__(self):
         self.client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
-        self.model = "gemini-2.5-flash"
+        self.model = "gemini-1.5-flash"
     
     def ask_question(self, document_id, question):
         """
