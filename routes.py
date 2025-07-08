@@ -421,7 +421,7 @@ def test_page():
     return send_file('test_ai.html')
 
 # Voice Tutoring Routes
-@app.route('/interactive-reading')
+@app.route('/interactive_reading')
 def interactive_reading():
     """Show the interactive reading page"""
     documents = Document.query.order_by(Document.upload_date.desc()).all()
