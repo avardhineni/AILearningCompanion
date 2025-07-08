@@ -100,17 +100,6 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
-- July 7, 2025: SUCCESSFULLY ENHANCED Homework Assistant with Voice Interaction Capabilities
-- Added Text-to-Speech (TTS) for listening to hints with child-friendly voice settings
-- Implemented advanced text cleaning for TTS to remove confusing formatting symbols (*, #, _, etc.)
-- Created comprehensive speech text preprocessing that removes markdown symbols and HTML entities
-- Added Speech-to-Text (STT) for spoken answer input with Indian English accent support
-- Created comprehensive browser-native voice interface with fallback error handling
-- Added voice controls (play, pause, stop) for hint reading with visual feedback
-- Integrated microphone button for hands-free answer input with real-time transcription
-- Enhanced accessibility for kids who prefer listening/speaking over typing/reading
-- Included proper error messages and fallback instructions for unsupported browsers
-- Updated both frontend and backend TTS cleaning functions for consistent experience
 - July 7, 2025: SUCCESSFULLY IMPLEMENTED Homework & Worksheet Assistant feature
 - Added comprehensive adaptive hint system with 5 progressive levels (gentle nudge → complete explanation)
 - Created full database schema for tracking homework sessions, questions, attempts, and hints
@@ -220,11 +209,6 @@ This is a Flask-based web application designed to process educational Word docum
 - **Daily Homework Support**: Guided assistance for daily homework assignments with subject selection
 - **Weekly Worksheet Sessions**: Dedicated Friday worksheet completion sessions with step-by-step guidance
 - **Adaptive Hint System**: 5-level progressive hint system (gentle nudge → complete explanation)
-- **Voice Interaction Capabilities**: Full TTS and STT support for enhanced accessibility
-  - **Hint Listening**: Text-to-Speech for all hints with child-friendly voice settings and Indian English accent
-  - **Spoken Answers**: Speech-to-Text for answer input with real-time transcription and error handling
-  - **Voice Controls**: Play, pause, and stop controls for hint reading with visual feedback
-  - **Browser Compatibility**: Native browser APIs with fallback instructions for unsupported devices
 - **Independent Learning Focus**: AI guides thinking process without providing direct answers
 - **Session Management**: Complete tracking of homework sessions with start/end times and progress
 - **Performance Analytics**: Detailed progress tracking with success rates and hint usage patterns
