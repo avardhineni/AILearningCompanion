@@ -66,20 +66,45 @@
         "start_time": "2025-07-07T21:00:43.879825"
       },
       "status": "active"
+    },
+    {
+      "session_id": "hw_20250707_210811",
+      "subject": "Science",
+      "task_description": "Chapter 1 Long Answer Questions",
+      "start_time": "2025-07-07T21:08:11.151244",
+      "questions": [],
+      "current_question": {
+        "text": "explain malnutrition",
+        "attempts": [
+          {
+            "response": "nutrition is like deficiency in nutritions  is called malnutrition",
+            "timestamp": "2025-07-07T21:09:16.941841",
+            "evaluation": {
+              "evaluation_text": "I need to review this more carefully.",
+              "evaluation_level": "incorrect",
+              "subject": "Science",
+              "timestamp": "2025-07-07T21:09:16.941826"
+            }
+          }
+        ],
+        "hints_used": 3,
+        "start_time": "2025-07-07T21:08:27.383592"
+      },
+      "status": "active"
     }
   ],
   "worksheet_sessions": [],
   "performance_data": {
     "Science": {
       "correct": 0,
-      "total": 1
+      "total": 2
     }
   },
   "hint_usage": {
     "Science": {
-      "1": 4,
-      "2": 2,
-      "3": 2
+      "1": 5,
+      "2": 3,
+      "3": 3
     }
   },
   "subject_strengths": {}
