@@ -9,7 +9,7 @@ class AITutor:
     """AI Tutor class that uses Gemini to answer questions about documents"""
     
     def __init__(self):
-        self.client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+        self.client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
         self.model = "gemini-2.5-flash"
     
     def ask_question(self, document_id, question):

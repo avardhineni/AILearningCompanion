@@ -25,7 +25,7 @@ class HomeworkAssistant:
     
     def __init__(self):
         """Initialize the homework assistant with Gemini AI client."""
-        self.client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+        self.client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
         self.progress_file = "homework_progress.json"
         self.hint_levels = {
             1: "gentle_nudge",
