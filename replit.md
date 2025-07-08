@@ -8,24 +8,33 @@ This is a Flask-based web application designed to process educational Word docum
 
 ### Frontend Architecture
 - **Framework**: Flask with Jinja2 templating
-- **UI Framework**: Bootstrap 5 with dark theme
+- **UI Framework**: Bootstrap 5 with dark theme (using Replit's agent theme)
 - **Icons**: Feather Icons for consistent iconography
-- **JavaScript**: Vanilla JavaScript for form handling and user interactions
+- **JavaScript**: Vanilla JavaScript with Chart.js for analytics visualization
 - **Styling**: Custom CSS for educational content display and readability
+- **Interactive Components**: AJAX-based homework assistant with real-time feedback
 
 ### Backend Architecture
 - **Web Framework**: Flask (Python)
 - **WSGI Server**: Gunicorn for production deployment
 - **Database ORM**: SQLAlchemy with Flask-SQLAlchemy extension
+- **AI Integration**: Google Gemini API for intelligent tutoring and homework assistance
 - **Document Processing**: python-docx library for Word document parsing
+- **Voice Processing**: Google Text-to-Speech (gTTS) for multilingual audio generation
 - **File Handling**: Werkzeug utilities for secure file uploads
 
 ### Database Design
 - **Primary Database**: SQLite for development (PostgreSQL ready for production)
-- **Models**:
+- **Document Management Models**:
   - `Document`: Stores document metadata (filename, upload date, total pages, subject, lesson title)
   - `DocumentPage`: Stores individual page content with word count and timestamps
-- **Relationships**: One-to-many relationship between Document and DocumentPage
+- **Homework Assistant Models**:
+  - `HomeworkSession`: Tracks homework/worksheet sessions with subject, timing, and performance metrics
+  - `HomeworkQuestion`: Stores individual questions with difficulty level, attempts, and correctness
+  - `HomeworkAttempt`: Records each student response attempt with evaluation feedback
+  - `HomeworkHint`: Tracks progressive hints provided (5 levels) with timestamps
+  - `StudentProgress`: Aggregates overall performance across subjects with success rates
+- **Relationships**: Complex relationships supporting homework session tracking and progress analytics
 
 ## Key Components
 

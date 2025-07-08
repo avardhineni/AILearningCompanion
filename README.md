@@ -10,6 +10,7 @@ An advanced AI-powered educational platform designed for 5th grade CBSE students
 - **Document Processing**: Automatic extraction and page-by-page storage of Word documents (.docx)
 - **AI-Powered Tutoring**: Interactive question-answering system using Google Gemini AI
 - **Voice-Based Interactive Reading**: Text-to-speech lesson playback with interactive conversational elements and doubt resolution
+- **Homework & Worksheet Assistant**: Adaptive hint system for guided homework help with progress tracking
 - **Quiz Generation**: Automatic creation of practice questions based on lesson content
 - **Kid-Friendly Interface**: Age-appropriate responses with educational emojis and simple language
 
@@ -41,6 +42,7 @@ An advanced AI-powered educational platform designed for 5th grade CBSE students
 
 ### Database Schema
 ```
+Document Management:
 Document
 ├── id (Primary Key)
 ├── filename
@@ -58,6 +60,52 @@ DocumentPage
 ├── content
 ├── word_count
 └── created_date
+
+Homework Assistant:
+HomeworkSession
+├── id (Primary Key)
+├── session_id (Unique)
+├── subject
+├── session_type (homework/worksheet)
+├── task_description
+├── start_time/end_time
+├── performance_score
+└── total_questions/hints_used/attempts
+
+HomeworkQuestion
+├── id (Primary Key)
+├── session_id (Foreign Key)
+├── question_text
+├── difficulty_level
+├── hints_used
+├── attempts_count
+├── final_answer
+└── evaluation_score
+
+HomeworkAttempt
+├── id (Primary Key)
+├── question_id (Foreign Key)
+├── attempt_number
+├── student_response
+├── evaluation_result
+└── evaluation_level
+
+HomeworkHint
+├── id (Primary Key)
+├── question_id (Foreign Key)
+├── hint_level (1-5)
+├── hint_type
+├── hint_text
+└── timestamp
+
+StudentProgress
+├── id (Primary Key)
+├── subject
+├── total_sessions/questions
+├── correct_answers
+├── success_rate
+├── average_hints_per_question
+└── difficulty_level
 ```
 
 ## 🚀 Getting Started
@@ -122,6 +170,15 @@ gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
 6. Use playback controls (play, pause, stop) as needed
 7. Enjoy uninterrupted content delivery with engaging conversational phrases
 
+### Using Homework Assistant
+1. Navigate to the **Homework Assistant** page
+2. Choose between "Daily Homework" or "Weekly Worksheet" sessions
+3. Select your subject and describe your homework assignment
+4. Enter your homework questions one by one
+5. Get progressive hints (5 levels) that guide your thinking process
+6. Submit your answers for AI evaluation and feedback
+7. Complete the session for progress tracking and parent/teacher reports
+
 ### Language Support
 - **Hindi subjects**: AI responds in Hindi with educational context, voice reading uses Hindi TTS
 - **Telugu subjects**: AI responds in Telugu with educational context, voice reading uses Telugu TTS
@@ -182,10 +239,14 @@ gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
 ## 🌟 Key Achievements
 
 ### Latest Improvements (July 2025)
+- **Homework & Worksheet Assistant**: Implemented comprehensive adaptive hint system with 5 progressive levels
+- **Progress Tracking**: Added detailed analytics for parents/teachers with charts and performance reports
+- **Smart Evaluation**: AI evaluates student responses with constructive feedback encouraging independent thinking
+- **Session Management**: Complete homework session tracking with timing, attempts, and success metrics
+- **Professional Rebranding**: Updated to "TutionBuddy - Students Smart Study Partner" across all interfaces
 - **Seamless Voice Reading**: Fixed critical bugs preventing lesson content delivery after welcome messages
 - **Enhanced User Engagement**: Added conversational elements making voice reading more interactive and natural
 - **Streamlined Experience**: Removed interrupting comprehension questions for uninterrupted learning flow
-- **Professional Rebranding**: Updated to "TutionBuddy - Students Smart Study Partner" across all interfaces
 - **Improved Text Processing**: Enhanced speech synthesis with better punctuation handling and readability
 
 ### Multilingual Education Support
@@ -265,6 +326,31 @@ PGDATABASE=database_name
 - **Persistent Session Management**: Tracks reading progress across browser sessions
 - **Audio Controls**: Play, pause, resume, and stop functionality for flexible learning
 - **Conversational Engagement**: Interactive phrases like "Let's begin", "Isn't this interesting?", "Amazing, right!" in multiple languages
+
+## 📝 Homework & Worksheet Assistant
+
+### Core Assistant Features
+- **Daily Homework Support**: Guided assistance for daily homework assignments with subject-specific help
+- **Weekly Worksheet Sessions**: Dedicated Friday worksheet completion with comprehensive guidance
+- **5-Level Progressive Hint System**: From gentle nudges to complete explanations that encourage independent thinking
+- **Smart Evaluation System**: AI evaluates student responses with constructive feedback and encouragement
+- **Session Management**: Complete tracking of homework sessions with start/end times and detailed progress
+- **Performance Analytics**: Success rates, hint usage patterns, and learning progress across all subjects
+- **Progress Reports**: Comprehensive charts and recommendations for parents and teachers
+- **Subject-wise Tracking**: Individual performance monitoring with adaptive difficulty adjustment
+
+### Hint System Levels
+1. **Gentle Nudge**: Subtle guidance to help students think in the right direction
+2. **Conceptual Hint**: Points to relevant concepts or formulas without giving answers
+3. **Approach Guidance**: Suggests problem-solving strategies and methods
+4. **Step-by-Step Breakdown**: Detailed process explanation with examples
+5. **Complete Explanation**: Full solution with educational context when students are stuck
+
+### Learning Philosophy
+- **Independent Thinking**: AI guides the thought process rather than providing direct answers
+- **Encouraging Feedback**: Positive reinforcement and constructive criticism for better learning
+- **Adaptive Learning**: Hint levels adjust based on student's past performance and confidence
+- **Comprehensive Tracking**: Every attempt, hint usage, and success is tracked for improvement
 
 ### Voice Technology Stack
 - **gTTS (Google Text-to-Speech)**: Reliable cloud-based TTS service with multilingual support
