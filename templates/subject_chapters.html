@@ -99,6 +99,10 @@
                                 <i data-feather="message-circle" class="me-1"></i>
                                 Ask AI
                             </a>
+                            <a href="{{ url_for('generate_quiz', doc_id=doc.id) }}" class="btn btn-outline-success btn-sm flex-fill">
+                                <i data-feather="clipboard" class="me-1"></i>
+                                Generate Quiz
+                            </a>
                         </div>
                     </div>
                 </div>
