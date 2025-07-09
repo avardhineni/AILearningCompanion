@@ -49,7 +49,12 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label for="question" class="form-label">Your Question</label>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label for="question" class="form-label">Your Question</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary" id="speakQuestionBtn" onclick="speakQuestion()">
+                                    <i data-feather="mic" class="me-1"></i>Speak Question
+                                </button>
+                            </div>
                             <textarea class="form-control" id="question" rows="4" 
                                     placeholder="Ask anything about the lesson..." required></textarea>
                         </div>
@@ -79,7 +84,17 @@
                             <div id="questionDisplay" class="p-2 bg-light bg-opacity-10 rounded mt-1"></div>
                         </div>
                         <div>
-                            <strong>Answer:</strong>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>Answer:</strong>
+                                <div class="audio-controls" id="answerAudioControls" style="display: none;">
+                                    <button type="button" class="btn btn-sm btn-outline-success" id="listenAnswerBtn" onclick="listenToAnswer()">
+                                        <i data-feather="volume-2" class="me-1"></i>Listen
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" id="stopAnswerBtn" onclick="stopAnswerAudio()" style="display: none;">
+                                        <i data-feather="volume-x" class="me-1"></i>Stop
+                                    </button>
+                                </div>
+                            </div>
                             <div id="answerDisplay" class="p-3 bg-light rounded mt-1 border" style="font-size: 1.1rem; line-height: 1.6; color: #212529; background-color: #f8f9fa !important;"></div>
                         </div>
                     </div>
@@ -148,9 +163,10 @@ function askQuestion() {
                 console.log('Answer element innerHTML set');
             }
             
-            // Show answer area
+            // Show answer area and audio controls
             if (answerArea) {
                 answerArea.style.display = 'block';
+                document.getElementById('answerAudioControls').style.display = 'block';
                 console.log('Answer area shown');
                 
                 // Scroll to answer
@@ -307,5 +323,207 @@ document.addEventListener('visibilitychange', function() {
         refreshDocumentList();
     }
 });
+
+// Global audio variable
+let currentAudio = null;
+
+// Speech recognition for questions
+function speakQuestion() {
+    const speakBtn = document.getElementById('speakQuestionBtn');
+    const questionTextarea = document.getElementById('question');
+    
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+        return;
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+    
+    // Update button state
+    speakBtn.innerHTML = '<i data-feather="loader" class="me-1"></i>Listening...';
+    speakBtn.disabled = true;
+    
+    recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        questionTextarea.value = transcript;
+        
+        // Reset button
+        speakBtn.innerHTML = '<i data-feather="mic" class="me-1"></i>Speak Question';
+        speakBtn.disabled = false;
+        feather.replace();
+    };
+    
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        alert('Speech recognition error: ' + event.error);
+        
+        // Reset button
+        speakBtn.innerHTML = '<i data-feather="mic" class="me-1"></i>Speak Question';
+        speakBtn.disabled = false;
+        feather.replace();
+    };
+    
+    recognition.onend = function() {
+        // Reset button if not already reset
+        if (speakBtn.disabled) {
+            speakBtn.innerHTML = '<i data-feather="mic" class="me-1"></i>Speak Question';
+            speakBtn.disabled = false;
+            feather.replace();
+        }
+    };
+    
+    try {
+        recognition.start();
+    } catch (error) {
+        console.error('Error starting speech recognition:', error);
+        alert('Error starting speech recognition: ' + error.message);
+        
+        // Reset button
+        speakBtn.innerHTML = '<i data-feather="mic" class="me-1"></i>Speak Question';
+        speakBtn.disabled = false;
+        feather.replace();
+    }
+}
+
+// Text cleaning function for speech
+function cleanTextForSpeech(text) {
+    if (!text) return '';
+    
+    // Convert HTML to plain text
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = text;
+    text = tempDiv.textContent || tempDiv.innerText || '';
+    
+    // Remove emojis and symbols
+    text = text.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '');
+    
+    // Remove special characters and formatting
+    text = text.replace(/[*_~`#]/g, '');
+    text = text.replace(/\s+/g, ' ');
+    
+    // Fix pronunciation issues
+    text = text.replace(/\bcontext\b/gi, 'con-text');
+    text = text.replace(/\bcontent\b/gi, 'con-tent');
+    text = text.replace(/\bcomputer\b/gi, 'com-puter');
+    
+    // Clean up currency and numbers
+    text = text.replace(/₹/g, 'Rupees ');
+    text = text.replace(/\$/g, 'Dollars ');
+    
+    return text.trim();
+}
+
+// Listen to answer function
+function listenToAnswer() {
+    const answerElement = document.getElementById('answerDisplay');
+    const listenBtn = document.getElementById('listenAnswerBtn');
+    const stopBtn = document.getElementById('stopAnswerBtn');
+    
+    if (!answerElement) {
+        alert('No answer available to listen to');
+        return;
+    }
+    
+    // Get plain text content and clean it
+    let answerText = answerElement.textContent || answerElement.innerText;
+    answerText = cleanTextForSpeech(answerText);
+    
+    if (!answerText.trim()) {
+        alert('No answer text to read');
+        return;
+    }
+    
+    // Show loading state
+    listenBtn.innerHTML = '<i data-feather="loader" class="me-1"></i>Loading...';
+    listenBtn.disabled = true;
+    
+    // Get selected document's subject for language selection
+    const documentSelect = document.getElementById('document_id');
+    const selectedOption = documentSelect.options[documentSelect.selectedIndex];
+    let subject = 'English';
+    
+    if (selectedOption && selectedOption.parentElement && selectedOption.parentElement.label) {
+        subject = selectedOption.parentElement.label;
+    }
+    
+    // Generate and play audio
+    fetch('/api/homework/listen-hint', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            hint_text: answerText,
+            subject: subject
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success && data.audio_url) {
+            // Stop any current audio
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+            }
+            
+            // Play new audio
+            currentAudio = new Audio(data.audio_url);
+            currentAudio.play();
+            
+            // Update button states
+            listenBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+            
+            // Reset buttons when audio ends
+            currentAudio.addEventListener('ended', () => {
+                listenBtn.style.display = 'inline-block';
+                stopBtn.style.display = 'none';
+                listenBtn.innerHTML = '<i data-feather="volume-2" class="me-1"></i>Listen';
+                listenBtn.disabled = false;
+                currentAudio = null;
+                feather.replace();
+            });
+            
+            feather.replace();
+        } else {
+            alert('Unable to generate audio for answer');
+            listenBtn.innerHTML = '<i data-feather="volume-2" class="me-1"></i>Listen';
+            listenBtn.disabled = false;
+            feather.replace();
+        }
+    })
+    .catch(error => {
+        console.error('Audio generation error:', error);
+        alert('Error generating audio');
+        listenBtn.innerHTML = '<i data-feather="volume-2" class="me-1"></i>Listen';
+        listenBtn.disabled = false;
+        feather.replace();
+    });
+}
+
+// Stop answer audio function
+function stopAnswerAudio() {
+    const listenBtn = document.getElementById('listenAnswerBtn');
+    const stopBtn = document.getElementById('stopAnswerBtn');
+    
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+    }
+    
+    // Reset button states
+    listenBtn.style.display = 'inline-block';
+    stopBtn.style.display = 'none';
+    listenBtn.innerHTML = '<i data-feather="volume-2" class="me-1"></i>Listen';
+    listenBtn.disabled = false;
+    
+    feather.replace();
+}
 </script>
 {% endblock %}
