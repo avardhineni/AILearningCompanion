@@ -109,6 +109,12 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- July 9, 2025: SUCCESSFULLY IMPLEMENTED Language-Specific Quiz Generation
+- Enhanced quiz generation system to support Hindi and Telugu languages
+- Hindi subjects now generate all quiz questions, answers, and formatting in Hindi language
+- Telugu subjects now generate all quiz questions, answers, and formatting in Telugu language
+- Added proper language-specific formatting labels (प्रश्न/प्रकार/उत्तर/पृष्ठ for Hindi, ప్రశ్న/రకం/సమాధానం/పేజీ for Telugu)
+- Generate Quiz button now creates language-appropriate content for all subjects
 - July 9, 2025: SUCCESSFULLY ENHANCED Homework & Worksheet Assistant with comprehensive features
 - Added support for multiple file types: .docx, .txt, .jpg, .jpeg, .png for homework uploads
 - Implemented "Ask Your Question" section with both text input and voice recognition
