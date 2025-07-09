@@ -1205,6 +1205,8 @@
                 return;
             }
             
+            // Store current question for incremental hints
+            currentQuestion = questionText;
             showPreSubmitHint(questionText);
         });
         
@@ -1493,6 +1495,18 @@
         // Question input change handler
         document.getElementById('questionInput').addEventListener('input', function() {
             togglePreSubmitHintButton();
+            
+            // Reset hint level when question changes
+            const newQuestion = this.value.trim();
+            if (newQuestion !== currentQuestion) {
+                currentHintLevel = 1;
+                currentQuestion = newQuestion;
+                
+                // Hide response if it was showing
+                if (newQuestion === '') {
+                    document.getElementById('questionResponse').style.display = 'none';
+                }
+            }
         });
         
         function togglePreSubmitHintButton() {
@@ -1505,10 +1519,11 @@
             const responseTextDiv = document.getElementById('responseText');
             
             // Show loading state
+            const hintLevelText = getHintLevelText(currentHintLevel);
             responseTextDiv.innerHTML = `
                 <div class="d-flex align-items-center">
                     <div class="progress-ring me-3"></div>
-                    <span>Generating hint to help you solve this problem...</span>
+                    <span>Generating ${hintLevelText} hint to help you solve this problem...</span>
                 </div>
             `;
             responseDiv.style.display = 'block';
@@ -1524,7 +1539,7 @@
                     question: questionText,
                     subject: selectedSubject,
                     request_hint: true,
-                    hint_level: 1
+                    hint_level: currentHintLevel
                 })
             })
             .then(response => response.json())
@@ -1532,14 +1547,24 @@
                 if (data.success) {
                     responseTextDiv.innerHTML = `
                         <div class="mb-3">
-                            <strong>💡 Hint to help you solve this:</strong>
+                            <strong>💡 ${hintLevelText} Hint (Level ${currentHintLevel}):</strong>
                             <div class="mt-2">${formatSteps(data.hint_text)}</div>
                         </div>
                         <div class="mt-3">
-                            <small class="text-muted">
-                                <i data-feather="info" class="me-1"></i>
-                                Try to solve the problem using this hint! If you need more help, submit your question.
-                            </small>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i data-feather="info" class="me-1"></i>
+                                    Try to solve the problem using this hint!
+                                </small>
+                                <div>
+                                    ${currentHintLevel < 5 ? `<button class="btn btn-sm btn-outline-info me-2" onclick="requestNextHint()">
+                                        <i data-feather="help-circle" class="me-1"></i>Need more help?
+                                    </button>` : ''}
+                                    <button class="btn btn-sm btn-outline-success" onclick="resetHintLevel()">
+                                        <i data-feather="refresh-cw" class="me-1"></i>Start over
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     `;
                     
@@ -1549,12 +1574,25 @@
                     
                     feather.replace();
                 } else {
+                    // Handle API errors gracefully
+                    const errorMessage = data.message || 'Service temporarily unavailable';
                     responseTextDiv.innerHTML = `
                         <div class="alert alert-warning">
                             <i data-feather="alert-circle" class="me-2"></i>
-                            Unable to generate hint. Please try submitting your question directly.
+                            ${errorMessage}. ${currentHintLevel < 5 ? 'Try requesting the next hint level.' : 'Please try submitting your question directly.'}
+                        </div>
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between">
+                                ${currentHintLevel < 5 ? `<button class="btn btn-sm btn-outline-info" onclick="requestNextHint()">
+                                    <i data-feather="help-circle" class="me-1"></i>Try next hint level
+                                </button>` : ''}
+                                <button class="btn btn-sm btn-outline-success" onclick="resetHintLevel()">
+                                    <i data-feather="refresh-cw" class="me-1"></i>Start over
+                                </button>
+                            </div>
                         </div>
                     `;
+                    feather.replace();
                 }
             })
             .catch(error => {
@@ -1562,10 +1600,41 @@
                 responseTextDiv.innerHTML = `
                     <div class="alert alert-danger">
                         <i data-feather="alert-circle" class="me-2"></i>
-                        Error generating hint. Please try submitting your question directly.
+                        Network error. Please check your connection and try again.
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-primary" onclick="showPreSubmitHint(currentQuestion)">
+                            <i data-feather="refresh-cw" class="me-1"></i>Try again
+                        </button>
                     </div>
                 `;
+                feather.replace();
             });
+        }
+        
+        function getHintLevelText(level) {
+            const levels = {
+                1: "Gentle",
+                2: "Guiding", 
+                3: "Detailed",
+                4: "Step-by-step",
+                5: "Complete"
+            };
+            return levels[level] || "Helpful";
+        }
+        
+        function requestNextHint() {
+            if (currentHintLevel < 5) {
+                currentHintLevel++;
+                showPreSubmitHint(currentQuestion);
+            }
+        }
+        
+        function resetHintLevel() {
+            currentHintLevel = 1;
+            // Clear the response area
+            document.getElementById('questionResponse').style.display = 'none';
+            document.getElementById('responseText').innerHTML = '';
         }
 
         // Initialize the page

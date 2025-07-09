@@ -789,15 +789,26 @@ def api_process_homework_question():
         
         # Handle hint requests without session
         if request_hint and not session_id:
-            result = homework_assistant.generate_progressive_hint(
-                question, subject, hint_level, "", []
-            )
-            return jsonify({
-                "success": True,
-                "hint_text": result.get('hint_text', 'Try breaking this problem down step by step.'),
-                "hint_type": result.get('hint_type', 'general'),
-                "hint_level": hint_level
-            })
+            try:
+                result = homework_assistant.generate_progressive_hint(
+                    question, subject, hint_level, "", []
+                )
+                return jsonify({
+                    "success": True,
+                    "hint_text": result.get('hint_text', 'Try breaking this problem down step by step.'),
+                    "hint_type": result.get('hint_type', 'general'),
+                    "hint_level": hint_level
+                })
+            except Exception as e:
+                logging.error(f"Error generating hint: {e}")
+                # Provide fallback hints when API is unavailable
+                fallback_hints = get_fallback_hints(question, subject, hint_level)
+                return jsonify({
+                    "success": True,
+                    "hint_text": fallback_hints,
+                    "hint_type": "fallback",
+                    "hint_level": hint_level
+                })
         
         result = homework_assistant.process_homework_question(
             session_id, question, student_response, request_hint, hint_level
@@ -987,6 +998,40 @@ def api_ask_homework_question():
     except Exception as e:
         logging.error(f"Error handling homework question: {e}")
         return jsonify({"success": False, "message": "Failed to process question"})
+
+def get_fallback_hints(question, subject, hint_level):
+    """Provide fallback hints when AI service is unavailable"""
+    question_lower = question.lower()
+    
+    # Math hints
+    if subject in ['Maths', 'Mathematics']:
+        if 'profit' in question_lower or 'loss' in question_lower:
+            hints = {
+                1: "Start by identifying the cost price and selling price in the problem.",
+                2: "Remember: Profit = Selling Price - Cost Price, Loss = Cost Price - Selling Price",
+                3: "If there are additional expenses, add them to the cost price: Total Cost = Cost Price + Additional Expenses",
+                4: "Step 1: Find total cost price. Step 2: Compare with selling price. Step 3: Calculate profit or loss.",
+                5: "Complete solution: Total Cost = Original Cost + Expenses, then compare with Selling Price to find Profit/Loss."
+            }
+        else:
+            hints = {
+                1: "Read the problem carefully and identify what you need to find.",
+                2: "Look for key numbers and what they represent in the problem.",
+                3: "Think about which mathematical operation (addition, subtraction, multiplication, division) you need to use.",
+                4: "Set up the calculation step by step, writing down each step clearly.",
+                5: "Solve the problem step by step, checking your work at each stage."
+            }
+    else:
+        # General hints for other subjects
+        hints = {
+            1: "Read the question carefully and identify the key information.",
+            2: "Think about what the question is asking you to find or explain.",
+            3: "Break down the problem into smaller parts that are easier to solve.",
+            4: "Use your knowledge of the subject to work through each part systematically.",
+            5: "Put together all the parts to form a complete answer, checking that it makes sense."
+        }
+    
+    return hints.get(hint_level, "Try to approach this problem step by step.")
 
 @app.route('/progress-report')
 def progress_report():
