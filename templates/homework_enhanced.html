@@ -1105,23 +1105,29 @@
             feather.replace();
         }
 
-        // Navigation functions
-        document.getElementById('prevQuestion').addEventListener('click', () => {
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                loadCurrentQuestion();
-            }
-        });
+        // Navigation functions - check if elements exist
+        const prevQuestionButton = document.getElementById('prevQuestion');
+        if (prevQuestionButton) {
+            prevQuestionButton.addEventListener('click', () => {
+                if (currentQuestionIndex > 0) {
+                    currentQuestionIndex--;
+                    loadCurrentQuestion();
+                }
+            });
+        }
 
-        document.getElementById('nextQuestion').addEventListener('click', () => {
-            if (currentQuestionIndex < currentQuestions.length - 1) {
-                currentQuestionIndex++;
-                loadCurrentQuestion();
-            } else {
-                // All questions completed
-                showSessionSummary();
-            }
-        });
+        const nextQuestionButton = document.getElementById('nextQuestion');
+        if (nextQuestionButton) {
+            nextQuestionButton.addEventListener('click', () => {
+                if (currentQuestionIndex < currentQuestions.length - 1) {
+                    currentQuestionIndex++;
+                    loadCurrentQuestion();
+                } else {
+                    // All questions completed
+                    showSessionSummary();
+                }
+            });
+        }
 
         function showSessionSummary() {
             document.getElementById('questionsSection').style.display = 'none';
@@ -1165,65 +1171,89 @@
             feather.replace();
         }
 
-        // Question handling functions
-        document.getElementById('submitQuestion').addEventListener('click', function() {
-            const questionText = document.getElementById('questionInput').value.trim();
-            
-            if (!questionText) {
-                alert('Please enter a question');
-                return;
-            }
-            
-            if (!selectedSubject) {
-                alert('Please select a subject first');
-                return;
-            }
-            
-            submitUserQuestion(questionText);
-        });
+        // Question handling functions - check if element exists
+        const submitQuestionButton = document.getElementById('submitQuestion');
+        if (submitQuestionButton) {
+            submitQuestionButton.addEventListener('click', function() {
+                const questionInput = document.getElementById('questionInput');
+                const questionText = questionInput ? questionInput.value.trim() : '';
+                
+                if (!questionText) {
+                    alert('Please enter a question');
+                    return;
+                }
+                
+                if (!selectedSubject) {
+                    alert('Please select a subject first');
+                    return;
+                }
+                
+                submitUserQuestion(questionText);
+            });
+        }
         
-        document.getElementById('speakQuestion').addEventListener('click', function() {
-            if (!selectedSubject) {
-                alert('Please select a subject first');
-                return;
-            }
-            
-            startQuestionSpeechRecognition();
-        });
+        // Speak question button - check if element exists
+        const speakQuestionButton = document.getElementById('speakQuestion');
+        if (speakQuestionButton) {
+            speakQuestionButton.addEventListener('click', function() {
+                if (!selectedSubject) {
+                    alert('Please select a subject first');
+                    return;
+                }
+                
+                startQuestionSpeechRecognition();
+            });
+        }
         
-        // Pre-submit hint button
-        document.getElementById('needHintPreSubmit').addEventListener('click', function() {
-            const questionText = document.getElementById('questionInput').value.trim();
-            
-            if (!questionText) {
-                alert('Please enter a question first');
-                return;
-            }
-            
-            if (!selectedSubject) {
-                alert('Please select a subject first');
-                return;
-            }
-            
-            // Store current question for incremental hints
-            currentQuestion = questionText;
-            showPreSubmitHint(questionText);
-        });
+        // Pre-submit hint button - check if element exists
+        const needHintPreSubmitButton = document.getElementById('needHintPreSubmit');
+        if (needHintPreSubmitButton) {
+            needHintPreSubmitButton.addEventListener('click', function() {
+                const questionInput = document.getElementById('questionInput');
+                const questionText = questionInput ? questionInput.value.trim() : '';
+                
+                if (!questionText) {
+                    alert('Please enter a question first');
+                    return;
+                }
+                
+                if (!selectedSubject) {
+                    alert('Please select a subject first');
+                    return;
+                }
+                
+                // Store current question for incremental hints
+                currentQuestion = questionText;
+                showPreSubmitHint(questionText);
+            });
+        }
         
-        document.getElementById('clearQuestion').addEventListener('click', function() {
-            document.getElementById('questionInput').value = '';
-            document.getElementById('questionResponse').style.display = 'none';
-            document.getElementById('needHint').style.display = 'none';
-            currentQuestion = null;
-            currentAudio = null;
-        });
+        // Clear question button - check if element exists
+        const clearQuestionButton = document.getElementById('clearQuestion');
+        if (clearQuestionButton) {
+            clearQuestionButton.addEventListener('click', function() {
+                const questionInput = document.getElementById('questionInput');
+                const questionResponse = document.getElementById('questionResponse');
+                const needHint = document.getElementById('needHint');
+                
+                if (questionInput) questionInput.value = '';
+                if (questionResponse) questionResponse.style.display = 'none';
+                if (needHint) needHint.style.display = 'none';
+                
+                currentQuestion = null;
+                currentAudio = null;
+            });
+        }
         
-        // Add need hint functionality
-        document.getElementById('needHint').addEventListener('click', function() {
-            if (currentQuestion) {
-                requestHint(currentQuestion);
-            }
-        });
+        // Add need hint functionality - check if element exists
+        const needHintButton = document.getElementById('needHint');
+        if (needHintButton) {
+            needHintButton.addEventListener('click', function() {
+                if (currentQuestion) {
+                    requestHint(currentQuestion);
+                }
+            });
+        }
         
         // Listen button - check if element exists before adding listener
         const listenButton = document.getElementById('listenResponse');
@@ -1561,22 +1591,28 @@
             }
         }
 
-        // Question input change handler
-        document.getElementById('questionInput').addEventListener('input', function() {
-            togglePreSubmitHintButton();
-            
-            // Reset hint level when question changes
-            const newQuestion = this.value.trim();
-            if (newQuestion !== currentQuestion) {
-                currentHintLevel = 1;
-                currentQuestion = newQuestion;
+        // Question input change handler - check if element exists
+        const questionInputElement = document.getElementById('questionInput');
+        if (questionInputElement) {
+            questionInputElement.addEventListener('input', function() {
+                togglePreSubmitHintButton();
                 
-                // Hide response if it was showing
-                if (newQuestion === '') {
-                    document.getElementById('questionResponse').style.display = 'none';
+                // Reset hint level when question changes
+                const newQuestion = this.value.trim();
+                if (newQuestion !== currentQuestion) {
+                    currentHintLevel = 1;
+                    currentQuestion = newQuestion;
+                    
+                    // Hide response if it was showing
+                    if (newQuestion === '') {
+                        const questionResponse = document.getElementById('questionResponse');
+                        if (questionResponse) {
+                            questionResponse.style.display = 'none';
+                        }
+                    }
                 }
-            }
-        });
+            });
+        }
         
         function togglePreSubmitHintButton() {
             // Button is always visible now, no need to toggle
