@@ -9,6 +9,7 @@ from document_processor import DocumentProcessor
 from ai_tutor import AITutor
 from simple_voice_tutor import SimpleVoiceTutor
 from homework_assistant import HomeworkAssistant
+from google.genai import types
 import logging
 
 logger = logging.getLogger(__name__)
@@ -363,7 +364,15 @@ def api_documents():
         # Force session refresh to get latest data
         db.session.expire_all()
         db.session.commit()  # Ensure any pending transactions are committed
-        documents = Document.query.order_by(Document.upload_date.desc()).all()
+        
+        # Check if subject filter is provided
+        subject = request.args.get('subject')
+        
+        if subject:
+            documents = Document.query.filter_by(subject=subject).order_by(Document.upload_date.desc()).all()
+        else:
+            documents = Document.query.order_by(Document.upload_date.desc()).all()
+        
         doc_list = []
         for doc in documents:
             doc_list.append({
@@ -371,7 +380,8 @@ def api_documents():
                 'subject': doc.subject,
                 'lesson_title': doc.lesson_title,
                 'chapter_number': doc.chapter_number or '',
-                'upload_date': doc.upload_date.isoformat()
+                'upload_date': doc.upload_date.isoformat(),
+                'total_pages': doc.total_pages
             })
         
         from datetime import datetime
@@ -634,12 +644,21 @@ def api_exam_revision_summaries():
     try:
         data = request.get_json()
         subject = data.get('subject')
+        chapters = data.get('chapters', [])
         
         if not subject:
             return jsonify({"success": False, "message": "Subject is required"})
         
         # Get documents for the subject
-        documents = Document.query.filter_by(subject=subject).all()
+        if chapters:
+            # Filter by specific chapters
+            documents = Document.query.filter(
+                Document.subject == subject,
+                Document.id.in_(chapters)
+            ).all()
+        else:
+            # Get all documents for the subject
+            documents = Document.query.filter_by(subject=subject).all()
         
         if not documents:
             return jsonify({"success": False, "message": f"No documents found for {subject}. Please upload some lessons first."})
@@ -685,7 +704,7 @@ def api_exam_revision_summaries():
                 response = tutor.client.models.generate_content(
                     model=tutor.model,
                     contents=summary_prompt,
-                    config=tutor.genai_types.GenerateContentConfig(
+                    config=types.GenerateContentConfig(
                         temperature=0.3,
                         max_output_tokens=800
                     )

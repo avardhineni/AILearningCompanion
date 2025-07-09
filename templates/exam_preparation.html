@@ -165,7 +165,7 @@
                         <h5 class="card-title">Smart Revision</h5>
                         <p class="card-text text-muted">Personalized revision recommendations based on your quiz scores and weak areas.</p>
                         <button class="btn btn-info" onclick="getRevisionRecommendations()">
-                            <i data-feather="lightbulb" class="me-2"></i>Get Recommendations
+                            <i data-feather="zap" class="me-2"></i>Get Recommendations
                         </button>
                     </div>
                 </div>
@@ -254,18 +254,28 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-12">
-                            <select class="form-select" id="examSubject">
-                                <option value="">Choose a subject...</option>
-                                <option value="English">English</option>
-                                <option value="Maths">Mathematics</option>
-                                <option value="Science">Science</option>
-                                <option value="Social">Social Studies</option>
-                                <option value="Hindi">Hindi</option>
-                                <option value="Telugu">Telugu</option>
-                                <option value="IT-Computers">IT & Computers</option>
-                                <option value="GK">General Knowledge</option>
-                                <option value="Value Education">Value Education</option>
-                            </select>
+                            <div class="mb-3">
+                                <label for="examSubject" class="form-label">Choose a subject:</label>
+                                <select class="form-select" id="examSubject" onchange="loadChaptersForSubject()">
+                                    <option value="">Choose a subject...</option>
+                                    <option value="English">English</option>
+                                    <option value="Maths">Mathematics</option>
+                                    <option value="Science">Science</option>
+                                    <option value="Social">Social Studies</option>
+                                    <option value="Hindi">Hindi</option>
+                                    <option value="Telugu">Telugu</option>
+                                    <option value="IT-Computers">IT & Computers</option>
+                                    <option value="GK">General Knowledge</option>
+                                    <option value="Value Education">Value Education</option>
+                                </select>
+                            </div>
+                            
+                            <div id="chapterSelectionDiv" style="display: none;">
+                                <label class="form-label">Choose chapters (optional - leave blank for all):</label>
+                                <div id="chapterCheckboxes" class="mt-2">
+                                    <!-- Chapters will be loaded here -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -358,6 +368,48 @@
             new bootstrap.Modal(document.getElementById('subjectModal')).show();
         }
 
+        // Load chapters for selected subject
+        function loadChaptersForSubject() {
+            const subject = document.getElementById('examSubject').value;
+            const chapterDiv = document.getElementById('chapterSelectionDiv');
+            const chapterCheckboxes = document.getElementById('chapterCheckboxes');
+            
+            if (!subject) {
+                chapterDiv.style.display = 'none';
+                return;
+            }
+            
+            // Fetch chapters from API
+            fetch(`/api/documents?subject=${encodeURIComponent(subject)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.documents.length > 0) {
+                        chapterCheckboxes.innerHTML = '';
+                        
+                        data.documents.forEach(doc => {
+                            const checkbox = document.createElement('div');
+                            checkbox.className = 'form-check mb-2';
+                            checkbox.innerHTML = `
+                                <input class="form-check-input" type="checkbox" value="${doc.id}" id="chapter${doc.id}">
+                                <label class="form-check-label" for="chapter${doc.id}">
+                                    ${doc.lesson_title || `Chapter ${doc.chapter_number}`}
+                                    <small class="text-muted"> (${doc.total_pages} pages)</small>
+                                </label>
+                            `;
+                            chapterCheckboxes.appendChild(checkbox);
+                        });
+                        
+                        chapterDiv.style.display = 'block';
+                    } else {
+                        chapterDiv.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading chapters:', error);
+                    chapterDiv.style.display = 'none';
+                });
+        }
+
         // Confirm subject selection
         function confirmSubjectSelection() {
             selectedSubject = document.getElementById('examSubject').value;
@@ -365,6 +417,16 @@
                 alert('Please select a subject');
                 return;
             }
+            
+            // Get selected chapters
+            const selectedChapters = [];
+            const checkboxes = document.querySelectorAll('#chapterCheckboxes input[type="checkbox"]:checked');
+            checkboxes.forEach(checkbox => {
+                selectedChapters.push(parseInt(checkbox.value));
+            });
+            
+            // Store selected chapters globally
+            window.selectedChapters = selectedChapters;
             
             bootstrap.Modal.getInstance(document.getElementById('subjectModal')).hide();
             
@@ -414,7 +476,8 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    subject: selectedSubject
+                    subject: selectedSubject,
+                    chapters: window.selectedChapters || []
                 })
             })
             .then(response => response.json())
