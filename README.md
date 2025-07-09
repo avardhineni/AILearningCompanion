@@ -12,6 +12,7 @@ An advanced AI-powered educational platform designed for 5th grade CBSE students
 - **Voice-Based Interactive Reading**: Text-to-speech lesson playback with interactive conversational elements and doubt resolution
 - **Homework & Worksheet Assistant**: Adaptive hint system for guided homework help with progress tracking
 - **Quiz Generation**: Automatic creation of practice questions based on lesson content
+- **Exam Preparation System**: Complete exam preparation with revision summaries, mock exams, priority topics, and smart revision recommendations
 - **Kid-Friendly Interface**: Age-appropriate responses with educational emojis and simple language
 
 ### Technical Capabilities
@@ -179,6 +180,18 @@ gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
 6. Submit your answers for AI evaluation and feedback
 7. Complete the session for progress tracking and parent/teacher reports
 
+### Using Exam Preparation System
+1. Navigate to the **Exam Preparation** page
+2. Choose from four main features:
+   - **Revision Summaries**: Select subject and chapters to generate AI-powered revision content
+   - **Mock Exams**: Take practice exams with AI-generated questions and automatic scoring
+   - **Priority Topics**: Analyze curriculum to identify high/medium/low priority topics with study time estimates
+   - **Smart Revision**: Get personalized revision recommendations based on your performance
+3. Select your subject from the dropdown menu
+4. Choose specific chapters or leave blank for comprehensive analysis
+5. Click "Continue" to generate AI-powered exam preparation content
+6. Review results, take mock exams, and track your exam readiness progress
+
 ### Language Support
 - **Hindi subjects**: AI responds in Hindi with educational context, voice reading uses Hindi TTS
 - **Telugu subjects**: AI responds in Telugu with educational context, voice reading uses Telugu TTS
@@ -239,6 +252,10 @@ gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
 ## 🌟 Key Achievements
 
 ### Latest Improvements (July 2025)
+- **Complete Exam Preparation System**: Implemented comprehensive exam preparation with revision summaries, mock exams, priority topics, and smart revision recommendations
+- **Mock Exams**: AI-generated practice exams with mixed question types, automatic scoring, and detailed performance feedback
+- **Priority Topics**: Curriculum analysis identifying high/medium/low priority topics with study time estimates and interactive study management
+- **Language-Specific Exam Content**: Hindi, Telugu, and English exam preparation materials generated based on subject selection
 - **Homework & Worksheet Assistant**: Implemented comprehensive adaptive hint system with 5 progressive levels
 - **Progress Tracking**: Added detailed analytics for parents/teachers with charts and performance reports
 - **Smart Evaluation**: AI evaluates student responses with constructive feedback encouraging independent thinking
@@ -351,6 +368,32 @@ PGDATABASE=database_name
 - **Encouraging Feedback**: Positive reinforcement and constructive criticism for better learning
 - **Adaptive Learning**: Hint levels adjust based on student's past performance and confidence
 - **Comprehensive Tracking**: Every attempt, hint usage, and success is tracked for improvement
+
+## 🎯 Exam Preparation System
+
+### Core Exam Features
+- **Revision Summaries**: AI-generated chapter summaries highlighting key concepts and important points from uploaded documents
+- **Mock Exams**: Full-length practice exams with AI-generated questions (multiple choice and short answer) with automatic scoring
+- **Priority Topics**: Curriculum analysis identifying high/medium/low priority topics based on CBSE guidelines and exam weightage
+- **Smart Revision**: Personalized revision recommendations based on student performance and curriculum priorities
+- **Chapter Selection**: Choose specific chapters or analyze all content for comprehensive exam preparation
+- **Language Support**: Hindi, Telugu, and English exam content generation based on subject selection
+
+### Exam Preparation Features
+- **AI-Powered Question Generation**: Real exam questions created from uploaded lesson content
+- **Mixed Question Types**: Multiple choice questions with 4 options and short answer questions
+- **Automatic Scoring**: Instant evaluation with detailed performance feedback and improvement suggestions
+- **Priority Analysis**: Curriculum importance assessment with study time estimates for each topic
+- **Interactive Interface**: Clean exam interface with progress tracking and visual score displays
+- **Performance Analytics**: Detailed statistics with correct/incorrect answers, time taken, and performance trends
+
+### Exam Preparation Workflow
+1. **Content Analysis**: AI analyzes uploaded lesson documents to understand curriculum coverage
+2. **Question Generation**: Creates exam-appropriate questions based on 5th grade CBSE standards
+3. **Priority Assessment**: Evaluates topic importance based on curriculum guidelines and typical exam patterns
+4. **Revision Planning**: Generates personalized study plans with time estimates and priority rankings
+5. **Mock Exam Creation**: Builds full practice exams with balanced question distribution
+6. **Performance Tracking**: Monitors exam readiness and identifies areas for improvement
 
 ### Voice Technology Stack
 - **gTTS (Google Text-to-Speech)**: Reliable cloud-based TTS service with multilingual support
