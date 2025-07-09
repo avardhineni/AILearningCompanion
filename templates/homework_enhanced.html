@@ -1226,7 +1226,15 @@
         });
         
         document.getElementById('listenResponse').addEventListener('click', function() {
-            const responseText = document.getElementById('responseText').textContent;
+            const responseElement = document.getElementById('responseText');
+            // Get the plain text content for speech synthesis
+            const responseText = responseElement.textContent || responseElement.innerText;
+            
+            if (!responseText.trim()) {
+                alert('No response text to read');
+                return;
+            }
+            
             playResponseAudio(responseText);
         });
         
@@ -1354,6 +1362,14 @@
         }
         
         function playResponseAudio(text) {
+            console.log('Attempting to play audio for text:', text.substring(0, 100));
+            
+            // Show loading state for listen button
+            const listenBtn = document.getElementById('listenResponse');
+            const originalText = listenBtn.innerHTML;
+            listenBtn.innerHTML = '<i data-feather="loader" class="me-2"></i>Loading...';
+            listenBtn.disabled = true;
+            
             fetch('/api/homework/listen-hint', {
                 method: 'POST',
                 headers: {
@@ -1366,6 +1382,13 @@
             })
             .then(response => response.json())
             .then(data => {
+                console.log('Audio API response:', data);
+                
+                // Reset button
+                listenBtn.innerHTML = originalText;
+                listenBtn.disabled = false;
+                feather.replace();
+                
                 if (data.success && data.audio_url) {
                     currentAudio = new Audio(data.audio_url);
                     
@@ -1380,14 +1403,32 @@
                         currentAudio = null;
                     };
                     
-                    currentAudio.play();
+                    currentAudio.onerror = function() {
+                        console.error('Audio playback error');
+                        document.getElementById('stopAudio').style.display = 'none';
+                        document.getElementById('listenResponse').style.display = 'inline-block';
+                        currentAudio = null;
+                        alert('Error playing audio file');
+                    };
+                    
+                    currentAudio.play().catch(error => {
+                        console.error('Audio play error:', error);
+                        document.getElementById('stopAudio').style.display = 'none';
+                        document.getElementById('listenResponse').style.display = 'inline-block';
+                        currentAudio = null;
+                        alert('Error playing audio: ' + error.message);
+                    });
                 } else {
-                    alert('Unable to generate audio for response');
+                    alert('Unable to generate audio: ' + (data.message || 'Unknown error'));
                 }
             })
             .catch(error => {
                 console.error('Audio generation error:', error);
-                alert('Error generating audio');
+                // Reset button
+                listenBtn.innerHTML = originalText;
+                listenBtn.disabled = false;
+                feather.replace();
+                alert('Error generating audio: ' + error.message);
             });
         }
         
