@@ -618,8 +618,8 @@ def test_ai_direct():
 
 @app.route('/homework')
 def homework():
-    """Show the homework assistant page"""
-    return render_template('homework.html')
+    """Show the enhanced homework assistant page"""
+    return render_template('homework_enhanced.html')
 
 @app.route('/api/homework/start-session', methods=['POST'])
 def api_start_homework_session():
@@ -641,6 +641,84 @@ def api_start_homework_session():
         logging.error(f"Error starting homework session: {e}")
         return jsonify({"success": False, "message": "Failed to start homework session"})
 
+@app.route('/api/homework/upload-document', methods=['POST'])
+def api_upload_homework_document():
+    """Upload and process homework document"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({"success": False, "message": "No file uploaded"})
+        
+        file = request.files['file']
+        subject = request.form.get('subject')
+        session_type = request.form.get('session_type', 'homework')  # homework or worksheet
+        
+        if not file or not file.filename:
+            return jsonify({"success": False, "message": "No file selected"})
+        
+        if not subject:
+            return jsonify({"success": False, "message": "Subject is required"})
+        
+        if not allowed_file(file.filename):
+            return jsonify({"success": False, "message": "Only .docx files are allowed"})
+        
+        # Generate unique filename
+        original_filename = secure_filename(file.filename)
+        unique_filename = f"{uuid.uuid4()}.docx"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+        
+        # Save file
+        file.save(file_path)
+        
+        # Process document
+        processor = DocumentProcessor()
+        pages = processor.extract_text_from_docx(file_path)
+        
+        if not pages:
+            return jsonify({"success": False, "message": "No content extracted from document"})
+        
+        # Create document record
+        document = Document(
+            filename=unique_filename,
+            original_filename=original_filename,
+            subject=subject,
+            lesson_title=f"{session_type.title()} Document",
+            chapter_number=f"{session_type}-{datetime.now().strftime('%Y%m%d')}"
+        )
+        
+        db.session.add(document)
+        db.session.flush()  # Get the document ID
+        
+        # Store pages
+        for page_num, content in pages:
+            if content.strip():
+                page = DocumentPage(
+                    document_id=document.id,
+                    page_number=page_num,
+                    content=content,
+                    word_count=processor.count_words(content)
+                )
+                db.session.add(page)
+        
+        document.total_pages = len(pages)
+        db.session.commit()
+        
+        # Initialize homework assistant to parse questions
+        homework_assistant = HomeworkAssistant()
+        questions = homework_assistant.parse_document_questions(document.id)
+        
+        return jsonify({
+            "success": True,
+            "document_id": document.id,
+            "filename": original_filename,
+            "total_pages": document.total_pages,
+            "questions_found": len(questions),
+            "questions": questions
+        })
+        
+    except Exception as e:
+        logging.error(f"Error uploading homework document: {e}")
+        return jsonify({"success": False, "message": "Failed to upload document"})
+
 @app.route('/api/homework/start-worksheet', methods=['POST'])
 def api_start_worksheet_session():
     """Start a new worksheet session"""
@@ -660,6 +738,27 @@ def api_start_worksheet_session():
         logging.error(f"Error starting worksheet session: {e}")
         return jsonify({"success": False, "message": "Failed to start worksheet session"})
 
+@app.route('/api/homework/start-enhanced-session', methods=['POST'])
+def api_start_enhanced_session():
+    """Start an enhanced homework/worksheet/exam session"""
+    try:
+        data = request.get_json()
+        subject = data.get('subject')
+        session_type = data.get('session_type', 'homework')
+        document_id = data.get('document_id')
+        
+        if not subject:
+            return jsonify({"success": False, "message": "Subject is required"})
+        
+        homework_assistant = HomeworkAssistant()
+        result = homework_assistant.start_enhanced_session(subject, session_type, document_id)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        logging.error(f"Error starting enhanced session: {e}")
+        return jsonify({"success": False, "message": "Failed to start enhanced session"})
+
 @app.route('/api/homework/process-question', methods=['POST'])
 def api_process_homework_question():
     """Process a homework question with hint system"""
@@ -669,13 +768,14 @@ def api_process_homework_question():
         question = data.get('question')
         student_response = data.get('student_response')
         request_hint = data.get('request_hint', False)
+        hint_level = data.get('hint_level', 1)
         
         if not session_id or not question:
             return jsonify({"success": False, "message": "Session ID and question are required"})
         
         homework_assistant = HomeworkAssistant()
         result = homework_assistant.process_homework_question(
-            session_id, question, student_response, request_hint
+            session_id, question, student_response, request_hint, hint_level
         )
         
         return jsonify(result)
@@ -683,6 +783,56 @@ def api_process_homework_question():
     except Exception as e:
         logging.error(f"Error processing homework question: {e}")
         return jsonify({"success": False, "message": "Failed to process question"})
+
+@app.route('/api/homework/listen-hint', methods=['POST'])
+def api_listen_hint():
+    """Generate audio for hint text"""
+    try:
+        data = request.get_json()
+        hint_text = data.get('hint_text')
+        subject = data.get('subject', 'English')
+        
+        if not hint_text:
+            return jsonify({"success": False, "message": "Hint text is required"})
+        
+        # Use SimpleVoiceTutor for TTS
+        voice_tutor = SimpleVoiceTutor()
+        clean_hint = voice_tutor.clean_text_for_speech(hint_text)
+        
+        try:
+            audio_file = voice_tutor.generate_audio_file(clean_hint, subject)
+            audio_url = f"/static/audio/{os.path.basename(audio_file)}"
+            
+            return jsonify({
+                "success": True,
+                "audio_url": audio_url,
+                "hint_text": hint_text
+            })
+        except Exception as e:
+            logging.error(f"Error generating hint audio: {e}")
+            return jsonify({"success": False, "message": "Failed to generate audio"})
+        
+    except Exception as e:
+        logging.error(f"Error in listen hint: {e}")
+        return jsonify({"success": False, "message": "Failed to process hint"})
+
+@app.route('/api/homework/speak-answer', methods=['POST'])
+def api_speak_answer():
+    """Convert speech to text for answer input"""
+    try:
+        # This endpoint will be used by the frontend to trigger speech recognition
+        # The actual speech recognition will be handled by the Web Speech API on the frontend
+        # This endpoint can be used for any server-side processing if needed
+        
+        return jsonify({
+            "success": True,
+            "message": "Speech recognition ready",
+            "instructions": "Please use the microphone to speak your answer"
+        })
+        
+    except Exception as e:
+        logging.error(f"Error in speak answer: {e}")
+        return jsonify({"success": False, "message": "Failed to initialize speech recognition"})
 
 @app.route('/api/homework/complete-session', methods=['POST'])
 def api_complete_homework_session():

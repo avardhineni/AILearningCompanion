@@ -1,0 +1,94 @@
+Task
+Build and enhance the Homework & Worksheet Assistant feature for the TutionBuddy – Students Smart Study Partner app.
+Integrate voice interaction, document upload, and adaptive learning for a complete student support experience.
+
+Requirements
+
+📝 Daily Homework Support
+	• Enable students to select the Homework section and choose their subject and task.
+	• Add a file upload option so students can upload their school homework as a document (.docx preferred).
+	• Automatically parse uploaded homework documents page-by-page, store content in the database, and display it for students to work on.
+	• Guide students step-by-step through each homework question extracted from the uploaded file.
+	• Provide incremental hints (Hint System) instead of direct answers.
+	• Offer partial solutions and logical steps to encourage critical thinking.
+	• Adapt guidance dynamically — if a student struggles, provide clearer hints or simpler explanations.
+	• After completion, review the answers and give constructive feedback.
+	• Allow students to submit completed homework for review by parents or teachers.
+
+🗂️ Weekly Worksheet Guidance
+	• Every Friday, activate a module that helps students complete subject-wise worksheets.
+	• Add a file upload option for students to upload worksheet documents (.docx).
+	• Automatically parse uploaded worksheet documents page-by-page, store content, and display it for students to work on.
+	• Break down worksheet questions into manageable parts.
+	• Guide students step-by-step through each part.
+	• Use the same scalable Hint System as homework to encourage independent problem-solving.
+
+🏆 Exam Preparation Support
+	• Integrate adaptive learning so question difficulty adjusts automatically based on student performance.
+	• Use previous performance data to personalize hints, nudges, and question flow.
+
+✅ Betterment Features
+	• Implement a scalable Hint System that starts with gentle nudges and progresses to more detailed hints if the child still struggles.
+	• Keep detailed logs of student progress for parents and teachers to review.
+	• Ensure the assistant never copies textbook answers directly — it must explain the logic behind each solution to develop the student’s thinking.
+
+🎙️ Voice Interaction Enhancements
+✔️ Confirmed Text-to-Speech (TTS):
+	• Technology: gTTS (Google Text-to-Speech)
+	• Where Used:
+		○ The Voice Reading, Interactive Reading, and AI Tutor class.
+		○ Reads lessons, homework hints, and worksheet hints aloud in English, Hindi, and Telugu.
+		○ Adds conversational phrases like “Let’s begin!” and “Isn’t this interesting?”
+		○ Generates MP3 files dynamically and plays them using pygame.mixer with HTML5 audio controls.
+		○ Cleans up markdown symbols (*, #, _) for clear spoken output.
+✔️ Confirmed Speech-to-Text (STT):
+	• Technology: speech_recognition (sr.Recognizer + sr.Microphone).
+	• Uses the listen_for_speech() method to convert mic input to text via Google Speech Recognition.
+	• Supports Hindi (hi-IN), Telugu (te-IN), and Indian English (en-IN).
+	• Handles ambient noise, timeouts, and error handling.
+	• Currently used for the “Ask a Doubt” feature during reading.
+✅ Explicit Usage Requirement:
+Reuse the same gTTS TTS system and the same listen_for_speech() STT logic for ALL voice interaction in Daily Homework Support, Weekly Worksheet Guidance, and Exam Preparation.
+No new TTS or STT provider — only extend the current proven pipeline.
+
+✔️ Hint Listening Option:
+	• For each of the 5 hints for any homework or worksheet question, add a “Listen to Hint” button.
+	• When clicked, use the confirmed gTTS flow to read the hint aloud with correct language/accents.
+✔️ Answer Speaking Option:
+	• In the “Your Answer” section for homework and worksheets, add a “🎙️ Speak Answer” mic icon/button.
+	• When clicked, trigger the listen_for_speech() method to capture the student’s spoken answer.
+	• Auto-fill the answer box with the recognized text.
+	• Let the AI Tutor evaluate the spoken answer, provide feedback, hints, or encouragement.
+✔️ Voice Feature Quality:
+	• Ensure TTS and STT work smoothly on both desktop and mobile.
+	• Add fallback text instructions if mic or speaker access is denied.
+
+📂 Document Upload Feature
+	• Allow students to upload homework and worksheet documents in .docx format for each subject.
+	• Parse uploaded files page-by-page using the existing DocumentProcessor pipeline.
+	• Store and link the extracted content to the correct student and task.
+	• Display questions from uploaded files directly inside the Homework/Worksheet Assistant interface.
+
+Deliverables
+	• Fully functional modules for:
+		○ Daily Homework Support
+		○ Weekly Worksheet Guidance
+		○ Adaptive Exam Prep
+	• Scalable Hint System.
+	• Document upload integration for both homework and worksheets.
+	• UI updates:
+		○ File upload area for homework and worksheets.
+		○ Listen to Hint buttons.
+		○ Speak Answer mic icon/button.
+	• Smooth, clear reuse of existing gTTS and listen_for_speech().
+	• Well-documented, maintainable Python, HTML, and JavaScript code that integrates with the current Flask backend and VoiceTutor class.
+
+Goals
+	• Help students think independently and solve problems logically.
+	• Prevent direct copying and rote answers.
+	• Support students who prefer listening/speaking.
+	• Adapt learning guidance to each student’s strengths and weaknesses.
+
+✅ Instruction:
+Generate clean, modular functions, clear UI code, and well-commented integration steps that work naturally inside the TutionBuddy app.
+

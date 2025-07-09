@@ -35,6 +35,80 @@ class HomeworkAssistant:
             5: "complete_explanation"
         }
         
+    def parse_document_questions(self, document_id: int) -> List[Dict]:
+        """
+        Parse questions from uploaded homework/worksheet document.
+        
+        Args:
+            document_id: Document ID to parse questions from
+            
+        Returns:
+            List of parsed questions with metadata
+        """
+        try:
+            # Get document and its pages
+            document = Document.query.get(document_id)
+            if not document:
+                return []
+                
+            pages = DocumentPage.query.filter_by(document_id=document_id).order_by(DocumentPage.page_number).all()
+            
+            # Combine all content
+            full_content = "\n".join([page.content for page in pages])
+            
+            # Use AI to parse questions from the content
+            prompt = f"""
+            Parse the following document content and extract all questions, problems, or tasks that students need to complete.
+            
+            Document content:
+            {full_content}
+            
+            For each question/problem found, provide:
+            1. Question text (exact wording)
+            2. Question type (multiple_choice, short_answer, essay, math_problem, etc.)
+            3. Difficulty level (basic, intermediate, advanced)
+            4. Page number where it appears
+            5. Any context or instructions related to the question
+            
+            Return the response in JSON format with an array of questions.
+            """
+            
+            response = self.client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.3,
+                    max_output_tokens=2000
+                )
+            )
+            
+            # Parse the AI response to extract questions
+            questions = []
+            if response.text:
+                try:
+                    # Try to parse JSON response
+                    import json
+                    parsed = json.loads(response.text)
+                    if isinstance(parsed, list):
+                        questions = parsed
+                    elif isinstance(parsed, dict) and 'questions' in parsed:
+                        questions = parsed['questions']
+                except:
+                    # If JSON parsing fails, create a simple question list
+                    questions = [{
+                        "question_text": "Complete the homework tasks as shown in the document",
+                        "question_type": "mixed",
+                        "difficulty_level": "basic",
+                        "page_number": 1,
+                        "context": full_content[:500] + "..." if len(full_content) > 500 else full_content
+                    }]
+            
+            return questions
+            
+        except Exception as e:
+            logger.error(f"Error parsing document questions: {e}")
+            return []
+        
     def _load_student_progress(self) -> Dict:
         """Load student progress data from file."""
         try:
@@ -100,6 +174,112 @@ class HomeworkAssistant:
         Returns:
             Dict containing hint text and metadata
         """
+        try:
+            # Get appropriate language for the subject
+            language_map = {
+                'Hindi': 'Hindi',
+                'Telugu': 'Telugu',
+                'English': 'English',
+                'Maths': 'English',
+                'Science': 'English',
+                'Social': 'English',
+                'IT-Computers': 'English',
+                'GK': 'English',
+                'Value Education': 'English'
+            }
+            
+            response_language = language_map.get(subject, 'English')
+            
+            # Define hint level prompts
+            hint_prompts = {
+                1: f"""
+                Provide a gentle nudge hint for this {subject} question. Don't give away the answer directly.
+                Just point the student in the right direction with a small clue or reminder.
+                
+                Question: {question}
+                Context: {context}
+                
+                Keep the hint encouraging and brief. Respond in {response_language}.
+                """,
+                
+                2: f"""
+                Provide a conceptual hint for this {subject} question. Help the student understand the 
+                key concept or approach they need to solve the problem.
+                
+                Question: {question}
+                Context: {context}
+                Previous attempts: {previous_attempts}
+                
+                Focus on the underlying concept without giving the direct answer. Respond in {response_language}.
+                """,
+                
+                3: f"""
+                Provide step-by-step guidance for this {subject} question. Break down the problem into 
+                smaller, manageable steps that guide the student's thinking.
+                
+                Question: {question}
+                Context: {context}
+                Previous attempts: {previous_attempts}
+                
+                Show the logical progression but let the student work through each step. Respond in {response_language}.
+                """,
+                
+                4: f"""
+                Provide detailed help for this {subject} question. Give more specific guidance while 
+                still encouraging the student to think through the problem.
+                
+                Question: {question}
+                Context: {context}
+                Previous attempts: {previous_attempts}
+                
+                Provide clear direction but maintain educational value. Respond in {response_language}.
+                """,
+                
+                5: f"""
+                Provide a complete explanation for this {subject} question. Since this is the final hint level,
+                give a thorough explanation of how to solve the problem, including the reasoning behind each step.
+                
+                Question: {question}
+                Context: {context}
+                Previous attempts: {previous_attempts}
+                
+                Explain the complete solution process while helping the student understand the logic. Respond in {response_language}.
+                """
+            }
+            
+            prompt = hint_prompts.get(hint_level, hint_prompts[1])
+            
+            response = self.client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.7,
+                    max_output_tokens=1000
+                )
+            )
+            
+            hint_text = response.text if response.text else "I need more information to provide a helpful hint."
+            
+            return {
+                "hint_text": hint_text,
+                "hint_level": hint_level,
+                "hint_type": self.hint_levels[hint_level],
+                "subject": subject,
+                "can_request_next": hint_level < 5,
+                "is_final_hint": hint_level == 5
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating hint: {e}")
+            return {
+                "hint_text": "I'm having trouble generating a hint right now. Please try asking your question in a different way.",
+                "hint_level": hint_level,
+                "hint_type": self.hint_levels.get(hint_level, "gentle_nudge"),
+                "subject": subject,
+                "can_request_next": hint_level < 5,
+                "is_final_hint": hint_level == 5,
+                "error": str(e)
+            }
         hint_type = self.hint_levels.get(hint_level, "gentle_nudge")
         
         # Build context for AI
@@ -294,6 +474,73 @@ class HomeworkAssistant:
                 "timestamp": datetime.now().isoformat()
             }
     
+    def start_enhanced_session(self, subject: str, session_type: str, document_id: int = None) -> Dict:
+        """
+        Start an enhanced homework/worksheet/exam session with document support.
+        
+        Args:
+            subject: Subject area
+            session_type: Type of session (homework, worksheet, exam)
+            document_id: Optional document ID if document was uploaded
+            
+        Returns:
+            Dict containing session information
+        """
+        try:
+            import uuid
+            session_id = str(uuid.uuid4())
+            
+            # Get current progress
+            progress = self._load_student_progress()
+            
+            # Determine difficulty level
+            difficulty = self.get_adaptive_difficulty(subject, progress)
+            
+            # Create session data
+            session_data = {
+                "session_id": session_id,
+                "subject": subject,
+                "session_type": session_type,
+                "document_id": document_id,
+                "difficulty_level": difficulty,
+                "start_time": datetime.now().isoformat(),
+                "status": "active",
+                "questions_completed": 0,
+                "hints_used": 0,
+                "performance_score": 0.0
+            }
+            
+            # Add to progress tracking
+            progress["active_sessions"] = progress.get("active_sessions", {})
+            progress["active_sessions"][session_id] = session_data
+            
+            # Save progress
+            self._save_student_progress(progress)
+            
+            # Generate welcome message based on session type
+            welcome_messages = {
+                "homework": f"Welcome to your {subject} homework session! I'm here to guide you through each question step by step.",
+                "worksheet": f"Let's work on your {subject} worksheet together! I'll help you understand each concept clearly.",
+                "exam": f"Ready for {subject} exam practice? I'll adapt the questions based on your progress and help you improve."
+            }
+            
+            return {
+                "success": True,
+                "session_id": session_id,
+                "message": f"Enhanced {session_type} session started successfully!",
+                "welcome_message": welcome_messages.get(session_type, "Let's begin learning!"),
+                "session_data": session_data,
+                "difficulty_level": difficulty
+            }
+            
+        except Exception as e:
+            logger.error(f"Error starting enhanced session: {e}")
+            return {
+                "success": False,
+                "message": "Failed to start session",
+                "error": str(e)
+            }
+
     def start_homework_session(self, subject: str, task_description: str) -> Dict:
         """
         Start a new homework session for the student.
@@ -370,7 +617,8 @@ class HomeworkAssistant:
     
     def process_homework_question(self, session_id: str, question: str, 
                                  student_response: str = None, 
-                                 request_hint: bool = False) -> Dict:
+                                 request_hint: bool = False,
+                                 hint_level: int = 1) -> Dict:
         """
         Process a homework question with adaptive hint system.
         
@@ -379,10 +627,89 @@ class HomeworkAssistant:
             question: The homework question
             student_response: Student's answer (if provided)
             request_hint: Whether student is requesting a hint
+            hint_level: Level of hint requested (1-5)
             
         Returns:
             Dict containing response and next steps
         """
+        try:
+            # Load current progress and find session
+            progress = self._load_student_progress()
+            active_sessions = progress.get("active_sessions", {})
+            
+            if session_id not in active_sessions:
+                return {
+                    "success": False,
+                    "message": "Session not found. Please start a new session."
+                }
+            
+            session = active_sessions[session_id]
+            subject = session.get("subject", "English")
+            
+            # Handle hint request
+            if request_hint:
+                hint_result = self.generate_progressive_hint(
+                    question, subject, hint_level, 
+                    context=session.get("context", ""),
+                    previous_attempts=session.get("previous_attempts", [])
+                )
+                
+                # Update session with hint usage
+                session["hints_used"] = session.get("hints_used", 0) + 1
+                self._save_student_progress(progress)
+                
+                return {
+                    "success": True,
+                    "hint": hint_result["hint_text"],
+                    "hint_level": hint_result["hint_level"],
+                    "hint_type": hint_result["hint_type"],
+                    "can_request_next": hint_result["can_request_next"],
+                    "is_final_hint": hint_result["is_final_hint"],
+                    "session_id": session_id
+                }
+            
+            # Handle answer evaluation
+            if student_response:
+                evaluation = self.evaluate_student_response(
+                    question, student_response, subject,
+                    context=session.get("context", "")
+                )
+                
+                # Update session with attempt
+                session["previous_attempts"] = session.get("previous_attempts", [])
+                session["previous_attempts"].append(student_response)
+                session["questions_completed"] = session.get("questions_completed", 0) + 1
+                
+                # Calculate performance score
+                if evaluation["is_correct"]:
+                    session["performance_score"] = session.get("performance_score", 0) + 1.0
+                elif evaluation["evaluation_level"] == "partially_correct":
+                    session["performance_score"] = session.get("performance_score", 0) + 0.5
+                
+                self._save_student_progress(progress)
+                
+                return {
+                    "success": True,
+                    "evaluation": evaluation,
+                    "feedback": evaluation["feedback"],
+                    "evaluation_level": evaluation["evaluation_level"],
+                    "is_correct": evaluation["is_correct"],
+                    "session_id": session_id,
+                    "performance_score": session["performance_score"]
+                }
+            
+            return {
+                "success": False,
+                "message": "No valid action specified. Please provide a student response or request a hint."
+            }
+            
+        except Exception as e:
+            logger.error(f"Error processing homework question: {e}")
+            return {
+                "success": False,
+                "message": "Failed to process question",
+                "error": str(e)
+            }
         progress = self._load_student_progress()
         
         # Find the current session
