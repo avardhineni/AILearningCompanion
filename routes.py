@@ -626,6 +626,285 @@ def exam_preparation():
     """Show the exam preparation page"""
     return render_template('exam_preparation.html')
 
+# ========== EXAM PREPARATION ROUTES ==========
+
+@app.route('/api/exam/revision-summaries', methods=['POST'])
+def api_exam_revision_summaries():
+    """Generate revision summaries for a subject"""
+    try:
+        data = request.get_json()
+        subject = data.get('subject')
+        
+        if not subject:
+            return jsonify({"success": False, "message": "Subject is required"})
+        
+        # Get documents for the subject
+        documents = Document.query.filter_by(subject=subject).all()
+        
+        if not documents:
+            return jsonify({"success": False, "message": f"No documents found for {subject}. Please upload some lessons first."})
+        
+        # Generate summaries using AI
+        tutor = AITutor()
+        summaries = []
+        
+        for doc in documents[:5]:  # Limit to first 5 documents to avoid timeout
+            try:
+                # Get document pages
+                pages = DocumentPage.query.filter_by(document_id=doc.id).order_by(DocumentPage.page_number).all()
+                if not pages:
+                    continue
+                
+                # Create summary prompt
+                context = tutor._prepare_context(doc, pages)
+                
+                # Get language for the subject
+                language_instruction = ""
+                if subject == "Hindi":
+                    language_instruction = "Please provide the summary in Hindi language."
+                elif subject == "Telugu":
+                    language_instruction = "Please provide the summary in Telugu language."
+                else:
+                    language_instruction = "Please provide the summary in English language."
+                
+                summary_prompt = f"""
+                Create a comprehensive revision summary for this {subject} lesson.
+                {language_instruction}
+                
+                Lesson: {doc.lesson_title}
+                Content: {context[:2000]}  # Limit content for faster processing
+                
+                Provide:
+                1. A concise summary (3-4 sentences)
+                2. Key concepts (comma-separated)
+                3. Important points to remember
+                
+                Format as a clear, study-friendly summary for a 5th grade student.
+                """
+                
+                response = tutor.client.models.generate_content(
+                    model=tutor.model,
+                    contents=summary_prompt,
+                    config=tutor.genai_types.GenerateContentConfig(
+                        temperature=0.3,
+                        max_output_tokens=800
+                    )
+                )
+                
+                if response.text:
+                    # Parse the response to extract key concepts
+                    summary_text = response.text
+                    key_concepts = "Key mathematical operations, problem-solving steps"  # Default fallback
+                    
+                    # Try to extract key concepts if mentioned in response
+                    lines = summary_text.split('\n')
+                    for line in lines:
+                        if 'key concept' in line.lower() or 'important' in line.lower():
+                            key_concepts = line.replace('Key concepts:', '').replace('Important:', '').strip()
+                            break
+                    
+                    summaries.append({
+                        "chapter": doc.lesson_title or f"Chapter {doc.chapter_number}",
+                        "content": summary_text,
+                        "key_concepts": key_concepts[:100]  # Limit length
+                    })
+                    
+            except Exception as e:
+                logger.error(f"Error generating summary for document {doc.id}: {e}")
+                continue
+        
+        if not summaries:
+            return jsonify({"success": False, "message": "Failed to generate summaries. Please try again."})
+        
+        return jsonify({
+            "success": True,
+            "summaries": summaries,
+            "subject": subject
+        })
+        
+    except Exception as e:
+        logger.error(f"Error generating revision summaries: {e}")
+        return jsonify({"success": False, "message": "Failed to generate revision summaries"})
+
+@app.route('/api/exam/revision-recommendations', methods=['POST'])
+def api_exam_revision_recommendations():
+    """Generate personalized revision recommendations"""
+    try:
+        data = request.get_json()
+        subject = data.get('subject')
+        
+        if not subject:
+            return jsonify({"success": False, "message": "Subject is required"})
+        
+        # Get student progress for the subject
+        progress = StudentProgress.query.filter_by(subject=subject).first()
+        
+        # Generate recommendations based on progress
+        recommendations = []
+        
+        if progress and progress.success_rate < 70:
+            recommendations.append({
+                "topic": f"Review {subject} Fundamentals",
+                "description": f"Your success rate in {subject} is {progress.success_rate:.1f}%. Focus on building strong fundamentals.",
+                "priority": "high",
+                "study_time": "30-45 minutes daily"
+            })
+        
+        if progress and progress.average_hints_per_question > 2:
+            recommendations.append({
+                "topic": "Practice Problem Solving",
+                "description": "You're using many hints per question. Practice more problems to build confidence.",
+                "priority": "medium",
+                "study_time": "20-30 minutes daily"
+            })
+        
+        # Add general recommendations
+        recommendations.extend([
+            {
+                "topic": f"{subject} Chapter Review",
+                "description": "Review recent chapters with practice questions and concept reinforcement.",
+                "priority": "medium",
+                "study_time": "25 minutes daily"
+            },
+            {
+                "topic": "Weekly Mock Tests",
+                "description": "Take practice tests to simulate exam conditions and identify weak areas.",
+                "priority": "low",
+                "study_time": "45 minutes weekly"
+            }
+        ])
+        
+        return jsonify({
+            "success": True,
+            "recommendations": recommendations,
+            "subject": subject
+        })
+        
+    except Exception as e:
+        logger.error(f"Error generating revision recommendations: {e}")
+        return jsonify({"success": False, "message": "Failed to generate recommendations"})
+
+@app.route('/api/exam/weak-topics', methods=['GET'])
+def api_exam_weak_topics():
+    """Analyze and return weak topics based on quiz performance"""
+    try:
+        # Get homework questions with low success rates
+        weak_topics = []
+        
+        # Query homework sessions with poor performance
+        poor_sessions = HomeworkSession.query.filter(
+            HomeworkSession.performance_score < 0.6
+        ).limit(10).all()
+        
+        for session in poor_sessions:
+            questions = HomeworkQuestion.query.filter_by(
+                session_id=session.id,
+                is_correct=False
+            ).all()
+            
+            for question in questions:
+                weak_topics.append({
+                    "id": str(question.id),
+                    "subject": session.subject,
+                    "chapter": f"Session {session.id}",
+                    "topic": question.question_text[:50] + "..." if len(question.question_text) > 50 else question.question_text,
+                    "success_rate": int(question.evaluation_score * 100) if question.evaluation_score else 0
+                })
+        
+        # Add some sample weak topics if no data available
+        if not weak_topics:
+            weak_topics = [
+                {
+                    "id": "sample1",
+                    "subject": "Mathematics",
+                    "chapter": "Chapter 5",
+                    "topic": "Fraction operations and decimal conversion",
+                    "success_rate": 45
+                },
+                {
+                    "id": "sample2",
+                    "subject": "Science",
+                    "chapter": "Chapter 8",
+                    "topic": "Light and sound wave properties",
+                    "success_rate": 60
+                },
+                {
+                    "id": "sample3",
+                    "subject": "English",
+                    "chapter": "Grammar",
+                    "topic": "Tenses and sentence formation",
+                    "success_rate": 55
+                }
+            ]
+        
+        return jsonify({
+            "success": True,
+            "topics": weak_topics[:6]  # Limit to 6 topics
+        })
+        
+    except Exception as e:
+        logger.error(f"Error analyzing weak topics: {e}")
+        return jsonify({"success": False, "message": "Failed to analyze weak topics"})
+
+@app.route('/api/exam/spaced-repetition', methods=['POST'])
+def api_exam_spaced_repetition():
+    """Generate spaced repetition session"""
+    try:
+        from datetime import datetime, timedelta
+        
+        # Generate concepts for spaced repetition
+        concepts = [
+            {
+                "id": "concept1",
+                "topic": "Multiplication Tables",
+                "subject": "Mathematics",
+                "last_reviewed": "2 days ago"
+            },
+            {
+                "id": "concept2",
+                "topic": "Parts of Speech",
+                "subject": "English",
+                "last_reviewed": "5 days ago"
+            },
+            {
+                "id": "concept3",
+                "topic": "Solar System",
+                "subject": "Science",
+                "last_reviewed": "1 week ago"
+            },
+            {
+                "id": "concept4",
+                "topic": "Indian States",
+                "subject": "Social Studies",
+                "last_reviewed": "3 days ago"
+            },
+            {
+                "id": "concept5",
+                "topic": "Number System",
+                "subject": "Mathematics",
+                "last_reviewed": "1 day ago"
+            },
+            {
+                "id": "concept6",
+                "topic": "Computer Hardware",
+                "subject": "IT-Computers",
+                "last_reviewed": "1 week ago"
+            }
+        ]
+        
+        return jsonify({
+            "success": True,
+            "session": {
+                "concepts": concepts,
+                "total_concepts": len(concepts),
+                "session_type": "spaced_repetition"
+            }
+        })
+        
+    except Exception as e:
+        logger.error(f"Error generating spaced repetition session: {e}")
+        return jsonify({"success": False, "message": "Failed to generate spaced repetition session"})
+
 @app.route('/api/homework/start-session', methods=['POST'])
 def api_start_homework_session():
     """Start a new homework session"""

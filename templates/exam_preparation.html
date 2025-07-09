@@ -165,7 +165,7 @@
                         <h5 class="card-title">Smart Revision</h5>
                         <p class="card-text text-muted">Personalized revision recommendations based on your quiz scores and weak areas.</p>
                         <button class="btn btn-info" onclick="getRevisionRecommendations()">
-                            <i data-feather="brain" class="me-2"></i>Get Recommendations
+                            <i data-feather="lightbulb" class="me-2"></i>Get Recommendations
                         </button>
                     </div>
                 </div>
@@ -194,6 +194,22 @@
                     <div class="card-body">
                         <div id="studyPlan">
                             <!-- Study plan items will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Area -->
+        <div class="row mb-5" id="resultsArea" style="display: none;">
+            <div class="col-12">
+                <h3 class="mb-4" id="resultsTitle">
+                    <i data-feather="file-text" class="me-2"></i>Results
+                </h3>
+                <div class="card">
+                    <div class="card-body">
+                        <div id="resultsContent">
+                            <!-- Results will be displayed here -->
                         </div>
                     </div>
                 </div>
@@ -388,8 +404,31 @@
 
         // Execute actions
         function executeRevisionSummaries() {
-            alert(`Generating revision summaries for ${selectedSubject}...`);
-            // TODO: Implement actual revision summaries generation
+            showResults('Revision Summaries', 'file-text');
+            showLoadingInResults('Generating revision summaries...');
+            
+            // Make API call to generate revision summaries
+            fetch('/api/exam/revision-summaries', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subject: selectedSubject
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayRevisionSummaries(data.summaries);
+                } else {
+                    showErrorInResults(data.message || 'Failed to generate revision summaries');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorInResults('Failed to generate revision summaries');
+            });
         }
 
         function executeMockExam() {
@@ -403,24 +442,218 @@
         }
 
         function executeRevisionRecommendations() {
-            alert(`Generating revision recommendations for ${selectedSubject}...`);
-            // TODO: Implement actual revision recommendations
+            showResults('Revision Recommendations', 'lightbulb');
+            showLoadingInResults('Generating personalized revision recommendations...');
+            
+            fetch('/api/exam/revision-recommendations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subject: selectedSubject
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayRevisionRecommendations(data.recommendations);
+                } else {
+                    showErrorInResults(data.message || 'Failed to generate recommendations');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorInResults('Failed to generate recommendations');
+            });
+        }
+
+        // Helper functions for results display
+        function showResults(title, icon) {
+            document.getElementById('resultsTitle').innerHTML = `<i data-feather="${icon}" class="me-2"></i>${title}`;
+            document.getElementById('resultsArea').style.display = 'block';
+            document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth' });
+            feather.replace();
+        }
+
+        function showLoadingInResults(message) {
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted">${message}</p>
+                </div>
+            `;
+        }
+
+        function showErrorInResults(message) {
+            document.getElementById('resultsContent').innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i data-feather="alert-circle" class="me-2"></i>
+                    ${message}
+                </div>
+            `;
+            feather.replace();
+        }
+
+        function displayRevisionSummaries(summaries) {
+            let content = '<div class="row">';
+            summaries.forEach((summary, index) => {
+                content += `
+                    <div class="col-md-6 mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">${summary.chapter}</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="summary-content">
+                                    ${summary.content}
+                                </div>
+                                <div class="mt-3">
+                                    <small class="text-muted">Key concepts: ${summary.key_concepts}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            content += '</div>';
+            document.getElementById('resultsContent').innerHTML = content;
+        }
+
+        function displayRevisionRecommendations(recommendations) {
+            let content = '<div class="recommendations-list">';
+            recommendations.forEach((rec, index) => {
+                const priorityClass = rec.priority === 'high' ? 'danger' : rec.priority === 'medium' ? 'warning' : 'info';
+                content += `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="card-title">${rec.topic}</h6>
+                                    <p class="card-text">${rec.description}</p>
+                                    <small class="text-muted">Estimated study time: ${rec.study_time}</small>
+                                </div>
+                                <span class="badge bg-${priorityClass}">${rec.priority.toUpperCase()}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            content += '</div>';
+            document.getElementById('resultsContent').innerHTML = content;
         }
 
         // Quick actions
         function generateQuickQuiz() {
-            alert('Generating quick quiz...');
-            // TODO: Implement quick quiz generation
+            showSubjectModal('quick-quiz', 'Select Subject for Quick Quiz');
         }
 
         function reviewWeakTopics() {
-            alert('Reviewing weak topics...');
-            // TODO: Implement weak topics review
+            showResults('Weak Topics Review', 'alert-triangle');
+            showLoadingInResults('Analyzing your weak topics...');
+            
+            fetch('/api/exam/weak-topics', {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayWeakTopics(data.topics);
+                } else {
+                    showErrorInResults(data.message || 'Failed to analyze weak topics');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorInResults('Failed to analyze weak topics');
+            });
+        }
+
+        function displayWeakTopics(topics) {
+            let content = '<div class="weak-topics-list">';
+            topics.forEach((topic, index) => {
+                content += `
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">${topic.subject} - ${topic.chapter}</h6>
+                                    <p class="card-text">${topic.topic}</p>
+                                    <small class="text-muted">Success rate: ${topic.success_rate}%</small>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary" onclick="practiceWeakTopic('${topic.id}')">
+                                    <i data-feather="repeat" class="me-1"></i>Practice
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            content += '</div>';
+            document.getElementById('resultsContent').innerHTML = content;
+            feather.replace();
         }
 
         function spacedRepetition() {
-            alert('Starting spaced repetition session...');
-            // TODO: Implement spaced repetition
+            showResults('Spaced Repetition', 'repeat');
+            showLoadingInResults('Preparing spaced repetition session...');
+            
+            fetch('/api/exam/spaced-repetition', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displaySpacedRepetition(data.session);
+                } else {
+                    showErrorInResults(data.message || 'Failed to start spaced repetition');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorInResults('Failed to start spaced repetition');
+            });
+        }
+
+        function displaySpacedRepetition(session) {
+            let content = `
+                <div class="spaced-repetition-session">
+                    <h5>Spaced Repetition Session</h5>
+                    <p class="text-muted">Review these concepts based on your learning schedule:</p>
+                    <div class="row">
+            `;
+            
+            session.concepts.forEach((concept, index) => {
+                content += `
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">${concept.topic}</h6>
+                                <p class="card-text small">${concept.subject}</p>
+                                <small class="text-muted">Last reviewed: ${concept.last_reviewed}</small>
+                                <div class="mt-2">
+                                    <button class="btn btn-sm btn-success me-1" onclick="markAsReviewed('${concept.id}')">
+                                        <i data-feather="check" class="me-1"></i>Got it
+                                    </button>
+                                    <button class="btn btn-sm btn-warning" onclick="needMorePractice('${concept.id}')">
+                                        <i data-feather="refresh-cw" class="me-1"></i>Need practice
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            content += `
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('resultsContent').innerHTML = content;
+            feather.replace();
         }
     </script>
 </body>
