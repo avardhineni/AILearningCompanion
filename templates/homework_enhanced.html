@@ -1225,29 +1225,45 @@
             }
         });
         
-        document.getElementById('listenResponse').addEventListener('click', function() {
-            const responseElement = document.getElementById('responseText');
-            // Get the plain text content for speech synthesis
-            const responseText = responseElement.textContent || responseElement.innerText;
-            
-            if (!responseText.trim()) {
-                alert('No response text to read');
-                return;
-            }
-            
-            playResponseAudio(responseText);
-        });
+        // Listen button - check if element exists before adding listener
+        const listenButton = document.getElementById('listenResponse');
+        if (listenButton) {
+            listenButton.addEventListener('click', function() {
+                const responseElement = document.getElementById('responseText');
+                if (!responseElement) {
+                    alert('No response text available');
+                    return;
+                }
+                
+                // Get the plain text content for speech synthesis
+                const responseText = responseElement.textContent || responseElement.innerText;
+                
+                if (!responseText.trim()) {
+                    alert('No response text to read');
+                    return;
+                }
+                
+                playResponseAudio(responseText);
+            });
+        }
         
-        // Add stop audio functionality
-        document.getElementById('stopAudio').addEventListener('click', function() {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-                currentAudio = null;
-                document.getElementById('stopAudio').style.display = 'none';
-                document.getElementById('listenResponse').style.display = 'inline-block';
-            }
-        });
+        // Add stop audio functionality - check if element exists
+        const stopAudioButton = document.getElementById('stopAudio');
+        if (stopAudioButton) {
+            stopAudioButton.addEventListener('click', function() {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                    currentAudio = null;
+                    
+                    const stopBtn = document.getElementById('stopAudio');
+                    const listenBtn = document.getElementById('listenResponse');
+                    
+                    if (stopBtn) stopBtn.style.display = 'none';
+                    if (listenBtn) listenBtn.style.display = 'inline-block';
+                }
+            });
+        }
         
         function startQuestionSpeechRecognition() {
             if (!speechRecognition) {
@@ -1340,6 +1356,12 @@
                         btnGroup.style.display = 'flex';
                     }
                     
+                    // Show the Listen button
+                    const listenBtn = document.getElementById('listenResponse');
+                    if (listenBtn) {
+                        listenBtn.style.display = 'inline-block';
+                    }
+                    
                     feather.replace();
                 } else {
                     responseText.innerHTML = `
@@ -1393,28 +1415,31 @@
                     currentAudio = new Audio(data.audio_url);
                     
                     // Show stop button and hide listen button
-                    document.getElementById('stopAudio').style.display = 'inline-block';
-                    document.getElementById('listenResponse').style.display = 'none';
+                    const stopBtn = document.getElementById('stopAudio');
+                    const listenBtn = document.getElementById('listenResponse');
+                    
+                    if (stopBtn) stopBtn.style.display = 'inline-block';
+                    if (listenBtn) listenBtn.style.display = 'none';
                     
                     // Handle audio end
                     currentAudio.onended = function() {
-                        document.getElementById('stopAudio').style.display = 'none';
-                        document.getElementById('listenResponse').style.display = 'inline-block';
+                        if (stopBtn) stopBtn.style.display = 'none';
+                        if (listenBtn) listenBtn.style.display = 'inline-block';
                         currentAudio = null;
                     };
                     
                     currentAudio.onerror = function() {
                         console.error('Audio playback error');
-                        document.getElementById('stopAudio').style.display = 'none';
-                        document.getElementById('listenResponse').style.display = 'inline-block';
+                        if (stopBtn) stopBtn.style.display = 'none';
+                        if (listenBtn) listenBtn.style.display = 'inline-block';
                         currentAudio = null;
                         alert('Error playing audio file');
                     };
                     
                     currentAudio.play().catch(error => {
                         console.error('Audio play error:', error);
-                        document.getElementById('stopAudio').style.display = 'none';
-                        document.getElementById('listenResponse').style.display = 'inline-block';
+                        if (stopBtn) stopBtn.style.display = 'none';
+                        if (listenBtn) listenBtn.style.display = 'inline-block';
                         currentAudio = null;
                         alert('Error playing audio: ' + error.message);
                     });
@@ -1528,8 +1553,11 @@
                 currentAudio = null;
                 
                 // Reset button display
-                document.getElementById('stopAudio').style.display = 'none';
-                document.getElementById('listenResponse').style.display = 'inline-block';
+                const stopBtn = document.getElementById('stopAudio');
+                const listenBtn = document.getElementById('listenResponse');
+                
+                if (stopBtn) stopBtn.style.display = 'none';
+                if (listenBtn) listenBtn.style.display = 'inline-block';
             }
         }
 
@@ -1610,8 +1638,11 @@
                     `;
                     
                     // Show the listen button but hide the post-answer hint button
-                    document.getElementById('listenResponse').style.display = 'inline-block';
-                    document.getElementById('needHint').style.display = 'none';
+                    const listenBtn = document.getElementById('listenResponse');
+                    const needHintBtn = document.getElementById('needHint');
+                    
+                    if (listenBtn) listenBtn.style.display = 'inline-block';
+                    if (needHintBtn) needHintBtn.style.display = 'none';
                     
                     feather.replace();
                 } else {
