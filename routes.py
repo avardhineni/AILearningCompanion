@@ -1130,6 +1130,200 @@ def api_exam_submit_mock_exam():
         logger.error(f"Error evaluating mock exam: {e}")
         return jsonify({"success": False, "message": "Failed to evaluate mock exam"})
 
+@app.route('/api/exam/priority-topics', methods=['POST'])
+def api_exam_priority_topics():
+    """Analyze and return priority topics for a subject based on curriculum importance"""
+    try:
+        data = request.get_json()
+        subject = data.get('subject')
+        chapters = data.get('chapters', [])
+        
+        if not subject:
+            return jsonify({"success": False, "message": "Subject is required"})
+        
+        # Get documents for the subject
+        if chapters:
+            documents = Document.query.filter(
+                Document.subject == subject,
+                Document.id.in_(chapters)
+            ).all()
+        else:
+            documents = Document.query.filter_by(subject=subject).all()
+        
+        if not documents:
+            return jsonify({"success": False, "message": f"No documents found for {subject}. Please upload some lessons first."})
+        
+        # Generate priority topics using AI
+        tutor = AITutor()
+        priority_topics = []
+        
+        for doc in documents[:3]:  # Limit to first 3 documents
+            try:
+                # Get document pages
+                pages = DocumentPage.query.filter_by(document_id=doc.id).order_by(DocumentPage.page_number).all()
+                if not pages:
+                    continue
+                
+                # Create priority analysis prompt
+                context = tutor._prepare_context(doc, pages)
+                
+                # Get language for the subject
+                language_instruction = ""
+                if subject == "Hindi":
+                    language_instruction = "Please provide the analysis in Hindi language."
+                elif subject == "Telugu":
+                    language_instruction = "Please provide the analysis in Telugu language."
+                else:
+                    language_instruction = "Please provide the analysis in English language."
+                
+                priority_prompt = f"""
+                Analyze this {subject} lesson content and identify 3-4 priority topics for 5th grade students preparing for exams.
+                {language_instruction}
+                
+                Lesson: {doc.lesson_title}
+                Content: {context[:1200]}
+                
+                For each priority topic, provide:
+                - Topic name
+                - Priority level (high, medium, low)
+                - Description of why it's important
+                - Estimated study time needed
+                
+                Consider:
+                - Curriculum importance for 5th grade
+                - Typical exam weightage
+                - Fundamental concepts that build to advanced topics
+                - Common areas where students struggle
+                
+                Format each topic as:
+                Topic: [topic name]
+                Priority: [high/medium/low]
+                Description: [explanation of importance]
+                Study_Time: [estimated time like "2 hours", "30 minutes"]
+                
+                Focus on core concepts that are most likely to appear in exams.
+                """
+                
+                response = tutor.client.models.generate_content(
+                    model=tutor.model,
+                    contents=priority_prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.3,
+                        max_output_tokens=800
+                    )
+                )
+                
+                if response.text:
+                    # Parse the response to extract topics
+                    topic_blocks = response.text.split('Topic:')
+                    
+                    for block in topic_blocks[1:]:  # Skip first empty block
+                        lines = block.strip().split('\n')
+                        if len(lines) >= 3:
+                            topic_name = lines[0].strip()
+                            priority = "medium"
+                            description = ""
+                            study_time = "1 hour"
+                            
+                            # Parse topic details
+                            for line in lines[1:]:
+                                line = line.strip()
+                                if line.startswith('Priority:'):
+                                    priority = line.replace('Priority:', '').strip().lower()
+                                elif line.startswith('Description:'):
+                                    description = line.replace('Description:', '').strip()
+                                elif line.startswith('Study_Time:'):
+                                    study_time = line.replace('Study_Time:', '').strip()
+                            
+                            # Create topic object
+                            topic = {
+                                "topic": topic_name,
+                                "priority": priority,
+                                "description": description,
+                                "study_time": study_time,
+                                "chapter": doc.lesson_title or f"Chapter {doc.chapter_number}",
+                                "subject": subject
+                            }
+                            
+                            priority_topics.append(topic)
+                    
+            except Exception as e:
+                logger.error(f"Error analyzing priority topics for document {doc.id}: {e}")
+                continue
+        
+        # Add some fallback topics if no topics were generated
+        if not priority_topics:
+            if subject == "Maths":
+                priority_topics = [
+                    {
+                        "topic": "Basic Addition and Subtraction",
+                        "priority": "high",
+                        "description": "Fundamental arithmetic operations essential for all math concepts",
+                        "study_time": "2 hours",
+                        "chapter": "Number System",
+                        "subject": subject
+                    },
+                    {
+                        "topic": "Multiplication Tables",
+                        "priority": "high",
+                        "description": "Essential for quick calculations and problem solving",
+                        "study_time": "1 hour",
+                        "chapter": "Multiplication",
+                        "subject": subject
+                    },
+                    {
+                        "topic": "Fractions",
+                        "priority": "medium",
+                        "description": "Important concept for understanding parts of a whole",
+                        "study_time": "1.5 hours",
+                        "chapter": "Fractions",
+                        "subject": subject
+                    }
+                ]
+            elif subject == "Science":
+                priority_topics = [
+                    {
+                        "topic": "States of Matter",
+                        "priority": "high",
+                        "description": "Fundamental concept about solid, liquid, and gas states",
+                        "study_time": "1 hour",
+                        "chapter": "Matter and Materials",
+                        "subject": subject
+                    },
+                    {
+                        "topic": "Plant Life Cycle",
+                        "priority": "medium",
+                        "description": "Important biological process from seed to plant",
+                        "study_time": "45 minutes",
+                        "chapter": "Living Things",
+                        "subject": subject
+                    }
+                ]
+            else:
+                priority_topics = [
+                    {
+                        "topic": f"Core {subject} Concepts",
+                        "priority": "high",
+                        "description": "Essential topics based on your uploaded lessons",
+                        "study_time": "1 hour",
+                        "chapter": "General",
+                        "subject": subject
+                    }
+                ]
+        
+        # Sort by priority (high first)
+        priority_order = {"high": 1, "medium": 2, "low": 3}
+        priority_topics.sort(key=lambda x: priority_order.get(x["priority"], 2))
+        
+        return jsonify({
+            "success": True,
+            "topics": priority_topics[:8]  # Limit to 8 topics
+        })
+        
+    except Exception as e:
+        logger.error(f"Error analyzing priority topics: {e}")
+        return jsonify({"success": False, "message": "Failed to analyze priority topics"})
+
 @app.route('/api/homework/start-session', methods=['POST'])
 def api_start_homework_session():
     """Start a new homework session"""

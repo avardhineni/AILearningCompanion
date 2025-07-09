@@ -573,8 +573,32 @@
         }
 
         function executePriorityTopics() {
-            alert(`Showing priority topics for ${selectedSubject}...`);
-            // TODO: Implement actual priority topics display
+            showResults('Priority Topics', 'target');
+            showLoadingInResults('Analyzing curriculum and identifying priority topics...');
+            
+            // Make API call to get priority topics
+            fetch('/api/exam/priority-topics', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subject: selectedSubject,
+                    chapters: window.selectedChapters || []
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayPriorityTopics(data.topics);
+                } else {
+                    showErrorInResults(data.message || 'Failed to analyze priority topics');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorInResults('Failed to analyze priority topics');
+            });
         }
 
         function executeRevisionRecommendations() {
@@ -948,6 +972,116 @@
             `;
             
             document.getElementById('resultsContent').innerHTML = content;
+        }
+
+        function displayPriorityTopics(topics) {
+            let content = `
+                <div class="priority-topics-container">
+                    <div class="topics-header mb-4">
+                        <h5>Priority Topics for ${selectedSubject}</h5>
+                        <p class="text-muted">Focus on these important topics for better exam performance</p>
+                    </div>
+                    <div class="topics-grid">
+            `;
+            
+            topics.forEach((topic, index) => {
+                const priorityClass = topic.priority === 'high' ? 'danger' : 
+                                    topic.priority === 'medium' ? 'warning' : 'info';
+                const priorityIcon = topic.priority === 'high' ? 'alert-triangle' : 
+                                   topic.priority === 'medium' ? 'clock' : 'info';
+                
+                content += `
+                    <div class="topic-card mb-3">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">${topic.topic}</h6>
+                                <span class="badge bg-${priorityClass}">
+                                    <i data-feather="${priorityIcon}" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    ${topic.priority.charAt(0).toUpperCase() + topic.priority.slice(1)} Priority
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <p class="topic-description">${topic.description}</p>
+                                <div class="topic-details">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <small class="text-muted">
+                                                <i data-feather="book" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                Chapter: ${topic.chapter}
+                                            </small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted">
+                                                <i data-feather="clock" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                Study Time: ${topic.study_time}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="topic-actions mt-3">
+                                    <button class="btn btn-outline-primary btn-sm me-2" onclick="studyTopic('${topic.topic}')">
+                                        <i data-feather="play-circle" class="me-1" style="width: 14px; height: 14px;"></i>
+                                        Study Now
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" onclick="markAsStudied('${topic.topic}')">
+                                        <i data-feather="check" class="me-1" style="width: 14px; height: 14px;"></i>
+                                        Mark as Studied
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            content += `
+                    </div>
+                    <div class="topics-summary mt-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="summary-card text-center">
+                                    <div class="summary-icon bg-danger text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i data-feather="alert-triangle" style="width: 20px; height: 20px;"></i>
+                                    </div>
+                                    <h6 class="mt-2">High Priority</h6>
+                                    <p class="mb-0">${topics.filter(t => t.priority === 'high').length} topics</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="summary-card text-center">
+                                    <div class="summary-icon bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i data-feather="clock" style="width: 20px; height: 20px;"></i>
+                                    </div>
+                                    <h6 class="mt-2">Medium Priority</h6>
+                                    <p class="mb-0">${topics.filter(t => t.priority === 'medium').length} topics</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="summary-card text-center">
+                                    <div class="summary-icon bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i data-feather="info" style="width: 20px; height: 20px;"></i>
+                                    </div>
+                                    <h6 class="mt-2">Low Priority</h6>
+                                    <p class="mb-0">${topics.filter(t => t.priority === 'low').length} topics</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('resultsContent').innerHTML = content;
+            feather.replace();
+        }
+
+        function studyTopic(topic) {
+            alert(`Starting study session for: ${topic}`);
+            // TODO: Implement study session functionality
+        }
+
+        function markAsStudied(topic) {
+            alert(`Marked "${topic}" as studied!`);
+            // TODO: Implement progress tracking
         }
     </script>
 </body>
