@@ -637,13 +637,31 @@ class HomeworkAssistant:
             progress = self._load_student_progress()
             active_sessions = progress.get("active_sessions", {})
             
-            if session_id not in active_sessions:
-                return {
-                    "success": False,
-                    "message": "Session not found. Please start a new session."
+            if session_id and session_id not in active_sessions:
+                # Create a temporary session for standalone questions
+                import uuid
+                temp_session_id = str(uuid.uuid4())
+                temp_session = {
+                    "session_id": temp_session_id,
+                    "subject": "English",
+                    "session_type": "standalone",
+                    "start_time": datetime.now().isoformat(),
+                    "status": "active",
+                    "questions_completed": 0,
+                    "hints_used": 0,
+                    "performance_score": 0.0
                 }
+                active_sessions[temp_session_id] = temp_session
+                session_id = temp_session_id
             
-            session = active_sessions[session_id]
+            session = active_sessions.get(session_id, {
+                "subject": "English",
+                "session_type": "standalone",
+                "hints_used": 0,
+                "questions_completed": 0,
+                "performance_score": 0.0
+            })
+            
             subject = session.get("subject", "English")
             
             # Handle hint request

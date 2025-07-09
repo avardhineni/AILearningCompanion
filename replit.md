@@ -109,6 +109,15 @@ This is a Flask-based web application designed to process educational Word docum
 - **Logging**: Debug-level logging for development, configurable for production
 
 ## Recent Changes
+- July 9, 2025: SUCCESSFULLY ENHANCED Homework & Worksheet Assistant with comprehensive features
+- Added support for multiple file types: .docx, .txt, .jpg, .jpeg, .png for homework uploads
+- Implemented "Ask Your Question" section with both text input and voice recognition
+- Added "Submit Question" and "Speak Question" buttons for flexible interaction
+- Enhanced document processing to handle text files and image placeholders
+- Fixed hint generation and answer evaluation error handling
+- Added standalone question processing for general homework help
+- Improved progressive hint system with 5 levels (gentle nudge to complete explanation)
+- Voice features now work for both hints and question responses using gTTS
 - July 8, 2025: SUCCESSFULLY RESOLVED Interactive Voice Reading API issues
 - Fixed Google AI API key configuration (GOOGLE_API_KEY vs GEMINI_API_KEY)
 - Corrected Gemini model name from "gemini-2.5-flash" to "gemini-1.5-flash"

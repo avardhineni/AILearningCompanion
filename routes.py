@@ -658,20 +658,31 @@ def api_upload_homework_document():
         if not subject:
             return jsonify({"success": False, "message": "Subject is required"})
         
-        if not allowed_file(file.filename):
-            return jsonify({"success": False, "message": "Only .docx files are allowed"})
+        # Check for allowed file types
+        allowed_extensions = {'.docx', '.txt', '.jpg', '.jpeg', '.png'}
+        file_extension = os.path.splitext(file.filename)[1].lower()
+        
+        if file_extension not in allowed_extensions:
+            return jsonify({"success": False, "message": "Only .docx, .txt, .jpg, .jpeg, and .png files are allowed"})
         
         # Generate unique filename
         original_filename = secure_filename(file.filename)
-        unique_filename = f"{uuid.uuid4()}.docx"
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         
         # Save file
         file.save(file_path)
         
-        # Process document
+        # Process document based on file type
         processor = DocumentProcessor()
-        pages = processor.extract_text_from_docx(file_path)
+        if file_extension == '.docx':
+            pages = processor.extract_text_from_docx(file_path)
+        elif file_extension == '.txt':
+            pages = processor.extract_text_from_txt(file_path)
+        elif file_extension in ['.jpg', '.jpeg', '.png']:
+            pages = processor.extract_text_from_image(file_path)
+        else:
+            return jsonify({"success": False, "message": "Unsupported file type"})
         
         if not pages:
             return jsonify({"success": False, "message": "No content extracted from document"})
@@ -868,6 +879,100 @@ def api_get_progress_report():
     except Exception as e:
         logging.error(f"Error generating progress report: {e}")
         return jsonify({"success": False, "message": "Failed to generate progress report"})
+
+@app.route('/api/homework/ask-question', methods=['POST'])
+def api_ask_homework_question():
+    """Handle standalone homework questions"""
+    try:
+        data = request.get_json()
+        document_id = data.get('document_id')
+        question = data.get('question')
+        subject = data.get('subject', 'English')
+        
+        if not question:
+            return jsonify({"success": False, "message": "Question is required"})
+        
+        # Use AI tutor for standalone questions
+        if document_id:
+            tutor = AITutor()
+            result = tutor.ask_question(document_id, question)
+            
+            if 'error' in result:
+                return jsonify({"success": False, "message": result['error']})
+            
+            return jsonify({
+                "success": True,
+                "answer": result['answer'],
+                "page_references": result.get('page_references', [])
+            })
+        else:
+            # Use homework assistant for general questions
+            homework_assistant = HomeworkAssistant()
+            result = homework_assistant.process_homework_question(
+                session_id=None,
+                question=question,
+                request_hint=False,
+                hint_level=1
+            )
+            
+            # Generate a general response for the question
+            from google import genai
+            from google.genai import types
+            
+            client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
+            
+            # Get appropriate language for the subject
+            language_map = {
+                'Hindi': 'Hindi',
+                'Telugu': 'Telugu',
+                'English': 'English',
+                'Maths': 'English',
+                'Science': 'English',
+                'Social': 'English',
+                'IT-Computers': 'English',
+                'GK': 'English',
+                'Value Education': 'English'
+            }
+            
+            response_language = language_map.get(subject, 'English')
+            
+            prompt = f"""
+            You are an AI tutor helping a 5th grade student with their {subject} homework.
+            
+            Question: {question}
+            
+            Please provide a helpful, educational response that:
+            1. Explains the concept clearly for a 5th grader
+            2. Guides the student's thinking rather than giving direct answers
+            3. Encourages learning and understanding
+            4. Uses simple language appropriate for the age group
+            5. Responds in {response_language}
+            
+            If this is a math problem, show the steps but let the student work through them.
+            If this is a reading question, help them understand the concept.
+            Always be encouraging and supportive.
+            """
+            
+            response = client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    temperature=0.7,
+                    max_output_tokens=1000
+                )
+            )
+            
+            answer = response.text if response.text else "I'm here to help! Could you please rephrase your question?"
+            
+            return jsonify({
+                "success": True,
+                "answer": answer,
+                "page_references": []
+            })
+        
+    except Exception as e:
+        logging.error(f"Error handling homework question: {e}")
+        return jsonify({"success": False, "message": "Failed to process question"})
 
 @app.route('/progress-report')
 def progress_report():

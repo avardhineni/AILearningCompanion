@@ -170,3 +170,81 @@ class DocumentProcessor:
                 'title': "Untitled Document",
                 'subject': "General"
             }
+    
+    def extract_text_from_txt(self, file_path):
+        """
+        Extract text content from a plain text file
+        
+        Args:
+            file_path (str): Path to the .txt file
+            
+        Returns:
+            list: List of tuples (page_number, content)
+        """
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+            
+            # Split content into chunks (treating as pages)
+            # Split by double newlines or every 1000 characters
+            pages = []
+            chunks = content.split('\n\n')
+            
+            current_page = 1
+            current_chunk = ""
+            
+            for chunk in chunks:
+                if len(current_chunk + chunk) > 1000:  # Max characters per page
+                    if current_chunk:
+                        pages.append((current_page, current_chunk.strip()))
+                        current_page += 1
+                        current_chunk = chunk
+                    else:
+                        pages.append((current_page, chunk.strip()))
+                        current_page += 1
+                        current_chunk = ""
+                else:
+                    current_chunk += "\n\n" + chunk if current_chunk else chunk
+            
+            # Add remaining content
+            if current_chunk:
+                pages.append((current_page, current_chunk.strip()))
+            
+            return pages
+            
+        except Exception as e:
+            logger.error(f"Error extracting text from TXT file: {str(e)}")
+            return []
+    
+    def extract_text_from_image(self, file_path):
+        """
+        Extract text content from an image file using OCR
+        
+        Args:
+            file_path (str): Path to the image file
+            
+        Returns:
+            list: List of tuples (page_number, content)
+        """
+        try:
+            import os
+            filename = os.path.basename(file_path)
+            
+            placeholder_text = f"""
+            Image uploaded: {filename}
+            
+            Note: This is an image file. Please describe the content of the image or ask specific questions about what you see.
+            
+            To get the best help:
+            1. Describe what type of homework this is (math problems, reading comprehension, etc.)
+            2. Tell me what specific questions you need help with
+            3. Type out any text or problems you can see in the image
+            
+            I'm ready to help you with your homework once you provide these details!
+            """
+            
+            return [(1, placeholder_text.strip())]
+            
+        except Exception as e:
+            logger.error(f"Error processing image file: {str(e)}")
+            return [(1, f"Error processing image: {str(e)}")]

@@ -363,12 +363,12 @@
                         <i data-feather="upload" class="me-2"></i>Upload Document
                     </h4>
                     <div class="upload-area" id="uploadArea">
-                        <input type="file" id="documentFile" accept=".docx" style="display: none;">
+                        <input type="file" id="documentFile" accept=".docx,.txt,.jpg,.jpeg,.png" style="display: none;">
                         <div class="upload-content">
                             <i data-feather="file-text" size="48" class="mb-3 text-muted"></i>
                             <h5>Drop your homework document here</h5>
                             <p class="text-muted">or click to browse files</p>
-                            <small class="text-muted">Supports .docx files only</small>
+                            <small class="text-muted">Supports .docx, .txt, .jpg, .jpeg, .png files</small>
                         </div>
                     </div>
                     <div class="mt-3" id="uploadStatus" style="display: none;">
@@ -396,6 +396,55 @@
                     </h4>
                     <div class="document-preview" id="documentContent">
                         <!-- Document content will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ask Your Question Section -->
+        <div class="row mb-4" id="askQuestionSection">
+            <div class="col-12">
+                <div class="homework-card p-4">
+                    <h4 class="mb-3">
+                        <i data-feather="message-circle" class="me-2"></i>Ask Your Question
+                    </h4>
+                    
+                    <div class="question-input-area">
+                        <label class="form-label fw-bold">Type your question here or use the microphone button to speak:</label>
+                        <textarea 
+                            class="answer-textarea form-control" 
+                            id="questionInput" 
+                            placeholder="Type your question here or use the microphone button to speak..."
+                            rows="4"
+                        ></textarea>
+                        
+                        <div class="d-flex justify-content-between mt-3">
+                            <div class="btn-group">
+                                <button class="btn btn-success" id="submitQuestion">
+                                    <i data-feather="send" class="me-2"></i>Submit Question
+                                </button>
+                                <button class="voice-button" id="speakQuestion" title="Speak your question">
+                                    <i data-feather="mic" class="me-2"></i>Speak Question
+                                </button>
+                            </div>
+                            <button class="btn btn-outline-secondary" id="clearQuestion">
+                                <i data-feather="x" class="me-2"></i>Clear
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4" id="questionResponse" style="display: none;">
+                        <div class="alert alert-info">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">
+                                    <i data-feather="brain" class="me-2"></i>AI Response
+                                </h6>
+                                <button class="btn btn-sm btn-outline-primary" id="listenResponse">
+                                    <i data-feather="volume-2" class="me-1"></i>Listen
+                                </button>
+                            </div>
+                            <div id="responseText"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -560,8 +609,11 @@
         });
 
         function handleFileUpload(file) {
-            if (!file.name.endsWith('.docx')) {
-                alert('Please upload a .docx file only');
+            const allowedExtensions = ['.docx', '.txt', '.jpg', '.jpeg', '.png'];
+            const fileExtension = file.name.toLowerCase().substr(file.name.lastIndexOf('.'));
+            
+            if (!allowedExtensions.includes(fileExtension)) {
+                alert('Please upload a .docx, .txt, .jpg, .jpeg, or .png file only');
                 return;
             }
 
@@ -945,6 +997,163 @@
             `;
             
             feather.replace();
+        }
+
+        // Question handling functions
+        document.getElementById('submitQuestion').addEventListener('click', function() {
+            const questionText = document.getElementById('questionInput').value.trim();
+            
+            if (!questionText) {
+                alert('Please enter a question');
+                return;
+            }
+            
+            if (!selectedSubject) {
+                alert('Please select a subject first');
+                return;
+            }
+            
+            submitUserQuestion(questionText);
+        });
+        
+        document.getElementById('speakQuestion').addEventListener('click', function() {
+            if (!selectedSubject) {
+                alert('Please select a subject first');
+                return;
+            }
+            
+            startQuestionSpeechRecognition();
+        });
+        
+        document.getElementById('clearQuestion').addEventListener('click', function() {
+            document.getElementById('questionInput').value = '';
+            document.getElementById('questionResponse').style.display = 'none';
+        });
+        
+        document.getElementById('listenResponse').addEventListener('click', function() {
+            const responseText = document.getElementById('responseText').textContent;
+            playResponseAudio(responseText);
+        });
+        
+        function startQuestionSpeechRecognition() {
+            if (!speechRecognition) {
+                alert('Speech recognition is not supported in your browser');
+                return;
+            }
+            
+            const speakButton = document.getElementById('speakQuestion');
+            speakButton.classList.add('listening');
+            speakButton.disabled = true;
+            
+            speechRecognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('questionInput').value = transcript;
+                speakButton.classList.remove('listening');
+                speakButton.disabled = false;
+            };
+            
+            speechRecognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                speakButton.classList.remove('listening');
+                speakButton.disabled = false;
+                alert('Speech recognition error: ' + event.error);
+            };
+            
+            speechRecognition.onend = function() {
+                speakButton.classList.remove('listening');
+                speakButton.disabled = false;
+            };
+            
+            speechRecognition.start();
+        }
+        
+        function submitUserQuestion(question) {
+            const responseDiv = document.getElementById('questionResponse');
+            const responseText = document.getElementById('responseText');
+            
+            // Show loading state
+            responseDiv.style.display = 'block';
+            responseText.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="progress-ring me-3"></div>
+                    <span>Processing your question...</span>
+                </div>
+            `;
+            
+            // Submit question to AI tutor
+            fetch('/api/homework/ask-question', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    document_id: uploadedDocumentId || null,
+                    question: question,
+                    subject: selectedSubject
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success !== false) {
+                    responseText.innerHTML = `
+                        <div class="mb-3">
+                            <strong>Answer:</strong>
+                            <div class="mt-2">${data.answer || data.message}</div>
+                        </div>
+                        ${data.page_references ? `
+                            <div class="mt-3">
+                                <small class="text-muted">
+                                    <i data-feather="bookmark" class="me-1"></i>
+                                    References: ${data.page_references.join(', ')}
+                                </small>
+                            </div>
+                        ` : ''}
+                    `;
+                    feather.replace();
+                } else {
+                    responseText.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i data-feather="alert-circle" class="me-2"></i>
+                            ${data.message || 'Unable to process your question. Please try again.'}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Question submission error:', error);
+                responseText.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i data-feather="alert-circle" class="me-2"></i>
+                        Error processing your question. Please try again.
+                    </div>
+                `;
+            });
+        }
+        
+        function playResponseAudio(text) {
+            fetch('/api/homework/listen-hint', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    hint_text: text,
+                    subject: selectedSubject
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.audio_url) {
+                    const audio = new Audio(data.audio_url);
+                    audio.play();
+                } else {
+                    alert('Unable to generate audio for response');
+                }
+            })
+            .catch(error => {
+                console.error('Audio generation error:', error);
+                alert('Error generating audio');
+            });
         }
 
         // Initialize the page
