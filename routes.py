@@ -621,6 +621,11 @@ def homework():
     """Show the enhanced homework assistant page"""
     return render_template('homework_enhanced.html')
 
+@app.route('/exam-preparation')
+def exam_preparation():
+    """Show the exam preparation page"""
+    return render_template('exam_preparation.html')
+
 @app.route('/api/homework/start-session', methods=['POST'])
 def api_start_homework_session():
     """Start a new homework session"""

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Preparation - TutionBuddy</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <style>
+        .feature-card {
+            transition: transform 0.2s ease-in-out;
+            border: none;
+            background: var(--bs-gray-800);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .progress-ring {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            position: relative;
+            margin: 0 auto 15px;
+        }
+        
+        .progress-ring.high {
+            background: linear-gradient(45deg, #28a745, #34ce57);
+        }
+        
+        .progress-ring.medium {
+            background: linear-gradient(45deg, #ffc107, #ffcd39);
+        }
+        
+        .progress-ring.low {
+            background: linear-gradient(45deg, #dc3545, #e55a6c);
+        }
+        
+        .subject-card {
+            background: var(--bs-gray-900);
+            border: 2px solid var(--bs-gray-700);
+            transition: all 0.3s ease;
+        }
+        
+        .subject-card:hover {
+            border-color: var(--bs-primary);
+            transform: translateY(-2px);
+        }
+        
+        .study-plan-item {
+            background: var(--bs-gray-800);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--bs-primary);
+        }
+        
+        .study-plan-item.completed {
+            opacity: 0.7;
+            border-left-color: var(--bs-success);
+        }
+        
+        .study-plan-item.current {
+            border-left-color: var(--bs-warning);
+            background: var(--bs-gray-700);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">
+                <i data-feather="book-open" class="me-2"></i>TutionBuddy
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/subjects">Subjects</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/ask">AI Tutor</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/interactive-reading">Voice Reading</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/homework">Homework Assistant</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/progress-report">Progress Report</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/exam-preparation">Exam Preparation</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="text-center">
+                    <h1 class="display-5 fw-bold mb-3">
+                        <i data-feather="award" class="me-3"></i>Exam Preparation
+                    </h1>
+                    <p class="lead text-muted">Comprehensive exam preparation with revision summaries, mock tests, and personalized study plans</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Features -->
+        <div class="row mb-5">
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card feature-card h-100 text-center">
+                    <div class="card-body">
+                        <i data-feather="book" style="width: 48px; height: 48px;" class="text-primary mb-3"></i>
+                        <h5 class="card-title">Revision Summaries</h5>
+                        <p class="card-text text-muted">AI-generated chapter summaries highlighting key concepts and important points.</p>
+                        <button class="btn btn-primary" onclick="startRevisionSummaries()">
+                            <i data-feather="file-text" class="me-2"></i>Create Summaries
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card feature-card h-100 text-center">
+                    <div class="card-body">
+                        <i data-feather="clipboard" style="width: 48px; height: 48px;" class="text-success mb-3"></i>
+                        <h5 class="card-title">Mock Exams</h5>
+                        <p class="card-text text-muted">Practice with full-length mock exams with automatic scoring and detailed feedback.</p>
+                        <button class="btn btn-success" onclick="startMockExam()">
+                            <i data-feather="play-circle" class="me-2"></i>Start Mock Exam
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card feature-card h-100 text-center">
+                    <div class="card-body">
+                        <i data-feather="target" style="width: 48px; height: 48px;" class="text-warning mb-3"></i>
+                        <h5 class="card-title">Priority Topics</h5>
+                        <p class="card-text text-muted">Focus on important topics based on curriculum guidelines and your performance.</p>
+                        <button class="btn btn-warning" onclick="showPriorityTopics()">
+                            <i data-feather="trending-up" class="me-2"></i>View Topics
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3 mb-4">
+                <div class="card feature-card h-100 text-center">
+                    <div class="card-body">
+                        <i data-feather="refresh-cw" style="width: 48px; height: 48px;" class="text-info mb-3"></i>
+                        <h5 class="card-title">Smart Revision</h5>
+                        <p class="card-text text-muted">Personalized revision recommendations based on your quiz scores and weak areas.</p>
+                        <button class="btn btn-info" onclick="getRevisionRecommendations()">
+                            <i data-feather="brain" class="me-2"></i>Get Recommendations
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subject-wise Performance -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h3 class="mb-4">
+                    <i data-feather="bar-chart-2" class="me-2"></i>Subject-wise Performance
+                </h3>
+                <div class="row" id="subjectPerformance">
+                    <!-- Subject cards will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Personalized Study Plan -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h3 class="mb-4">
+                    <i data-feather="calendar" class="me-2"></i>Personalized Study Plan
+                </h3>
+                <div class="card">
+                    <div class="card-body">
+                        <div id="studyPlan">
+                            <!-- Study plan items will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row">
+            <div class="col-12">
+                <h3 class="mb-4">
+                    <i data-feather="zap" class="me-2"></i>Quick Actions
+                </h3>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-outline-primary w-100" onclick="generateQuickQuiz()">
+                            <i data-feather="help-circle" class="me-2"></i>Generate Quick Quiz
+                        </button>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-outline-success w-100" onclick="reviewWeakTopics()">
+                            <i data-feather="alert-triangle" class="me-2"></i>Review Weak Topics
+                        </button>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-outline-info w-100" onclick="spacedRepetition()">
+                            <i data-feather="repeat" class="me-2"></i>Spaced Repetition
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject Selection Modal -->
+    <div class="modal fade" id="subjectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="subjectModalTitle">Select Subject</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-12">
+                            <select class="form-select" id="examSubject">
+                                <option value="">Choose a subject...</option>
+                                <option value="English">English</option>
+                                <option value="Maths">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="Social">Social Studies</option>
+                                <option value="Hindi">Hindi</option>
+                                <option value="Telugu">Telugu</option>
+                                <option value="IT-Computers">IT & Computers</option>
+                                <option value="GK">General Knowledge</option>
+                                <option value="Value Education">Value Education</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmSubjectSelection()">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize feather icons
+        feather.replace();
+
+        // Global variables
+        let currentAction = '';
+        let selectedSubject = '';
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSubjectPerformance();
+            loadStudyPlan();
+        });
+
+        // Load subject performance data
+        function loadSubjectPerformance() {
+            const subjects = ['English', 'Maths', 'Science', 'Social', 'Hindi', 'Telugu', 'IT-Computers', 'GK', 'Value Education'];
+            const performanceContainer = document.getElementById('subjectPerformance');
+            
+            subjects.forEach(subject => {
+                const performance = Math.floor(Math.random() * 40) + 60; // Random performance between 60-100
+                const performanceLevel = performance >= 80 ? 'high' : performance >= 65 ? 'medium' : 'low';
+                
+                const card = document.createElement('div');
+                card.className = 'col-lg-4 col-md-6 mb-3';
+                card.innerHTML = `
+                    <div class="card subject-card h-100">
+                        <div class="card-body text-center">
+                            <div class="progress-ring ${performanceLevel}">
+                                <div class="d-flex align-items-center justify-content-center h-100">
+                                    <span class="fw-bold text-white">${performance}%</span>
+                                </div>
+                            </div>
+                            <h6 class="card-title">${subject}</h6>
+                            <p class="card-text text-muted small">Overall Performance</p>
+                        </div>
+                    </div>
+                `;
+                performanceContainer.appendChild(card);
+            });
+        }
+
+        // Load personalized study plan
+        function loadStudyPlan() {
+            const studyPlan = document.getElementById('studyPlan');
+            const planItems = [
+                { task: 'Review Math Chapter 5 - Fractions', status: 'completed', subject: 'Maths' },
+                { task: 'Practice Science Chapter 8 - Light and Sound', status: 'current', subject: 'Science' },
+                { task: 'Memorize Hindi poems from Chapter 3', status: 'pending', subject: 'Hindi' },
+                { task: 'Social Studies - Map work practice', status: 'pending', subject: 'Social' },
+                { task: 'English grammar - Tenses revision', status: 'pending', subject: 'English' }
+            ];
+
+            planItems.forEach(item => {
+                const planItem = document.createElement('div');
+                planItem.className = `study-plan-item ${item.status}`;
+                planItem.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">${item.task}</h6>
+                            <small class="text-muted">${item.subject}</small>
+                        </div>
+                        <div>
+                            <span class="badge bg-${item.status === 'completed' ? 'success' : item.status === 'current' ? 'warning' : 'secondary'}">
+                                ${item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                            </span>
+                        </div>
+                    </div>
+                `;
+                studyPlan.appendChild(planItem);
+            });
+        }
+
+        // Show subject selection modal
+        function showSubjectModal(action, title) {
+            currentAction = action;
+            document.getElementById('subjectModalTitle').textContent = title;
+            new bootstrap.Modal(document.getElementById('subjectModal')).show();
+        }
+
+        // Confirm subject selection
+        function confirmSubjectSelection() {
+            selectedSubject = document.getElementById('examSubject').value;
+            if (!selectedSubject) {
+                alert('Please select a subject');
+                return;
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('subjectModal')).hide();
+            
+            // Execute the action based on currentAction
+            switch(currentAction) {
+                case 'revision':
+                    executeRevisionSummaries();
+                    break;
+                case 'mock':
+                    executeMockExam();
+                    break;
+                case 'priority':
+                    executePriorityTopics();
+                    break;
+                case 'recommendations':
+                    executeRevisionRecommendations();
+                    break;
+            }
+        }
+
+        // Action functions
+        function startRevisionSummaries() {
+            showSubjectModal('revision', 'Select Subject for Revision Summaries');
+        }
+
+        function startMockExam() {
+            showSubjectModal('mock', 'Select Subject for Mock Exam');
+        }
+
+        function showPriorityTopics() {
+            showSubjectModal('priority', 'Select Subject for Priority Topics');
+        }
+
+        function getRevisionRecommendations() {
+            showSubjectModal('recommendations', 'Select Subject for Revision Recommendations');
+        }
+
+        // Execute actions
+        function executeRevisionSummaries() {
+            alert(`Generating revision summaries for ${selectedSubject}...`);
+            // TODO: Implement actual revision summaries generation
+        }
+
+        function executeMockExam() {
+            alert(`Starting mock exam for ${selectedSubject}...`);
+            // TODO: Implement actual mock exam functionality
+        }
+
+        function executePriorityTopics() {
+            alert(`Showing priority topics for ${selectedSubject}...`);
+            // TODO: Implement actual priority topics display
+        }
+
+        function executeRevisionRecommendations() {
+            alert(`Generating revision recommendations for ${selectedSubject}...`);
+            // TODO: Implement actual revision recommendations
+        }
+
+        // Quick actions
+        function generateQuickQuiz() {
+            alert('Generating quick quiz...');
+            // TODO: Implement quick quiz generation
+        }
+
+        function reviewWeakTopics() {
+            alert('Reviewing weak topics...');
+            // TODO: Implement weak topics review
+        }
+
+        function spacedRepetition() {
+            alert('Starting spaced repetition session...');
+            // TODO: Implement spaced repetition
+        }
+    </script>
+</body>
+</html>
