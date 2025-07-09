@@ -494,38 +494,32 @@
                         <i data-feather="message-circle" class="me-2"></i>Ask Your Question
                     </h4>
                     
-                    <div class="question-input-area">
-                        <label class="form-label fw-bold">Type your question here or use the microphone button to speak:</label>
+                    <div class="question-input-area mb-3">
                         <textarea 
-                            class="answer-textarea form-control" 
+                            class="form-control" 
                             id="questionInput" 
                             placeholder="Type your question here or use the microphone button to speak..."
                             rows="4"
                         ></textarea>
-                        
-                        <div class="d-flex justify-content-between mt-3">
-                            <div class="btn-group">
-                                <button class="btn btn-success" id="submitQuestion">
-                                    <i data-feather="send" class="me-2"></i>Submit Question
-                                </button>
-                                <button class="voice-button" id="speakQuestion" title="Speak your question">
-                                    <i data-feather="mic" class="me-2"></i>Speak Question
-                                </button>
-                                <button class="btn btn-outline-info" id="needHint" style="display: none;" onclick="requestHint(currentQuestion)">
-                                    <i data-feather="help-circle" class="me-2"></i>Need a hint?
-                                </button>
-                            </div>
-                            <button class="btn btn-outline-secondary" id="clearQuestion">
-                                <i data-feather="x" class="me-2"></i>Clear
-                            </button>
-                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center gap-3 mb-3">
+                        <button class="btn btn-success" id="submitQuestion">
+                            <i data-feather="check" class="me-2"></i>Submit Question
+                        </button>
+                        <button class="btn btn-primary" id="speakQuestion">
+                            <i data-feather="mic" class="me-2"></i>Speak Question
+                        </button>
+                        <button class="btn btn-outline-secondary" id="cancelQuestion" style="display: none;">
+                            <i data-feather="x" class="me-2"></i>Cancel
+                        </button>
                     </div>
                     
                     <div class="mt-4" id="questionResponse" style="display: none;">
                         <div class="alert alert-info">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="mb-0">
-                                    <i data-feather="cpu" class="me-2"></i>AI Response
+                                    <i data-feather="cpu" class="me-2"></i>Answer:
                                 </h6>
                                 <div class="btn-group" role="group">
                                     <button class="btn btn-sm btn-outline-primary" id="listenResponse">
@@ -533,6 +527,9 @@
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger" id="stopAudio" style="display: none;">
                                         <i data-feather="square" class="me-1"></i>Stop
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-info" id="needHint" style="display: none;" onclick="requestHint(currentQuestion)">
+                                        <i data-feather="help-circle" class="me-1"></i>Need a hint?
                                     </button>
                                 </div>
                             </div>
@@ -767,9 +764,19 @@
         function showDocumentPreview(documentId) {
             if (!documentId) return;
             
+            console.log('Loading document preview for ID:', documentId);
+            
             fetch(`/api/document/${documentId}/pages`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Document API response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Document API data:', data);
+                    
                     if (data.document && data.pages) {
                         // Show document info
                         const docInfo = document.getElementById('documentInfo');
@@ -805,11 +812,28 @@
                         document.getElementById('documentPreview').style.display = 'block';
                         
                         feather.replace();
+                    } else {
+                        console.error('Invalid document data structure:', data);
+                        showPreviewError('Invalid document data received');
                     }
                 })
                 .catch(error => {
                     console.error('Error loading document preview:', error);
+                    showPreviewError('Unable to load document preview. Please try uploading again.');
                 });
+        }
+        
+        function showPreviewError(message) {
+            const docInfo = document.getElementById('documentInfo');
+            docInfo.innerHTML = `
+                <div class="alert alert-warning">
+                    <i data-feather="alert-triangle" class="me-2"></i>
+                    ${message}
+                </div>
+            `;
+            document.getElementById('documentPreview').style.display = 'block';
+            feather.replace();
+        }
         }
 
         function showQuestionsSection() {
