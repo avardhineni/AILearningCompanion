@@ -777,14 +777,28 @@ def api_process_homework_question():
         data = request.get_json()
         session_id = data.get('session_id')
         question = data.get('question')
+        subject = data.get('subject', 'English')
         student_response = data.get('student_response')
         request_hint = data.get('request_hint', False)
         hint_level = data.get('hint_level', 1)
         
-        if not session_id or not question:
-            return jsonify({"success": False, "message": "Session ID and question are required"})
+        if not question:
+            return jsonify({"success": False, "message": "Question is required"})
         
         homework_assistant = HomeworkAssistant()
+        
+        # Handle hint requests without session
+        if request_hint and not session_id:
+            result = homework_assistant.generate_progressive_hint(
+                question, subject, hint_level, "", []
+            )
+            return jsonify({
+                "success": True,
+                "hint_text": result.get('hint_text', 'Try breaking this problem down step by step.'),
+                "hint_type": result.get('hint_type', 'general'),
+                "hint_level": hint_level
+            })
+        
         result = homework_assistant.process_homework_question(
             session_id, question, student_response, request_hint, hint_level
         )
