@@ -510,7 +510,7 @@
                         <button class="btn btn-primary" id="speakQuestion">
                             <i data-feather="mic" class="me-2"></i>Speak Question
                         </button>
-                        <button class="btn btn-outline-info" id="needHintPreSubmit" style="display: none;">
+                        <button class="btn btn-outline-info" id="needHintPreSubmit">
                             <i data-feather="help-circle" class="me-2"></i>Need a hint?
                         </button>
                         <button class="btn btn-outline-secondary" id="cancelQuestion" style="display: none;">
@@ -1496,14 +1496,8 @@
         });
         
         function togglePreSubmitHintButton() {
-            const questionText = document.getElementById('questionInput').value.trim();
-            const hintButton = document.getElementById('needHintPreSubmit');
-            
-            if (questionText && selectedSubject) {
-                hintButton.style.display = 'inline-block';
-            } else {
-                hintButton.style.display = 'none';
-            }
+            // Button is always visible now, no need to toggle
+            // This function is kept for compatibility but does nothing
         }
         
         function showPreSubmitHint(questionText) {
