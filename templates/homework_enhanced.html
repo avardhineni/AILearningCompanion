@@ -510,6 +510,9 @@
                         <button class="btn btn-primary" id="speakQuestion">
                             <i data-feather="mic" class="me-2"></i>Speak Question
                         </button>
+                        <button class="btn btn-outline-info" id="needHintPreSubmit" style="display: none;">
+                            <i data-feather="help-circle" class="me-2"></i>Need a hint?
+                        </button>
                         <button class="btn btn-outline-secondary" id="cancelQuestion" style="display: none;">
                             <i data-feather="x" class="me-2"></i>Cancel
                         </button>
@@ -630,6 +633,7 @@
             radio.addEventListener('change', function() {
                 selectedSubject = this.value;
                 updateSpeechRecognitionLanguage();
+                togglePreSubmitHintButton();
             });
         });
 
@@ -1187,6 +1191,23 @@
             startQuestionSpeechRecognition();
         });
         
+        // Pre-submit hint button
+        document.getElementById('needHintPreSubmit').addEventListener('click', function() {
+            const questionText = document.getElementById('questionInput').value.trim();
+            
+            if (!questionText) {
+                alert('Please enter a question first');
+                return;
+            }
+            
+            if (!selectedSubject) {
+                alert('Please select a subject first');
+                return;
+            }
+            
+            showPreSubmitHint(questionText);
+        });
+        
         document.getElementById('clearQuestion').addEventListener('click', function() {
             document.getElementById('questionInput').value = '';
             document.getElementById('questionResponse').style.display = 'none';
@@ -1233,6 +1254,9 @@
                 document.getElementById('questionInput').value = transcript;
                 speakButton.classList.remove('listening');
                 speakButton.disabled = false;
+                
+                // Show pre-submit hint button when text is entered
+                togglePreSubmitHintButton();
             };
             
             speechRecognition.onerror = function(event) {
@@ -1464,6 +1488,89 @@
                 document.getElementById('stopAudio').style.display = 'none';
                 document.getElementById('listenResponse').style.display = 'inline-block';
             }
+        }
+
+        // Question input change handler
+        document.getElementById('questionInput').addEventListener('input', function() {
+            togglePreSubmitHintButton();
+        });
+        
+        function togglePreSubmitHintButton() {
+            const questionText = document.getElementById('questionInput').value.trim();
+            const hintButton = document.getElementById('needHintPreSubmit');
+            
+            if (questionText && selectedSubject) {
+                hintButton.style.display = 'inline-block';
+            } else {
+                hintButton.style.display = 'none';
+            }
+        }
+        
+        function showPreSubmitHint(questionText) {
+            const responseDiv = document.getElementById('questionResponse');
+            const responseTextDiv = document.getElementById('responseText');
+            
+            // Show loading state
+            responseTextDiv.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="progress-ring me-3"></div>
+                    <span>Generating hint to help you solve this problem...</span>
+                </div>
+            `;
+            responseDiv.style.display = 'block';
+            
+            // Request hint from server
+            fetch('/api/homework/process-question', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    session_id: null,
+                    question: questionText,
+                    request_hint: true,
+                    hint_level: 1
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    responseTextDiv.innerHTML = `
+                        <div class="mb-3">
+                            <strong>💡 Hint to help you solve this:</strong>
+                            <div class="mt-2">${formatSteps(data.hint_text)}</div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i data-feather="info" class="me-1"></i>
+                                Try to solve the problem using this hint! If you need more help, submit your question.
+                            </small>
+                        </div>
+                    `;
+                    
+                    // Show the listen button but hide the post-answer hint button
+                    document.getElementById('listenResponse').style.display = 'inline-block';
+                    document.getElementById('needHint').style.display = 'none';
+                    
+                    feather.replace();
+                } else {
+                    responseTextDiv.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i data-feather="alert-circle" class="me-2"></i>
+                            Unable to generate hint. Please try submitting your question directly.
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Hint generation error:', error);
+                responseTextDiv.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i data-feather="alert-circle" class="me-2"></i>
+                        Error generating hint. Please try submitting your question directly.
+                    </div>
+                `;
+            });
         }
 
         // Initialize the page
