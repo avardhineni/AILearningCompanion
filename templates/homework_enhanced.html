@@ -1366,51 +1366,7 @@
             });
         }
         
-        function showDocumentPreview(documentId) {
-            fetch(`/api/documents/${documentId}/pages`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Show document info
-                        const docInfo = document.getElementById('documentInfo');
-                        docInfo.innerHTML = `
-                            <div class="alert alert-info">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <strong>Document:</strong> ${data.document.original_filename}
-                                    </div>
-                                    <div class="col-md-6">
-                                        <strong>Pages:</strong> ${data.pages.length}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        
-                        // Show document content
-                        const docContent = document.getElementById('documentContent');
-                        let contentHtml = '';
-                        
-                        data.pages.forEach((page, index) => {
-                            contentHtml += `
-                                <div class="page-content mb-4">
-                                    <h6 class="text-primary mb-2">Page ${page.page_number}</h6>
-                                    <div class="content-text">${page.content.replace(/\n/g, '<br>')}</div>
-                                </div>
-                            `;
-                        });
-                        
-                        docContent.innerHTML = contentHtml;
-                        
-                        // Show the document preview section
-                        document.getElementById('documentPreview').style.display = 'block';
-                        
-                        feather.replace();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading document preview:', error);
-                });
-        }
+
         
         function requestHint(question) {
             const responseText = document.getElementById('responseText');
