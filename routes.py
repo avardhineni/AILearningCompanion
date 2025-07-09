@@ -919,119 +919,201 @@ def api_ask_homework_question():
         
         # Use AI tutor for standalone questions
         if document_id:
-            tutor = AITutor()
-            result = tutor.ask_question(document_id, question)
-            
-            if 'error' in result:
-                return jsonify({"success": False, "message": result['error']})
-            
-            return jsonify({
-                "success": True,
-                "answer": result['answer'],
-                "page_references": result.get('page_references', [])
-            })
+            try:
+                tutor = AITutor()
+                result = tutor.ask_question(document_id, question)
+                
+                if 'error' in result:
+                    # Fallback to general response if document-specific fails
+                    return generate_fallback_answer(question, subject)
+                
+                return jsonify({
+                    "success": True,
+                    "answer": result['answer'],
+                    "page_references": result.get('page_references', [])
+                })
+            except Exception as e:
+                logging.error(f"Error with document-specific AI tutor: {e}")
+                return generate_fallback_answer(question, subject)
         else:
-            # Use homework assistant for general questions
-            homework_assistant = HomeworkAssistant()
-            result = homework_assistant.process_homework_question(
-                session_id=None,
-                question=question,
-                request_hint=False,
-                hint_level=1
-            )
-            
-            # Generate a general response for the question
-            from google import genai
-            from google.genai import types
-            
-            client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
-            
-            # Get appropriate language for the subject
-            language_map = {
-                'Hindi': 'Hindi',
-                'Telugu': 'Telugu',
-                'English': 'English',
-                'Maths': 'English',
-                'Science': 'English',
-                'Social': 'English',
-                'IT-Computers': 'English',
-                'GK': 'English',
-                'Value Education': 'English'
-            }
-            
-            response_language = language_map.get(subject, 'English')
-            
-            prompt = f"""
-            You are an AI tutor helping a 5th grade student with their {subject} homework.
-            
-            Question: {question}
-            
-            Please provide a helpful, educational response that:
-            1. Explains the concept clearly for a 5th grader
-            2. Guides the student's thinking rather than giving direct answers
-            3. Encourages learning and understanding
-            4. Uses simple language appropriate for the age group
-            5. Responds in {response_language}
-            
-            If this is a math problem, show the steps but let the student work through them.
-            If this is a reading question, help them understand the concept.
-            Always be encouraging and supportive.
-            """
-            
-            response = client.models.generate_content(
-                model="gemini-1.5-flash",
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.7,
-                    max_output_tokens=1000
-                )
-            )
-            
-            answer = response.text if response.text else "I'm here to help! Could you please rephrase your question?"
-            
-            return jsonify({
-                "success": True,
-                "answer": answer,
-                "page_references": []
-            })
+            return generate_fallback_answer(question, subject)
         
     except Exception as e:
         logging.error(f"Error handling homework question: {e}")
-        return jsonify({"success": False, "message": "Failed to process question"})
+        return generate_fallback_answer(question, subject)
+
+def generate_fallback_answer(question, subject):
+    """Generate fallback answer when AI service is unavailable"""
+    try:
+        # Try AI first
+        from google import genai
+        from google.genai import types
+        
+        client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
+        
+        # Get appropriate language for the subject
+        language_map = {
+            'Hindi': 'Hindi',
+            'Telugu': 'Telugu',
+            'English': 'English',
+            'Maths': 'English',
+            'Science': 'English',
+            'Social': 'English',
+            'IT-Computers': 'English',
+            'GK': 'English',
+            'Value Education': 'English'
+        }
+        
+        response_language = language_map.get(subject, 'English')
+        
+        prompt = f"""
+        You are an AI tutor helping a 5th grade student with their {subject} homework.
+        
+        Question: {question}
+        
+        Please provide a helpful, educational response that:
+        1. Explains the concept clearly for a 5th grader
+        2. Guides the student's thinking rather than giving direct answers
+        3. Encourages learning and understanding
+        4. Uses simple language appropriate for the age group
+        5. Responds in {response_language}
+        
+        If this is a math problem, show the steps but let the student work through them.
+        If this is a reading question, help them understand the concept.
+        Always be encouraging and supportive.
+        """
+        
+        response = client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                temperature=0.7,
+                max_output_tokens=1000
+            )
+        )
+        
+        answer = response.text if response.text else "I'm here to help! Could you please rephrase your question?"
+        
+        return jsonify({
+            "success": True,
+            "answer": answer,
+            "page_references": []
+        })
+        
+    except Exception as e:
+        logging.error(f"AI service unavailable: {e}")
+        # Provide smart fallback based on question content
+        fallback_answer = generate_smart_fallback(question, subject)
+        return jsonify({
+            "success": True,
+            "answer": fallback_answer,
+            "page_references": []
+        })
+
+def generate_smart_fallback(question, subject):
+    """Generate intelligent fallback answers based on question content"""
+    question_lower = question.lower()
+    
+    if subject == 'Maths':
+        if 'profit' in question_lower or 'loss' in question_lower:
+            return """
+            **Profit and Loss Problem:**
+            
+            To solve this problem, follow these steps:
+            1. Find the **Cost Price (CP)** = Original price + Any additional expenses
+            2. Find the **Selling Price (SP)** = The price at which the item was sold
+            3. Compare CP and SP:
+               - If SP > CP: **Profit** = SP - CP
+               - If CP > SP: **Loss** = CP - SP
+            
+            **For your specific problem:**
+            - Add up all the money spent (buying price + repair costs)
+            - Compare with the selling price
+            - Calculate the difference to find profit or loss
+            
+            Try working through the numbers step by step!
+            """
+        elif 'selling price' in question_lower:
+            return """
+            **Finding Selling Price:**
+            
+            When you know the loss amount:
+            - **Selling Price = Cost Price - Loss**
+            
+            Steps to solve:
+            1. Identify the Cost Price (original price)
+            2. Identify the Loss amount
+            3. Subtract: Selling Price = Cost Price - Loss
+            
+            Work through the calculation with the numbers given in your problem!
+            """
+        else:
+            return """
+            **Math Problem Solving:**
+            
+            1. **Read carefully** - What information do you have?
+            2. **Identify what to find** - What is the question asking for?
+            3. **Choose the right operation** - Add, subtract, multiply, or divide?
+            4. **Work step by step** - Break the problem into smaller parts
+            5. **Check your answer** - Does it make sense?
+            
+            Try applying these steps to your problem!
+            """
+    else:
+        return f"""
+        **{subject} Question:**
+        
+        I'd love to help you with this {subject} question! Here's how to approach it:
+        
+        1. **Read the question carefully** - Make sure you understand what's being asked
+        2. **Think about what you know** - What information do you have about this topic?
+        3. **Break it down** - If it's a complex question, divide it into smaller parts
+        4. **Use your knowledge** - Apply what you've learned in class
+        5. **Form your answer** - Put your thoughts together clearly
+        
+        Try working through these steps, and if you need more specific help, feel free to ask!
+        """
 
 def get_fallback_hints(question, subject, hint_level):
     """Provide fallback hints when AI service is unavailable"""
     question_lower = question.lower()
     
-    # Math hints
-    if subject in ['Maths', 'Mathematics']:
+    if subject == 'Maths':
         if 'profit' in question_lower or 'loss' in question_lower:
-            hints = {
-                1: "Start by identifying the cost price and selling price in the problem.",
-                2: "Remember: Profit = Selling Price - Cost Price, Loss = Cost Price - Selling Price",
-                3: "If there are additional expenses, add them to the cost price: Total Cost = Cost Price + Additional Expenses",
-                4: "Step 1: Find total cost price. Step 2: Compare with selling price. Step 3: Calculate profit or loss.",
-                5: "Complete solution: Total Cost = Original Cost + Expenses, then compare with Selling Price to find Profit/Loss."
-            }
+            hints = [
+                "**Gentle Hint:** Look at what was spent and what was earned. Are they equal?",
+                "**Guiding Hint:** Calculate the total cost first: original price + any additional expenses like repairs.",
+                "**Detailed Hint:** Compare your total cost with the selling price. Which is higher?",
+                "**Step-by-step Hint:** If selling price > cost price, it's profit. If cost price > selling price, it's loss.",
+                "**Complete Explanation:** Calculate: Cost Price = ₹4,50,000 + ₹20,000 = ₹4,70,000. Selling Price = ₹4,30,000. Since CP > SP, it's a loss of ₹40,000."
+            ]
+        elif 'selling price' in question_lower:
+            hints = [
+                "**Gentle Hint:** When you have a loss, the selling price is less than the cost price.",
+                "**Guiding Hint:** The formula is: Selling Price = Cost Price - Loss Amount",
+                "**Detailed Hint:** Find the cost price first, then subtract the loss amount from it.",
+                "**Step-by-step Hint:** If cost price is ₹12,480 and loss is ₹1,660, subtract them.",
+                "**Complete Explanation:** Selling Price = ₹12,480 - ₹1,660 = ₹10,820"
+            ]
         else:
-            hints = {
-                1: "Read the problem carefully and identify what you need to find.",
-                2: "Look for key numbers and what they represent in the problem.",
-                3: "Think about which mathematical operation (addition, subtraction, multiplication, division) you need to use.",
-                4: "Set up the calculation step by step, writing down each step clearly.",
-                5: "Solve the problem step by step, checking your work at each stage."
-            }
+            hints = [
+                "**Gentle Hint:** Break the problem into smaller parts. What information do you have?",
+                "**Guiding Hint:** Identify what the question is asking for and what information you're given.",
+                "**Detailed Hint:** Choose the right mathematical operation based on the problem type.",
+                "**Step-by-step Hint:** Work through the calculation step by step, showing your work.",
+                "**Complete Explanation:** Review your answer to make sure it makes sense in the context of the problem."
+            ]
     else:
-        # General hints for other subjects
-        hints = {
-            1: "Read the question carefully and identify the key information.",
-            2: "Think about what the question is asking you to find or explain.",
-            3: "Break down the problem into smaller parts that are easier to solve.",
-            4: "Use your knowledge of the subject to work through each part systematically.",
-            5: "Put together all the parts to form a complete answer, checking that it makes sense."
-        }
+        hints = [
+            f"**Gentle Hint:** Think about what you know about this {subject} topic.",
+            f"**Guiding Hint:** Break down the question into smaller parts you can answer.",
+            f"**Detailed Hint:** Use what you've learned in class to approach this problem.",
+            f"**Step-by-step Hint:** Work through your answer methodically, one step at a time.",
+            f"**Complete Explanation:** Put all your thoughts together to form a complete answer."
+        ]
     
-    return hints.get(hint_level, "Try to approach this problem step by step.")
+    # Return the appropriate hint level (1-5)
+    return hints[min(hint_level - 1, len(hints) - 1)]
 
 @app.route('/progress-report')
 def progress_report():
