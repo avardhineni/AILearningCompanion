@@ -65,6 +65,55 @@
             border-left-color: var(--bs-warning);
             background: var(--bs-gray-700);
         }
+        
+        .score-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+        
+        .score-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            background: var(--bs-gray-800);
+            margin-bottom: 20px;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+        
+        .question-card {
+            border: 1px solid var(--bs-gray-700);
+            border-radius: 10px;
+            overflow: hidden;
+            background: var(--bs-gray-800);
+        }
+        
+        .question-card .card-header {
+            background-color: var(--bs-gray-700);
+            border-bottom: 1px solid var(--bs-gray-600);
+        }
+        
+        .exam-actions {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid var(--bs-gray-700);
+        }
     </style>
 </head>
 <body>
@@ -495,8 +544,32 @@
         }
 
         function executeMockExam() {
-            alert(`Starting mock exam for ${selectedSubject}...`);
-            // TODO: Implement actual mock exam functionality
+            showResults('Mock Exam', 'clipboard');
+            showLoadingInResults('Generating mock exam questions...');
+            
+            // Make API call to generate mock exam
+            fetch('/api/exam/mock-exam', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subject: selectedSubject,
+                    chapters: window.selectedChapters || []
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayMockExam(data.exam);
+                } else {
+                    showErrorInResults(data.message || 'Failed to generate mock exam');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorInResults('Failed to generate mock exam');
+            });
         }
 
         function executePriorityTopics() {
@@ -717,6 +790,164 @@
             
             document.getElementById('resultsContent').innerHTML = content;
             feather.replace();
+        }
+
+        function displayMockExam(exam) {
+            let content = `
+                <div class="mock-exam-container">
+                    <div class="exam-header mb-4">
+                        <h5>${exam.subject} Mock Exam</h5>
+                        <div class="d-flex justify-content-between">
+                            <span>Total Questions: ${exam.questions.length}</span>
+                            <span>Time: ${exam.duration} minutes</span>
+                        </div>
+                    </div>
+                    <div class="exam-questions">
+            `;
+            
+            exam.questions.forEach((question, index) => {
+                content += `
+                    <div class="question-card mb-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6>Question ${index + 1}</h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="question-text">${question.question}</p>
+                                ${question.type === 'multiple_choice' ? `
+                                    <div class="options">
+                                        ${question.options.map((option, i) => `
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="q${index}" id="q${index}_${i}" value="${option}">
+                                                <label class="form-check-label" for="q${index}_${i}">
+                                                    ${option}
+                                                </label>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : `
+                                    <div class="form-group">
+                                        <textarea class="form-control" rows="3" placeholder="Write your answer here..." id="answer_${index}"></textarea>
+                                    </div>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            content += `
+                    </div>
+                    <div class="exam-actions mt-4">
+                        <button class="btn btn-primary me-2" onclick="submitMockExam()">
+                            <i data-feather="check-circle" class="me-1"></i>Submit Exam
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetMockExam()">
+                            <i data-feather="refresh-cw" class="me-1"></i>Reset
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('resultsContent').innerHTML = content;
+            feather.replace();
+        }
+
+        function submitMockExam() {
+            // Collect answers
+            const answers = [];
+            const questions = document.querySelectorAll('.question-card');
+            
+            questions.forEach((questionCard, index) => {
+                const radioButtons = questionCard.querySelectorAll('input[type="radio"]');
+                const textArea = questionCard.querySelector('textarea');
+                
+                let answer = '';
+                if (radioButtons.length > 0) {
+                    const selected = questionCard.querySelector('input[type="radio"]:checked');
+                    answer = selected ? selected.value : '';
+                } else if (textArea) {
+                    answer = textArea.value;
+                }
+                
+                answers.push(answer);
+            });
+            
+            // Submit for evaluation
+            showLoadingInResults('Evaluating your exam...');
+            
+            fetch('/api/exam/submit-mock-exam', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subject: selectedSubject,
+                    answers: answers
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayExamResults(data.results);
+                } else {
+                    showErrorInResults(data.message || 'Failed to evaluate exam');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showErrorInResults('Failed to evaluate exam');
+            });
+        }
+
+        function displayExamResults(results) {
+            let content = `
+                <div class="exam-results">
+                    <div class="results-header text-center mb-4">
+                        <h5>Exam Results</h5>
+                        <div class="score-display">
+                            <div class="score-circle">
+                                <span class="score-number">${results.score}%</span>
+                            </div>
+                            <p class="score-text">Your Score</p>
+                        </div>
+                    </div>
+                    <div class="results-summary">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <h6>Total Questions</h6>
+                                    <p class="stat-number">${results.total_questions}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <h6>Correct</h6>
+                                    <p class="stat-number text-success">${results.correct_answers}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <h6>Incorrect</h6>
+                                    <p class="stat-number text-danger">${results.incorrect_answers}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-card">
+                                    <h6>Time Taken</h6>
+                                    <p class="stat-number">${results.time_taken}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="performance-feedback mt-4">
+                        <h6>Performance Feedback</h6>
+                        <p>${results.feedback}</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('resultsContent').innerHTML = content;
         }
     </script>
 </body>

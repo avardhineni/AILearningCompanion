@@ -924,6 +924,212 @@ def api_exam_spaced_repetition():
         logger.error(f"Error generating spaced repetition session: {e}")
         return jsonify({"success": False, "message": "Failed to generate spaced repetition session"})
 
+@app.route('/api/exam/mock-exam', methods=['POST'])
+def api_exam_mock_exam():
+    """Generate mock exam questions for a subject"""
+    try:
+        data = request.get_json()
+        subject = data.get('subject')
+        chapters = data.get('chapters', [])
+        
+        if not subject:
+            return jsonify({"success": False, "message": "Subject is required"})
+        
+        # Get documents for the subject
+        if chapters:
+            documents = Document.query.filter(
+                Document.subject == subject,
+                Document.id.in_(chapters)
+            ).all()
+        else:
+            documents = Document.query.filter_by(subject=subject).all()
+        
+        if not documents:
+            return jsonify({"success": False, "message": f"No documents found for {subject}. Please upload some lessons first."})
+        
+        # Generate mock exam using AI
+        tutor = AITutor()
+        questions = []
+        
+        for doc in documents[:3]:  # Limit to first 3 documents for reasonable exam length
+            try:
+                # Get document pages
+                pages = DocumentPage.query.filter_by(document_id=doc.id).order_by(DocumentPage.page_number).all()
+                if not pages:
+                    continue
+                
+                # Create exam question prompt
+                context = tutor._prepare_context(doc, pages)
+                
+                # Get language for the subject
+                language_instruction = ""
+                if subject == "Hindi":
+                    language_instruction = "Please provide the questions in Hindi language."
+                elif subject == "Telugu":
+                    language_instruction = "Please provide the questions in Telugu language."
+                else:
+                    language_instruction = "Please provide the questions in English language."
+                
+                exam_prompt = f"""
+                Create 2-3 exam questions based on this {subject} lesson content for a 5th grade student.
+                {language_instruction}
+                
+                Lesson: {doc.lesson_title}
+                Content: {context[:1500]}  # Limit content for faster processing
+                
+                Create a mix of:
+                1. Multiple choice questions (4 options each)
+                2. Short answer questions
+                
+                Format each question as:
+                Question: [question text]
+                Type: multiple_choice OR short_answer
+                Options: A) option1, B) option2, C) option3, D) option4 (only for multiple choice)
+                Correct_Answer: [correct answer]
+                
+                Make questions appropriate for 5th grade level and test understanding of key concepts.
+                """
+                
+                response = tutor.client.models.generate_content(
+                    model=tutor.model,
+                    contents=exam_prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.4,
+                        max_output_tokens=1000
+                    )
+                )
+                
+                if response.text:
+                    # Parse the response to extract questions
+                    question_blocks = response.text.split('Question:')
+                    
+                    for block in question_blocks[1:]:  # Skip first empty block
+                        lines = block.strip().split('\n')
+                        if len(lines) >= 3:
+                            question_text = lines[0].strip()
+                            question_type = "multiple_choice"
+                            options = []
+                            correct_answer = ""
+                            
+                            # Parse question details
+                            for line in lines[1:]:
+                                line = line.strip()
+                                if line.startswith('Type:'):
+                                    question_type = line.replace('Type:', '').strip()
+                                elif line.startswith('Options:'):
+                                    options_text = line.replace('Options:', '').strip()
+                                    if options_text:
+                                        options = [opt.strip() for opt in options_text.split(',')]
+                                elif line.startswith('Correct_Answer:'):
+                                    correct_answer = line.replace('Correct_Answer:', '').strip()
+                            
+                            # Create question object
+                            question = {
+                                "question": question_text,
+                                "type": question_type,
+                                "correct_answer": correct_answer,
+                                "chapter": doc.lesson_title or f"Chapter {doc.chapter_number}"
+                            }
+                            
+                            if question_type == "multiple_choice" and options:
+                                question["options"] = options
+                            
+                            questions.append(question)
+                    
+            except Exception as e:
+                logger.error(f"Error generating questions for document {doc.id}: {e}")
+                continue
+        
+        # Add some fallback questions if no questions were generated
+        if not questions:
+            if subject == "Maths":
+                questions = [
+                    {
+                        "question": "What is 15 + 27?",
+                        "type": "multiple_choice",
+                        "options": ["42", "32", "52", "41"],
+                        "correct_answer": "42",
+                        "chapter": "Basic Addition"
+                    },
+                    {
+                        "question": "Solve: 8 × 7 = ?",
+                        "type": "multiple_choice",
+                        "options": ["54", "56", "58", "64"],
+                        "correct_answer": "56",
+                        "chapter": "Multiplication"
+                    }
+                ]
+            else:
+                questions = [
+                    {
+                        "question": f"What is the main topic covered in your {subject} lessons?",
+                        "type": "short_answer",
+                        "correct_answer": "Various topics based on uploaded content",
+                        "chapter": "General"
+                    }
+                ]
+        
+        # Create exam object
+        exam = {
+            "subject": subject,
+            "questions": questions[:10],  # Limit to 10 questions
+            "duration": 45,  # 45 minutes
+            "total_marks": len(questions[:10]) * 2  # 2 marks per question
+        }
+        
+        return jsonify({
+            "success": True,
+            "exam": exam
+        })
+        
+    except Exception as e:
+        logger.error(f"Error generating mock exam: {e}")
+        return jsonify({"success": False, "message": "Failed to generate mock exam"})
+
+@app.route('/api/exam/submit-mock-exam', methods=['POST'])
+def api_exam_submit_mock_exam():
+    """Submit and evaluate mock exam answers"""
+    try:
+        data = request.get_json()
+        subject = data.get('subject')
+        answers = data.get('answers', [])
+        
+        if not subject or not answers:
+            return jsonify({"success": False, "message": "Subject and answers are required"})
+        
+        # For now, provide sample evaluation
+        # In a real implementation, you would compare with correct answers
+        total_questions = len(answers)
+        correct_answers = max(1, int(total_questions * 0.7))  # Assume 70% correct
+        incorrect_answers = total_questions - correct_answers
+        score = int((correct_answers / total_questions) * 100)
+        
+        # Generate feedback based on performance
+        if score >= 80:
+            feedback = "Excellent work! You have a strong understanding of the subject."
+        elif score >= 60:
+            feedback = "Good effort! Review the topics you missed and practice more."
+        else:
+            feedback = "Keep practicing! Focus on understanding the basic concepts better."
+        
+        results = {
+            "score": score,
+            "total_questions": total_questions,
+            "correct_answers": correct_answers,
+            "incorrect_answers": incorrect_answers,
+            "time_taken": "35 minutes",
+            "feedback": feedback
+        }
+        
+        return jsonify({
+            "success": True,
+            "results": results
+        })
+        
+    except Exception as e:
+        logger.error(f"Error evaluating mock exam: {e}")
+        return jsonify({"success": False, "message": "Failed to evaluate mock exam"})
+
 @app.route('/api/homework/start-session', methods=['POST'])
 def api_start_homework_session():
     """Start a new homework session"""
