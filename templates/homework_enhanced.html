@@ -198,6 +198,88 @@
             background: var(--bs-danger-bg-subtle);
             border: 1px solid var(--bs-danger-border-subtle);
         }
+        
+        .progress-ring {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Step formatting styles */
+        .step-item {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+        }
+        
+        .step-number {
+            color: #007bff;
+            font-size: 1.1em;
+        }
+        
+        .step-content {
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+        
+        .solution-item {
+            background-color: #e7f3ff;
+            border-left: 4px solid #17a2b8;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+        }
+        
+        .solution-header {
+            color: #17a2b8;
+            font-size: 1.1em;
+        }
+        
+        .solution-content {
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+        
+        .answer-item {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 4px;
+        }
+        
+        .answer-header {
+            color: #28a745;
+            font-size: 1.1em;
+        }
+        
+        .answer-content {
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+        
+        .page-content {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #f8f9fa;
+        }
+        
+        .content-text {
+            font-size: 0.95em;
+            line-height: 1.6;
+            color: #495057;
+        }
     </style>
 </head>
 <body>
@@ -394,6 +476,9 @@
                     <h4 class="mb-3">
                         <i data-feather="eye" class="me-2"></i>Document Preview
                     </h4>
+                    <div class="document-info mb-3" id="documentInfo">
+                        <!-- Document info will be loaded here -->
+                    </div>
                     <div class="document-preview" id="documentContent">
                         <!-- Document content will be loaded here -->
                     </div>
@@ -426,6 +511,9 @@
                                 <button class="voice-button" id="speakQuestion" title="Speak your question">
                                     <i data-feather="mic" class="me-2"></i>Speak Question
                                 </button>
+                                <button class="btn btn-outline-info" id="needHint" style="display: none;">
+                                    <i data-feather="help-circle" class="me-2"></i>Need a hint?
+                                </button>
                             </div>
                             <button class="btn btn-outline-secondary" id="clearQuestion">
                                 <i data-feather="x" class="me-2"></i>Clear
@@ -437,11 +525,16 @@
                         <div class="alert alert-info">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h6 class="mb-0">
-                                    <i data-feather="brain" class="me-2"></i>AI Response
+                                    <i data-feather="cpu" class="me-2"></i>AI Response
                                 </h6>
-                                <button class="btn btn-sm btn-outline-primary" id="listenResponse">
-                                    <i data-feather="volume-2" class="me-1"></i>Listen
-                                </button>
+                                <div class="btn-group" role="group">
+                                    <button class="btn btn-sm btn-outline-primary" id="listenResponse">
+                                        <i data-feather="volume-2" class="me-1"></i>Listen
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" id="stopAudio" style="display: none;">
+                                        <i data-feather="square" class="me-1"></i>Stop
+                                    </button>
+                                </div>
                             </div>
                             <div id="responseText"></div>
                         </div>
@@ -512,6 +605,9 @@
         let selectedSessionType = 'homework';
         let speechRecognition = null;
         let isListening = false;
+        let currentQuestion = null;
+        let currentAudio = null;
+        let currentHintLevel = 1;
 
         // Initialize speech recognition
         if ('webkitSpeechRecognition' in window) {
@@ -636,7 +732,7 @@
                     showUploadResult(data);
                     uploadedDocumentId = data.document_id;
                     currentQuestions = data.questions || [];
-                    showDocumentPreview();
+                    showDocumentPreview(data.document_id);
                     if (currentQuestions.length > 0) {
                         showQuestionsSection();
                     }
@@ -668,9 +764,52 @@
             resultDiv.style.display = 'block';
         }
 
-        function showDocumentPreview() {
-            document.getElementById('documentPreview').style.display = 'block';
-            // Load document content preview here
+        function showDocumentPreview(documentId) {
+            if (!documentId) return;
+            
+            fetch(`/api/documents/${documentId}/pages`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show document info
+                        const docInfo = document.getElementById('documentInfo');
+                        docInfo.innerHTML = `
+                            <div class="alert alert-info">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Document:</strong> ${data.document.original_filename}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Pages:</strong> ${data.pages.length}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Show document content
+                        const docContent = document.getElementById('documentContent');
+                        let contentHtml = '';
+                        
+                        data.pages.forEach((page, index) => {
+                            contentHtml += `
+                                <div class="page-content mb-4">
+                                    <h6 class="text-primary mb-2">Page ${page.page_number}</h6>
+                                    <div class="content-text">${page.content.replace(/\n/g, '<br>')}</div>
+                                </div>
+                            `;
+                        });
+                        
+                        docContent.innerHTML = contentHtml;
+                        
+                        // Show the document preview section
+                        document.getElementById('documentPreview').style.display = 'block';
+                        
+                        feather.replace();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading document preview:', error);
+                });
         }
 
         function showQuestionsSection() {
@@ -1028,11 +1167,32 @@
         document.getElementById('clearQuestion').addEventListener('click', function() {
             document.getElementById('questionInput').value = '';
             document.getElementById('questionResponse').style.display = 'none';
+            document.getElementById('needHint').style.display = 'none';
+            currentQuestion = null;
+            currentAudio = null;
+        });
+        
+        // Add need hint functionality
+        document.getElementById('needHint').addEventListener('click', function() {
+            if (currentQuestion) {
+                requestHint(currentQuestion);
+            }
         });
         
         document.getElementById('listenResponse').addEventListener('click', function() {
             const responseText = document.getElementById('responseText').textContent;
             playResponseAudio(responseText);
+        });
+        
+        // Add stop audio functionality
+        document.getElementById('stopAudio').addEventListener('click', function() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio = null;
+                document.getElementById('stopAudio').style.display = 'none';
+                document.getElementById('listenResponse').style.display = 'inline-block';
+            }
         });
         
         function startQuestionSpeechRecognition() {
@@ -1095,10 +1255,14 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success !== false) {
+                    // Store current question for hint functionality
+                    currentQuestion = question;
+                    currentHintLevel = 1;
+                    
                     responseText.innerHTML = `
                         <div class="mb-3">
                             <strong>Answer:</strong>
-                            <div class="mt-2">${data.answer || data.message}</div>
+                            <div class="mt-2">${formatSteps(data.answer || data.message)}</div>
                         </div>
                         ${data.page_references ? `
                             <div class="mt-3">
@@ -1109,6 +1273,10 @@
                             </div>
                         ` : ''}
                     `;
+                    
+                    // Show need hint button
+                    document.getElementById('needHint').style.display = 'inline-block';
+                    
                     feather.replace();
                 } else {
                     responseText.innerHTML = `
@@ -1144,8 +1312,20 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success && data.audio_url) {
-                    const audio = new Audio(data.audio_url);
-                    audio.play();
+                    currentAudio = new Audio(data.audio_url);
+                    
+                    // Show stop button and hide listen button
+                    document.getElementById('stopAudio').style.display = 'inline-block';
+                    document.getElementById('listenResponse').style.display = 'none';
+                    
+                    // Handle audio end
+                    currentAudio.onended = function() {
+                        document.getElementById('stopAudio').style.display = 'none';
+                        document.getElementById('listenResponse').style.display = 'inline-block';
+                        currentAudio = null;
+                    };
+                    
+                    currentAudio.play();
                 } else {
                     alert('Unable to generate audio for response');
                 }
@@ -1154,6 +1334,139 @@
                 console.error('Audio generation error:', error);
                 alert('Error generating audio');
             });
+        }
+        
+        function showDocumentPreview(documentId) {
+            fetch(`/api/documents/${documentId}/pages`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show document info
+                        const docInfo = document.getElementById('documentInfo');
+                        docInfo.innerHTML = `
+                            <div class="alert alert-info">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Document:</strong> ${data.document.original_filename}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Pages:</strong> ${data.pages.length}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Show document content
+                        const docContent = document.getElementById('documentContent');
+                        let contentHtml = '';
+                        
+                        data.pages.forEach((page, index) => {
+                            contentHtml += `
+                                <div class="page-content mb-4">
+                                    <h6 class="text-primary mb-2">Page ${page.page_number}</h6>
+                                    <div class="content-text">${page.content.replace(/\n/g, '<br>')}</div>
+                                </div>
+                            `;
+                        });
+                        
+                        docContent.innerHTML = contentHtml;
+                        
+                        // Show the document preview section
+                        document.getElementById('documentPreview').style.display = 'block';
+                        
+                        feather.replace();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading document preview:', error);
+                });
+        }
+        
+        function requestHint(question) {
+            const responseText = document.getElementById('responseText');
+            
+            // Show loading state
+            responseText.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <div class="progress-ring me-3"></div>
+                    <span>Generating hint level ${currentHintLevel}...</span>
+                </div>
+            `;
+            
+            fetch('/api/homework/process-question', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    session_id: currentSession ? currentSession.session_id : null,
+                    question: question,
+                    request_hint: true,
+                    hint_level: currentHintLevel
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    responseText.innerHTML = `
+                        <div class="mb-3">
+                            <strong>Hint Level ${currentHintLevel}:</strong>
+                            <div class="mt-2">${formatSteps(data.hint_text)}</div>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i data-feather="info" class="me-1"></i>
+                                ${data.hint_explanation || 'Think about this hint and try to solve the problem!'}
+                            </small>
+                        </div>
+                    `;
+                    
+                    // Increment hint level for next request
+                    currentHintLevel = Math.min(currentHintLevel + 1, 5);
+                    
+                    feather.replace();
+                } else {
+                    responseText.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i data-feather="alert-circle" class="me-2"></i>
+                            Unable to generate hint. Please try again.
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Hint generation error:', error);
+                responseText.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i data-feather="alert-circle" class="me-2"></i>
+                        Error generating hint. Please try again.
+                    </div>
+                `;
+            });
+        }
+        
+        function formatSteps(text) {
+            if (!text) return text;
+            
+            // Convert step patterns to HTML
+            text = text.replace(/\*\*Step (\d+):\*\*(.*?)(?=\*\*Step \d+:|\*\*Solution:|\*\*Answer:|$)/gs, 
+                '<div class="step-item"><strong class="step-number">Step $1:</strong><div class="step-content">$2</div></div>');
+            
+            // Convert solution patterns
+            text = text.replace(/\*\*Solution:\*\*(.*?)(?=\*\*Answer:|$)/gs, 
+                '<div class="solution-item"><strong class="solution-header">Solution:</strong><div class="solution-content">$1</div></div>');
+            
+            // Convert answer patterns
+            text = text.replace(/\*\*Answer:\*\*(.*?)$/gs, 
+                '<div class="answer-item"><strong class="answer-header">Answer:</strong><div class="answer-content">$1</div></div>');
+            
+            // Convert general bold patterns
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Convert line breaks
+            text = text.replace(/\n/g, '<br>');
+            
+            return text;
         }
 
         // Initialize the page
