@@ -274,7 +274,8 @@ Guidelines:
 - Focus on key concepts and important facts
 - Make questions clear and unambiguous
 - Include the page number where the answer can be found
-- Return in a structured format"""
+- Return in a structured format
+- Support multiple languages: English, Hindi, and Telugu"""
             
             user_prompt = f"""Based on this lesson content, create {num_questions} quiz questions for 5th grade students.
 
@@ -284,19 +285,38 @@ SUBJECT: {document.subject}
 CONTENT:
 {context}
 
+CRITICAL LANGUAGE REQUIREMENT - This MUST be followed exactly:
+- If SUBJECT is "Hindi": Generate ALL quiz questions, answers, and instructions ONLY in Hindi language (सभी प्रश्न हिंदी में बनाएं)
+- If SUBJECT is "Telugu": Generate ALL quiz questions, answers, and instructions ONLY in Telugu language (అన్ని ప్రశ్నలు తెలుగులో మాత్రమే రచించండి)
+- If SUBJECT is "English", "Maths", "Science", "Social", "IT-Computers", "GK", or "Value Education": Generate ALL quiz questions, answers, and instructions ONLY in English language
+
+CHECK THE SUBJECT ABOVE AND USE THE CORRECT LANGUAGE FOR YOUR ENTIRE RESPONSE INCLUDING QUESTIONS, ANSWERS, AND FORMATTING.
+
 Please format your response as:
 
-Question 1: [Question text]
-Type: [Multiple Choice/True False/Short Answer]
-Answer: [Correct answer]
+Question 1: [Question text in appropriate language]
+Type: [Multiple Choice/True False/Short Answer in appropriate language]
+Answer: [Correct answer in appropriate language]
 Page: [Page number where answer is found]
 
-Question 2: [Question text]
-Type: [Multiple Choice/True False/Short Answer]
-Answer: [Correct answer]
+Question 2: [Question text in appropriate language]
+Type: [Multiple Choice/True False/Short Answer in appropriate language]
+Answer: [Correct answer in appropriate language]
 Page: [Page number where answer is found]
 
-... and so on."""
+... and so on.
+
+IMPORTANT: If the subject is Hindi, use Hindi formatting labels like:
+प्रश्न 1: [प्रश्न]
+प्रकार: [बहुविकल्पीय/सत्य असत्य/लघु उत्तर]
+उत्तर: [सही उत्तर]
+पृष्ठ: [पृष्ठ संख्या]
+
+If the subject is Telugu, use Telugu formatting labels like:
+ప్రశ్న 1: [ప్రశ్న]
+రకం: [బహుళ ఎంపిక/సత్యం అసత్యం/చిన్న సమాధానం]
+సమాధానం: [సరైన సమాధానం]
+పేజీ: [పేజీ సంఖ్య]"""
             
             response = self.client.models.generate_content(
                 model=self.model,
