@@ -1266,12 +1266,15 @@
                 }
                 
                 // Get the plain text content for speech synthesis
-                const responseText = responseElement.textContent || responseElement.innerText;
+                let responseText = responseElement.textContent || responseElement.innerText;
                 
                 if (!responseText.trim()) {
                     alert('No response text to read');
                     return;
                 }
+                
+                // Clean the text for better speech synthesis
+                responseText = cleanTextForSpeech(responseText);
                 
                 playResponseAudio(responseText);
             });
@@ -1572,6 +1575,45 @@
             
             // Convert line breaks
             text = text.replace(/\n/g, '<br>');
+            
+            return text;
+        }
+
+        function cleanTextForSpeech(text) {
+            if (!text) return text;
+            
+            // Remove common emojis and symbols
+            text = text.replace(/💡/g, ''); // Remove lightbulb emoji
+            text = text.replace(/🔍/g, ''); // Remove magnifying glass
+            text = text.replace(/📝/g, ''); // Remove memo/note emoji
+            text = text.replace(/✓/g, ''); // Remove check mark
+            text = text.replace(/❌/g, ''); // Remove cross mark
+            text = text.replace(/⭐/g, ''); // Remove star
+            text = text.replace(/🎯/g, ''); // Remove target
+            text = text.replace(/📚/g, ''); // Remove books
+            text = text.replace(/🤔/g, ''); // Remove thinking face
+            text = text.replace(/💭/g, ''); // Remove thought bubble
+            
+            // Remove other common symbols that don't read well
+            text = text.replace(/→/g, 'to'); // Replace arrow with "to"
+            text = text.replace(/₹/g, 'rupees'); // Replace rupee symbol
+            text = text.replace(/\$/g, 'dollars'); // Replace dollar symbol
+            text = text.replace(/£/g, 'pounds'); // Replace pound symbol
+            text = text.replace(/€/g, 'euros'); // Replace euro symbol
+            
+            // Clean up extra whitespace and line breaks
+            text = text.replace(/\s+/g, ' '); // Replace multiple spaces with single space
+            text = text.replace(/\n+/g, ' '); // Replace line breaks with spaces
+            text = text.trim(); // Remove leading/trailing whitespace
+            
+            // Remove patterns like "Level 1:", "Level 2:", etc. when they appear after hint types
+            text = text.replace(/(Gentle|Guiding|Detailed|Step-by-step|Complete)\s*Hint\s*\(Level\s*\d+\):/gi, '$1 Hint:');
+            
+            // Remove button text and UI elements that shouldn't be spoken
+            text = text.replace(/Try to solve the problem using this hint!/gi, '');
+            text = text.replace(/Need more help\?/gi, '');
+            text = text.replace(/Start over/gi, '');
+            text = text.replace(/Try next hint level/gi, '');
             
             return text;
         }
