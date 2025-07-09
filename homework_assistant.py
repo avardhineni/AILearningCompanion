@@ -461,6 +461,8 @@ class HomeworkAssistant:
             return {
                 "evaluation_text": evaluation_text,
                 "evaluation_level": evaluation_level,
+                "is_correct": evaluation_level == "correct",
+                "feedback": evaluation_text,
                 "subject": subject,
                 "timestamp": datetime.now().isoformat()
             }
@@ -470,6 +472,8 @@ class HomeworkAssistant:
             return {
                 "evaluation_text": "I'm having trouble evaluating your response right now. Great job on attempting the question!",
                 "evaluation_level": "unknown",
+                "is_correct": False,
+                "feedback": "I'm having trouble evaluating your response right now. Great job on attempting the question!",
                 "subject": subject,
                 "timestamp": datetime.now().isoformat()
             }
