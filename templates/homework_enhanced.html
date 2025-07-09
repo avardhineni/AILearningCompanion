@@ -1595,11 +1595,27 @@
             text = text.replace(/💭/g, ''); // Remove thought bubble
             
             // Remove other common symbols that don't read well
-            text = text.replace(/→/g, 'to'); // Replace arrow with "to"
-            text = text.replace(/₹/g, 'rupees'); // Replace rupee symbol
-            text = text.replace(/\$/g, 'dollars'); // Replace dollar symbol
-            text = text.replace(/£/g, 'pounds'); // Replace pound symbol
-            text = text.replace(/€/g, 'euros'); // Replace euro symbol
+            text = text.replace(/→/g, ' to '); // Replace arrow with "to"
+            text = text.replace(/₹/g, ' rupees '); // Replace rupee symbol
+            text = text.replace(/\$/g, ' dollars '); // Replace dollar symbol
+            text = text.replace(/£/g, ' pounds '); // Replace pound symbol
+            text = text.replace(/€/g, ' euros '); // Replace euro symbol
+            
+            // Fix common pronunciation issues
+            text = text.replace(/\*([^*]+)\*/g, '$1'); // Remove asterisks around words
+            text = text.replace(/\bcontext\b/gi, 'con-text'); // Fix "context" pronunciation
+            text = text.replace(/\bcontent\b/gi, 'con-tent'); // Fix "content" pronunciation
+            text = text.replace(/\bcontact\b/gi, 'con-tact'); // Fix "contact" pronunciation
+            text = text.replace(/\bcontrol\b/gi, 'con-trol'); // Fix "control" pronunciation
+            text = text.replace(/\bcontract\b/gi, 'con-tract'); // Fix "contract" pronunciation
+            text = text.replace(/\bcontain\b/gi, 'con-tain'); // Fix "contain" pronunciation
+            text = text.replace(/\bcontinue\b/gi, 'con-tin-ue'); // Fix "continue" pronunciation
+            text = text.replace(/\bconnect\b/gi, 'con-nect'); // Fix "connect" pronunciation
+            text = text.replace(/\bconsider\b/gi, 'con-sid-er'); // Fix "consider" pronunciation
+            
+            // Add spaces around numbers for better pronunciation
+            text = text.replace(/(\d+),(\d+)/g, '$1 thousand $2'); // Handle comma-separated numbers
+            text = text.replace(/(\d+)\.(\d+)/g, '$1 point $2'); // Handle decimal numbers
             
             // Clean up extra whitespace and line breaks
             text = text.replace(/\s+/g, ' '); // Replace multiple spaces with single space
@@ -1614,6 +1630,10 @@
             text = text.replace(/Need more help\?/gi, '');
             text = text.replace(/Start over/gi, '');
             text = text.replace(/Try next hint level/gi, '');
+            
+            // Remove quotation marks that might confuse TTS
+            text = text.replace(/"/g, ''); // Remove double quotes
+            text = text.replace(/'/g, ''); // Remove single quotes
             
             return text;
         }
