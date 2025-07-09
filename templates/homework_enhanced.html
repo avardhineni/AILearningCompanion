@@ -511,7 +511,7 @@
                                 <button class="voice-button" id="speakQuestion" title="Speak your question">
                                     <i data-feather="mic" class="me-2"></i>Speak Question
                                 </button>
-                                <button class="btn btn-outline-info" id="needHint" style="display: none;">
+                                <button class="btn btn-outline-info" id="needHint" style="display: none;" onclick="requestHint(currentQuestion)">
                                     <i data-feather="help-circle" class="me-2"></i>Need a hint?
                                 </button>
                             </div>
@@ -760,24 +760,24 @@
             const resultDiv = document.getElementById('uploadResult');
             const messageSpan = document.getElementById('uploadMessage');
             
-            messageSpan.textContent = `Document uploaded successfully! Found ${data.questions_found} questions in ${data.total_pages} pages.`;
+            messageSpan.textContent = `Document uploaded successfully! ${data.pages_extracted || data.total_pages || 1} pages processed.`;
             resultDiv.style.display = 'block';
         }
 
         function showDocumentPreview(documentId) {
             if (!documentId) return;
             
-            fetch(`/api/documents/${documentId}/pages`)
+            fetch(`/api/document/${documentId}/pages`)
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success) {
+                    if (data.document && data.pages) {
                         // Show document info
                         const docInfo = document.getElementById('documentInfo');
                         docInfo.innerHTML = `
                             <div class="alert alert-info">
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <strong>Document:</strong> ${data.document.original_filename}
+                                        <strong>Document:</strong> ${data.document.title || 'Uploaded Document'}
                                     </div>
                                     <div class="col-md-6">
                                         <strong>Pages:</strong> ${data.pages.length}
@@ -1277,6 +1277,12 @@
                     // Show need hint button
                     document.getElementById('needHint').style.display = 'inline-block';
                     
+                    // Update button group display
+                    const btnGroup = document.getElementById('needHint').parentElement;
+                    if (btnGroup) {
+                        btnGroup.style.display = 'flex';
+                    }
+                    
                     feather.replace();
                 } else {
                     responseText.innerHTML = `
@@ -1467,6 +1473,18 @@
             text = text.replace(/\n/g, '<br>');
             
             return text;
+        }
+        
+        function stopCurrentAudio() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio = null;
+                
+                // Reset button display
+                document.getElementById('stopAudio').style.display = 'none';
+                document.getElementById('listenResponse').style.display = 'inline-block';
+            }
         }
 
         // Initialize the page
