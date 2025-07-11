@@ -490,31 +490,18 @@ def api_speak_text():
         
         voice_tutor = SimpleVoiceTutor()
         
-        # Generate TTS audio file
-        voice_config = voice_tutor.get_voice_config(subject)
+        # Use the voice tutor's generate_audio_file method for better error handling
+        audio_url = voice_tutor.generate_audio_file(text, subject)
         
-        from gtts import gTTS
-        tts = gTTS(
-            text=text,
-            lang=voice_config['lang'],
-            tld=voice_config['tld']
-        )
-        
-        # Save to temporary file and return URL
-        import uuid
-        filename = f"tts_{uuid.uuid4().hex}.mp3"
-        filepath = os.path.join('static', 'audio', filename)
-        
-        # Create audio directory if it doesn't exist
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        
-        tts.save(filepath)
-        
-        return jsonify({
-            "success": True,
-            "audio_url": f"/static/audio/{filename}",
-            "message": "Audio generated successfully"
-        })
+        if audio_url:
+            return jsonify({
+                "success": True,
+                "audio_url": audio_url,
+                "message": "Audio generated successfully"
+            })
+        else:
+            logging.error("Audio generation failed - no URL returned")
+            return jsonify({"success": False, "message": "Failed to generate speech"})
         
     except Exception as e:
         logging.error(f"Error generating speech: {e}")

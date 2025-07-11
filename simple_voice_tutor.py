@@ -129,31 +129,71 @@ class SimpleVoiceTutor:
         try:
             # Clean text for speech
             clean_text = self.clean_text_for_speech(text)
+            logging.info(f"Generating TTS for text: {clean_text[:100]}...")
+            
+            if not clean_text.strip():
+                logging.error("Empty text after cleaning")
+                return None
             
             voice_config = self.get_voice_config(subject)
+            logging.info(f"Using voice config: {voice_config}")
             
-            # Create TTS object
-            tts = gTTS(
-                text=clean_text,
-                lang=voice_config['lang'],
-                tld=voice_config['tld'],
-                slow=False
-            )
+            # Create TTS object with timeout and retry logic
+            import time
+            max_retries = 3
+            retry_delay = 2
+            
+            for attempt in range(max_retries):
+                try:
+                    tts = gTTS(
+                        text=clean_text,
+                        lang=voice_config['lang'],
+                        tld=voice_config['tld'],
+                        slow=False,
+                        timeout=10  # 10 second timeout
+                    )
+                    break
+                except Exception as retry_error:
+                    if attempt < max_retries - 1:
+                        logging.warning(f"TTS attempt {attempt + 1} failed, retrying in {retry_delay}s: {retry_error}")
+                        time.sleep(retry_delay)
+                    else:
+                        raise retry_error
             
             # Generate unique filename
             filename = f"tts_{uuid.uuid4().hex}.mp3"
             filepath = os.path.join('static', 'audio', filename)
             
             # Ensure audio directory exists
-            os.makedirs(os.path.dirname(filepath), exist_ok=True)
+            audio_dir = os.path.dirname(filepath)
+            os.makedirs(audio_dir, exist_ok=True)
+            logging.info(f"Audio directory created: {audio_dir}")
             
-            # Save audio file
-            tts.save(filepath)
+            # Save audio file with retry on failure
+            for save_attempt in range(3):
+                try:
+                    tts.save(filepath)
+                    break
+                except Exception as save_error:
+                    if save_attempt < 2:
+                        logging.warning(f"Save attempt {save_attempt + 1} failed, retrying: {save_error}")
+                        time.sleep(1)
+                    else:
+                        raise save_error
             
-            return f"/static/audio/{filename}"
+            # Verify file was created
+            if os.path.exists(filepath):
+                file_size = os.path.getsize(filepath)
+                logging.info(f"Audio file created successfully: {filepath} (size: {file_size} bytes)")
+                return f"/static/audio/{filename}"
+            else:
+                logging.error(f"Audio file was not created: {filepath}")
+                return None
             
         except Exception as e:
             logging.error(f"TTS Error: {e}")
+            import traceback
+            logging.error(f"TTS Traceback: {traceback.format_exc()}")
             return None
     
     def break_into_readable_chunks(self, content):
