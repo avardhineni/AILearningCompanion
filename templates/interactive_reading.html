@@ -570,7 +570,8 @@ function submitDoubt() {
             document.getElementById('doubt-answer').style.display = 'block';
             currentDoubtAnswer = {
                 text: data.speech_text || data.answer,
-                subject: data.subject
+                subject: data.subject,
+                audio_url: data.audio_url  // Store the pre-generated audio URL
             };
         } else {
             alert('Error getting answer: ' + data.message);
@@ -689,58 +690,85 @@ function playAnswer() {
     
     const playBtn = document.getElementById('play-answer-btn');
     const stopBtn = document.getElementById('stop-answer-btn');
-    const originalText = playBtn.innerHTML;
     
-    playBtn.innerHTML = '<i data-feather="loader" class="me-1"></i>Generating Audio...';
-    playBtn.disabled = true;
-    
-    fetch('/api/voice/speak', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            text: currentDoubtAnswer.text,
-            subject: currentDoubtAnswer.subject
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        playBtn.innerHTML = originalText;
-        playBtn.disabled = false;
-        
-        if (data.success) {
-            // Stop any existing audio
-            if (currentAnswerAudio) {
-                currentAnswerAudio.pause();
-                currentAnswerAudio = null;
-            }
-            
-            currentAnswerAudio = new Audio(data.audio_url);
-            
-            // Show stop button and hide play button
-            playBtn.style.display = 'none';
-            stopBtn.style.display = 'inline-block';
-            
-            currentAnswerAudio.play();
-            
-            // Reset buttons when audio ends
-            currentAnswerAudio.addEventListener('ended', function() {
-                playBtn.style.display = 'inline-block';
-                stopBtn.style.display = 'none';
-                currentAnswerAudio = null;
-            });
-            
-        } else {
-            alert('Error generating speech: ' + data.message);
+    // Check if audio was pre-generated
+    if (currentDoubtAnswer.audio_url) {
+        // Use pre-generated audio URL
+        if (currentAnswerAudio) {
+            currentAnswerAudio.pause();
+            currentAnswerAudio = null;
         }
-    })
-    .catch(error => {
-        playBtn.innerHTML = originalText;
-        playBtn.disabled = false;
-        console.error('Error:', error);
-        alert('Failed to generate speech. Please try again.');
-    });
+        
+        currentAnswerAudio = new Audio(currentDoubtAnswer.audio_url);
+        
+        // Show stop button and hide play button
+        playBtn.style.display = 'none';
+        stopBtn.style.display = 'inline-block';
+        
+        currentAnswerAudio.play();
+        
+        // Reset buttons when audio ends
+        currentAnswerAudio.addEventListener('ended', function() {
+            playBtn.style.display = 'inline-block';
+            stopBtn.style.display = 'none';
+            currentAnswerAudio = null;
+        });
+        
+    } else {
+        // Fallback to generating audio on demand
+        const originalText = playBtn.innerHTML;
+        
+        playBtn.innerHTML = '<i data-feather="loader" class="me-1"></i>Generating Audio...';
+        playBtn.disabled = true;
+        
+        fetch('/api/voice/speak', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: currentDoubtAnswer.text,
+                subject: currentDoubtAnswer.subject
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            playBtn.innerHTML = originalText;
+            playBtn.disabled = false;
+            
+            if (data.success) {
+                // Stop any existing audio
+                if (currentAnswerAudio) {
+                    currentAnswerAudio.pause();
+                    currentAnswerAudio = null;
+                }
+                
+                currentAnswerAudio = new Audio(data.audio_url);
+                
+                // Show stop button and hide play button
+                playBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
+                
+                currentAnswerAudio.play();
+                
+                // Reset buttons when audio ends
+                currentAnswerAudio.addEventListener('ended', function() {
+                    playBtn.style.display = 'inline-block';
+                    stopBtn.style.display = 'none';
+                    currentAnswerAudio = null;
+                });
+                
+            } else {
+                alert('Unable to generate audio for answer: ' + data.message);
+            }
+        })
+        .catch(error => {
+            playBtn.innerHTML = originalText;
+            playBtn.disabled = false;
+            console.error('Error:', error);
+            alert('Unable to generate audio for answer');
+        });
+    }
 }
 
 function stopAnswer() {

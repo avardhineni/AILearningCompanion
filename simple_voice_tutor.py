@@ -368,7 +368,17 @@ NEVER use paragraph format. ALWAYS use this structure."""
                 # For display, preserve formatting but clean for speech
                 display_answer = self._format_for_display(answer_text)
                 speech_answer = self.clean_text_for_speech(answer_text)
-                return {"success": True, "answer": display_answer, "speech_text": speech_answer, "subject": subject}
+                
+                # Pre-generate audio file for the answer
+                audio_url = self.generate_audio_file(speech_answer, subject)
+                
+                return {
+                    "success": True, 
+                    "answer": display_answer, 
+                    "speech_text": speech_answer, 
+                    "subject": subject,
+                    "audio_url": audio_url
+                }
             else:
                 return {"success": False, "message": "Could not generate answer"}
                 
