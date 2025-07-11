@@ -115,6 +115,7 @@ This is a Flask-based web application designed to process educational Word docum
 - Added comprehensive retry logic and timeout handling for TTS generation
 - Enhanced error handling with detailed logging for deployment environments
 - Voice reading and Ask a Doubt features now work correctly in both Preview and deployed environments
+- Added pause and resume functionality to Ask a Doubt audio playback with complete audio control buttons
 - July 9, 2025: SUCCESSFULLY IMPLEMENTED Complete Exam Preparation System
 - **Mock Exams**: Full exam generation with AI-powered questions from document content, mixed question types (multiple choice and short answer), language-specific question generation, interactive exam interface, automatic scoring and detailed results
 - **Priority Topics**: AI-powered curriculum analysis identifying high/medium/low priority topics, chapter-wise priority assessment, study time estimates, interactive topic cards with study session management

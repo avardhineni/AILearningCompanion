@@ -170,6 +170,14 @@
                                 <i data-feather="volume-2" class="me-1"></i>
                                 Listen to Answer
                             </button>
+                            <button class="btn btn-sm btn-outline-warning" id="pause-answer-btn" onclick="pauseAnswer()" style="display: none;">
+                                <i data-feather="pause" class="me-1"></i>
+                                Pause Audio
+                            </button>
+                            <button class="btn btn-sm btn-outline-info" id="resume-answer-btn" onclick="resumeAnswer()" style="display: none;">
+                                <i data-feather="play" class="me-1"></i>
+                                Resume Audio
+                            </button>
                             <button class="btn btn-sm btn-outline-danger" id="stop-answer-btn" onclick="stopAnswer()" style="display: none;">
                                 <i data-feather="stop-circle" class="me-1"></i>
                                 Stop Audio
@@ -689,6 +697,8 @@ function playAnswer() {
     }
     
     const playBtn = document.getElementById('play-answer-btn');
+    const pauseBtn = document.getElementById('pause-answer-btn');
+    const resumeBtn = document.getElementById('resume-answer-btn');
     const stopBtn = document.getElementById('stop-answer-btn');
     
     // Check if audio was pre-generated
@@ -701,17 +711,17 @@ function playAnswer() {
         
         currentAnswerAudio = new Audio(currentDoubtAnswer.audio_url);
         
-        // Show stop button and hide play button
+        // Show control buttons and hide play button
         playBtn.style.display = 'none';
+        pauseBtn.style.display = 'inline-block';
         stopBtn.style.display = 'inline-block';
+        resumeBtn.style.display = 'none';
         
         currentAnswerAudio.play();
         
         // Reset buttons when audio ends
         currentAnswerAudio.addEventListener('ended', function() {
-            playBtn.style.display = 'inline-block';
-            stopBtn.style.display = 'none';
-            currentAnswerAudio = null;
+            resetAudioButtons();
         });
         
     } else {
@@ -745,17 +755,17 @@ function playAnswer() {
                 
                 currentAnswerAudio = new Audio(data.audio_url);
                 
-                // Show stop button and hide play button
+                // Show control buttons and hide play button
                 playBtn.style.display = 'none';
+                pauseBtn.style.display = 'inline-block';
                 stopBtn.style.display = 'inline-block';
+                resumeBtn.style.display = 'none';
                 
                 currentAnswerAudio.play();
                 
                 // Reset buttons when audio ends
                 currentAnswerAudio.addEventListener('ended', function() {
-                    playBtn.style.display = 'inline-block';
-                    stopBtn.style.display = 'none';
-                    currentAnswerAudio = null;
+                    resetAudioButtons();
                 });
                 
             } else {
@@ -771,15 +781,43 @@ function playAnswer() {
     }
 }
 
+function pauseAnswer() {
+    if (currentAnswerAudio) {
+        currentAnswerAudio.pause();
+        
+        // Show resume button, hide pause button
+        document.getElementById('pause-answer-btn').style.display = 'none';
+        document.getElementById('resume-answer-btn').style.display = 'inline-block';
+    }
+}
+
+function resumeAnswer() {
+    if (currentAnswerAudio) {
+        currentAnswerAudio.play();
+        
+        // Show pause button, hide resume button
+        document.getElementById('pause-answer-btn').style.display = 'inline-block';
+        document.getElementById('resume-answer-btn').style.display = 'none';
+    }
+}
+
 function stopAnswer() {
     if (currentAnswerAudio) {
         currentAnswerAudio.pause();
+        currentAnswerAudio.currentTime = 0;
         currentAnswerAudio = null;
     }
     
-    // Reset button visibility
+    // Reset all buttons
+    resetAudioButtons();
+}
+
+function resetAudioButtons() {
     document.getElementById('play-answer-btn').style.display = 'inline-block';
+    document.getElementById('pause-answer-btn').style.display = 'none';
+    document.getElementById('resume-answer-btn').style.display = 'none';
     document.getElementById('stop-answer-btn').style.display = 'none';
+    currentAnswerAudio = null;
 }
 </script>
 {% endblock %}
