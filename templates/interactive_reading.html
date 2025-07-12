@@ -717,6 +717,15 @@ function playAnswer() {
         stopBtn.style.display = 'inline-block';
         resumeBtn.style.display = 'none';
         
+        // Ensure button text is correct
+        pauseBtn.innerHTML = '<i data-feather="pause" class="me-1"></i> Pause Audio';
+        stopBtn.innerHTML = '<i data-feather="stop-circle" class="me-1"></i> Stop Audio';
+        
+        // Re-render feather icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+        
         currentAnswerAudio.play();
         
         // Reset buttons when audio ends
@@ -761,6 +770,15 @@ function playAnswer() {
                 stopBtn.style.display = 'inline-block';
                 resumeBtn.style.display = 'none';
                 
+                // Ensure button text is correct
+                pauseBtn.innerHTML = '<i data-feather="pause" class="me-1"></i> Pause Audio';
+                stopBtn.innerHTML = '<i data-feather="stop-circle" class="me-1"></i> Stop Audio';
+                
+                // Re-render feather icons
+                if (typeof feather !== 'undefined') {
+                    feather.replace();
+                }
+                
                 currentAnswerAudio.play();
                 
                 // Reset buttons when audio ends
@@ -782,22 +800,54 @@ function playAnswer() {
 }
 
 function pauseAnswer() {
+    console.log('Pause function called');
     if (currentAnswerAudio) {
         currentAnswerAudio.pause();
+        console.log('Audio paused');
         
-        // Show resume button, hide pause button
-        document.getElementById('pause-answer-btn').style.display = 'none';
-        document.getElementById('resume-answer-btn').style.display = 'inline-block';
+        // Show resume button, hide pause button immediately
+        const pauseBtn = document.getElementById('pause-answer-btn');
+        const resumeBtn = document.getElementById('resume-answer-btn');
+        
+        pauseBtn.style.display = 'none';
+        resumeBtn.style.display = 'inline-block';
+        
+        // Ensure button text is not being overridden
+        pauseBtn.innerHTML = '<i data-feather="pause" class="me-1"></i> Pause Audio';
+        resumeBtn.innerHTML = '<i data-feather="play" class="me-1"></i> Resume Audio';
+        
+        // Re-render feather icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+        
+        console.log('Pause button hidden, resume button shown');
     }
 }
 
 function resumeAnswer() {
+    console.log('Resume function called');
     if (currentAnswerAudio) {
         currentAnswerAudio.play();
+        console.log('Audio resumed');
         
-        // Show pause button, hide resume button
-        document.getElementById('pause-answer-btn').style.display = 'inline-block';
-        document.getElementById('resume-answer-btn').style.display = 'none';
+        // Show pause button, hide resume button immediately
+        const pauseBtn = document.getElementById('pause-answer-btn');
+        const resumeBtn = document.getElementById('resume-answer-btn');
+        
+        pauseBtn.style.display = 'inline-block';
+        resumeBtn.style.display = 'none';
+        
+        // Ensure button text is correct
+        pauseBtn.innerHTML = '<i data-feather="pause" class="me-1"></i> Pause Audio';
+        resumeBtn.innerHTML = '<i data-feather="play" class="me-1"></i> Resume Audio';
+        
+        // Re-render feather icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+        
+        console.log('Resume button hidden, pause button shown');
     }
 }
 
@@ -813,10 +863,27 @@ function stopAnswer() {
 }
 
 function resetAudioButtons() {
-    document.getElementById('play-answer-btn').style.display = 'inline-block';
-    document.getElementById('pause-answer-btn').style.display = 'none';
-    document.getElementById('resume-answer-btn').style.display = 'none';
-    document.getElementById('stop-answer-btn').style.display = 'none';
+    const playBtn = document.getElementById('play-answer-btn');
+    const pauseBtn = document.getElementById('pause-answer-btn');
+    const resumeBtn = document.getElementById('resume-answer-btn');
+    const stopBtn = document.getElementById('stop-answer-btn');
+    
+    playBtn.style.display = 'inline-block';
+    pauseBtn.style.display = 'none';
+    resumeBtn.style.display = 'none';
+    stopBtn.style.display = 'none';
+    
+    // Ensure button text is correct
+    playBtn.innerHTML = '<i data-feather="volume-2" class="me-1"></i> Listen to Answer';
+    pauseBtn.innerHTML = '<i data-feather="pause" class="me-1"></i> Pause Audio';
+    resumeBtn.innerHTML = '<i data-feather="play" class="me-1"></i> Resume Audio';
+    stopBtn.innerHTML = '<i data-feather="stop-circle" class="me-1"></i> Stop Audio';
+    
+    // Re-render feather icons
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+    
     currentAnswerAudio = null;
 }
 </script>
