@@ -190,19 +190,19 @@
                         <div id="standalone-answer-text" class="mb-3"></div>
                         
                         <!-- Audio Controls Section -->
-                        <div class="border-top pt-3">
-                            <h6 class="mb-2 text-muted">Audio Controls</h6>
-                            <div class="d-flex justify-content-center gap-2 flex-wrap">
-                                <button class="btn btn-outline-success" id="play-standalone-btn" onclick="playStandaloneAnswer()">
+                        <div class="border-top pt-3 mt-3" id="audio-controls-section">
+                            <h6 class="mb-3 text-muted text-center">🎧 Audio Controls</h6>
+                            <div class="d-flex justify-content-center gap-2 flex-wrap" style="min-height: 50px;">
+                                <button class="btn btn-outline-success btn-sm" id="play-standalone-btn" onclick="playStandaloneAnswer()" style="display: inline-block !important;">
                                     <i data-feather="volume-2" class="me-2"></i>Listen to Answer
                                 </button>
-                                <button class="btn btn-outline-warning" id="pause-standalone-btn" onclick="pauseStandaloneAnswer()" style="display: none;">
+                                <button class="btn btn-outline-warning btn-sm" id="pause-standalone-btn" onclick="pauseStandaloneAnswer()" style="display: none !important;">
                                     <i data-feather="pause" class="me-2"></i>Pause Audio
                                 </button>
-                                <button class="btn btn-outline-info" id="resume-standalone-btn" onclick="resumeStandaloneAnswer()" style="display: none;">
+                                <button class="btn btn-outline-info btn-sm" id="resume-standalone-btn" onclick="resumeStandaloneAnswer()" style="display: none !important;">
                                     <i data-feather="play" class="me-2"></i>Resume Audio
                                 </button>
-                                <button class="btn btn-outline-danger" id="stop-standalone-btn" onclick="stopStandaloneAnswer()" style="display: none;">
+                                <button class="btn btn-outline-danger btn-sm" id="stop-standalone-btn" onclick="stopStandaloneAnswer()" style="display: none !important;">
                                     <i data-feather="stop-circle" class="me-2"></i>Stop Audio
                                 </button>
                             </div>
@@ -519,21 +519,37 @@
             const resumeBtn = document.getElementById('resume-standalone-btn');
             const stopBtn = document.getElementById('stop-standalone-btn');
             
-            playBtn.style.display = 'inline-block';
-            pauseBtn.style.display = 'none';
-            resumeBtn.style.display = 'none';
-            stopBtn.style.display = 'none';
+            console.log('Resetting audio buttons - Found buttons:', {
+                playBtn: !!playBtn,
+                pauseBtn: !!pauseBtn,
+                resumeBtn: !!resumeBtn,
+                stopBtn: !!stopBtn
+            });
             
-            // Ensure all buttons are enabled
-            playBtn.disabled = false;
-            pauseBtn.disabled = false;
-            resumeBtn.disabled = false;
-            stopBtn.disabled = false;
+            if (playBtn) {
+                playBtn.style.setProperty('display', 'inline-block', 'important');
+                playBtn.style.setProperty('visibility', 'visible', 'important');
+                playBtn.disabled = false;
+                playBtn.innerHTML = '<i data-feather="volume-2" class="me-2"></i>Listen to Answer';
+            }
             
-            playBtn.innerHTML = '<i data-feather="volume-2" class="me-2"></i>Listen to Answer';
-            pauseBtn.innerHTML = '<i data-feather="pause" class="me-2"></i>Pause Audio';
-            resumeBtn.innerHTML = '<i data-feather="play" class="me-2"></i>Resume Audio';
-            stopBtn.innerHTML = '<i data-feather="stop-circle" class="me-2"></i>Stop Audio';
+            if (pauseBtn) {
+                pauseBtn.style.setProperty('display', 'none', 'important');
+                pauseBtn.disabled = false;
+                pauseBtn.innerHTML = '<i data-feather="pause" class="me-2"></i>Pause Audio';
+            }
+            
+            if (resumeBtn) {
+                resumeBtn.style.setProperty('display', 'none', 'important');
+                resumeBtn.disabled = false;
+                resumeBtn.innerHTML = '<i data-feather="play" class="me-2"></i>Resume Audio';
+            }
+            
+            if (stopBtn) {
+                stopBtn.style.setProperty('display', 'none', 'important');
+                stopBtn.disabled = false;
+                stopBtn.innerHTML = '<i data-feather="stop-circle" class="me-2"></i>Stop Audio';
+            }
             
             // Re-render feather icons
             if (typeof feather !== 'undefined') {
@@ -586,10 +602,10 @@
                     const resumeBtn = document.getElementById('resume-standalone-btn');
                     const stopBtn = document.getElementById('stop-standalone-btn');
                     
-                    playBtn.style.display = 'none';
-                    pauseBtn.style.display = 'inline-block';
-                    resumeBtn.style.display = 'none';
-                    stopBtn.style.display = 'inline-block';
+                    playBtn.style.setProperty('display', 'none', 'important');
+                    pauseBtn.style.setProperty('display', 'inline-block', 'important');
+                    resumeBtn.style.setProperty('display', 'none', 'important');
+                    stopBtn.style.setProperty('display', 'inline-block', 'important');
                     
                     // Ensure buttons are enabled
                     pauseBtn.disabled = false;
@@ -629,9 +645,9 @@
                 const resumeBtn = document.getElementById('resume-standalone-btn');
                 const stopBtn = document.getElementById('stop-standalone-btn');
                 
-                pauseBtn.style.display = 'none';
-                resumeBtn.style.display = 'inline-block';
-                stopBtn.style.display = 'inline-block';
+                pauseBtn.style.setProperty('display', 'none', 'important');
+                resumeBtn.style.setProperty('display', 'inline-block', 'important');
+                stopBtn.style.setProperty('display', 'inline-block', 'important');
                 
                 // Ensure buttons are enabled
                 pauseBtn.disabled = false;
@@ -654,9 +670,9 @@
                 const resumeBtn = document.getElementById('resume-standalone-btn');
                 const stopBtn = document.getElementById('stop-standalone-btn');
                 
-                pauseBtn.style.display = 'inline-block';
-                resumeBtn.style.display = 'none';
-                stopBtn.style.display = 'inline-block';
+                pauseBtn.style.setProperty('display', 'inline-block', 'important');
+                resumeBtn.style.setProperty('display', 'none', 'important');
+                stopBtn.style.setProperty('display', 'inline-block', 'important');
                 
                 // Ensure buttons are enabled
                 pauseBtn.disabled = false;
