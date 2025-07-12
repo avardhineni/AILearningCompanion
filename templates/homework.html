@@ -178,35 +178,24 @@
                             <i data-feather="check-circle" class="me-2"></i>Answer:
                         </h6>
                         <div>
+                            <button class="btn btn-sm btn-outline-success" id="play-standalone-btn" onclick="playStandaloneAnswer()">
+                                <i data-feather="volume-2" class="me-1"></i>Play
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" id="pause-standalone-btn" onclick="pauseStandaloneAnswer()" style="display: none;">
+                                <i data-feather="pause" class="me-1"></i>Pause
+                            </button>
+                            <button class="btn btn-sm btn-outline-info" id="resume-standalone-btn" onclick="resumeStandaloneAnswer()" style="display: none;">
+                                <i data-feather="play" class="me-1"></i>Resume
+                            </button>
                             <button class="btn btn-sm btn-outline-danger" onclick="resetStandaloneAnswer()">
                                 <i data-feather="x" class="me-1"></i>Close
-                            </button>
-                            <button class="btn btn-sm btn-outline-info" onclick="showDocumentPreview()">
-                                <i data-feather="info" class="me-1"></i>Need a hint?
                             </button>
                         </div>
                     </div>
                     <div class="card-body">
                         <div id="standalone-answer-text" class="mb-3"></div>
                         
-                        <!-- Audio Controls Section -->
-                        <div class="border-top pt-3 mt-3" id="audio-controls-section">
-                            <h6 class="mb-3 text-muted text-center">🎧 Audio Controls</h6>
-                            <div class="d-flex justify-content-center gap-2 flex-wrap" style="min-height: 50px;">
-                                <button class="btn btn-outline-success btn-sm" id="play-standalone-btn" onclick="playStandaloneAnswer()" style="display: inline-block !important;">
-                                    <i data-feather="volume-2" class="me-2"></i>Listen to Answer
-                                </button>
-                                <button class="btn btn-outline-warning btn-sm" id="pause-standalone-btn" onclick="pauseStandaloneAnswer()" style="display: none !important;">
-                                    <i data-feather="pause" class="me-2"></i>Pause Audio
-                                </button>
-                                <button class="btn btn-outline-info btn-sm" id="resume-standalone-btn" onclick="resumeStandaloneAnswer()" style="display: none !important;">
-                                    <i data-feather="play" class="me-2"></i>Resume Audio
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm" id="stop-standalone-btn" onclick="stopStandaloneAnswer()" style="display: none !important;">
-                                    <i data-feather="stop-circle" class="me-2"></i>Stop Audio
-                                </button>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
             </div>

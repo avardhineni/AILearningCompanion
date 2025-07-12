@@ -522,6 +522,10 @@ def api_generate_audio():
         # Apply Indian number formatting before generating audio
         formatted_text = format_indian_numbers(text)
         
+        # Debug logging
+        logging.info(f"Original text: {text[:100]}...")
+        logging.info(f"Formatted text: {formatted_text[:100]}...")
+        
         voice_tutor = SimpleVoiceTutor()
         
         # Use the voice tutor's generate_audio_file method for better error handling
