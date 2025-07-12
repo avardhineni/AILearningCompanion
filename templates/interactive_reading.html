@@ -717,7 +717,9 @@ function playAnswer() {
         stopBtn.style.display = 'inline-block';
         resumeBtn.style.display = 'none';
         
-        // Ensure button text is correct
+        // Ensure buttons are enabled and text is correct
+        pauseBtn.disabled = false;
+        stopBtn.disabled = false;
         pauseBtn.innerHTML = '<i data-feather="pause" class="me-1"></i> Pause Audio';
         stopBtn.innerHTML = '<i data-feather="stop-circle" class="me-1"></i> Stop Audio';
         
@@ -770,7 +772,9 @@ function playAnswer() {
                 stopBtn.style.display = 'inline-block';
                 resumeBtn.style.display = 'none';
                 
-                // Ensure button text is correct
+                // Ensure buttons are enabled and text is correct
+                pauseBtn.disabled = false;
+                stopBtn.disabled = false;
                 pauseBtn.innerHTML = '<i data-feather="pause" class="me-1"></i> Pause Audio';
                 stopBtn.innerHTML = '<i data-feather="stop-circle" class="me-1"></i> Stop Audio';
                 
@@ -812,7 +816,9 @@ function pauseAnswer() {
         pauseBtn.style.display = 'none';
         resumeBtn.style.display = 'inline-block';
         
-        // Ensure button text is not being overridden
+        // Ensure buttons are enabled and text is correct
+        pauseBtn.disabled = false;
+        resumeBtn.disabled = false;
         pauseBtn.innerHTML = '<i data-feather="pause" class="me-1"></i> Pause Audio';
         resumeBtn.innerHTML = '<i data-feather="play" class="me-1"></i> Resume Audio';
         
@@ -838,7 +844,9 @@ function resumeAnswer() {
         pauseBtn.style.display = 'inline-block';
         resumeBtn.style.display = 'none';
         
-        // Ensure button text is correct
+        // Ensure buttons are enabled and text is correct
+        pauseBtn.disabled = false;
+        resumeBtn.disabled = false;
         pauseBtn.innerHTML = '<i data-feather="pause" class="me-1"></i> Pause Audio';
         resumeBtn.innerHTML = '<i data-feather="play" class="me-1"></i> Resume Audio';
         
@@ -873,7 +881,12 @@ function resetAudioButtons() {
     resumeBtn.style.display = 'none';
     stopBtn.style.display = 'none';
     
-    // Ensure button text is correct
+    // Ensure all buttons are enabled and text is correct
+    playBtn.disabled = false;
+    pauseBtn.disabled = false;
+    resumeBtn.disabled = false;
+    stopBtn.disabled = false;
+    
     playBtn.innerHTML = '<i data-feather="volume-2" class="me-1"></i> Listen to Answer';
     pauseBtn.innerHTML = '<i data-feather="pause" class="me-1"></i> Pause Audio';
     resumeBtn.innerHTML = '<i data-feather="play" class="me-1"></i> Resume Audio';
