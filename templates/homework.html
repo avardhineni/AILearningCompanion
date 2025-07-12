@@ -178,17 +178,8 @@
                             <i data-feather="check-circle" class="me-2"></i>Answer:
                         </h6>
                         <div>
-                            <button class="btn btn-sm btn-outline-success" id="play-standalone-btn" onclick="playStandaloneAnswer()">
-                                <i data-feather="volume-2" class="me-1"></i>Play
-                            </button>
-                            <button class="btn btn-sm btn-outline-warning" id="pause-standalone-btn" onclick="pauseStandaloneAnswer()" style="display: none;">
-                                <i data-feather="pause" class="me-1"></i>Pause
-                            </button>
-                            <button class="btn btn-sm btn-outline-info" id="resume-standalone-btn" onclick="resumeStandaloneAnswer()" style="display: none;">
-                                <i data-feather="play" class="me-1"></i>Resume
-                            </button>
-                            <button class="btn btn-sm btn-outline-secondary" id="stop-standalone-btn" onclick="stopStandaloneAnswer()" style="display: none;">
-                                <i data-feather="stop-circle" class="me-1"></i>Stop
+                            <button class="btn btn-sm btn-success" id="audio-play-btn" onclick="toggleAudio()">
+                                <i data-feather="volume-2" class="me-1"></i>Play Audio
                             </button>
                             <button class="btn btn-sm btn-outline-danger" onclick="resetStandaloneAnswer()">
                                 <i data-feather="x" class="me-1"></i>Close
@@ -427,6 +418,7 @@
         let attemptsCount = 0;
         let currentStandaloneAudio = null;
         let currentStandaloneAnswer = null;
+        let isPlaying = false;
 
         // Initialize Feather icons
         feather.replace();
@@ -487,18 +479,16 @@
                     document.getElementById('standalone-answer-text').innerHTML = result.answer.replace(/\n/g, '<br>');
                     document.getElementById('standalone-answer').classList.remove('d-none');
                     
-                    // Reset audio buttons and ensure they're visible
-                    resetStandaloneAudioButtons();
-                    
-                    // Force show the play button
-                    setTimeout(() => {
-                        const playBtn = document.getElementById('play-standalone-btn');
-                        if (playBtn) {
-                            playBtn.style.display = 'inline-block';
-                            playBtn.style.visibility = 'visible';
-                            console.log('Audio control buttons should now be visible');
-                        }
-                    }, 100);
+                    // Reset audio state and ensure play button is visible
+                    isPlaying = false;
+                    const audioBtn = document.getElementById('audio-play-btn');
+                    if (audioBtn) {
+                        audioBtn.innerHTML = '<i data-feather="volume-2" class="me-1"></i>Play Audio';
+                        audioBtn.style.display = 'inline-block';
+                        audioBtn.style.visibility = 'visible';
+                        console.log('Audio play button should now be visible');
+                        feather.replace();
+                    }
                 } else {
                     alert('Error: ' + result.message);
                 }
@@ -513,6 +503,82 @@
             document.getElementById('standalone-question').value = '';
             stopStandaloneAnswer();
             currentStandaloneAnswer = null;
+        }
+
+        // Simplified audio toggle function
+        async function toggleAudio() {
+            const audioBtn = document.getElementById('audio-play-btn');
+            
+            if (isPlaying) {
+                // Pause audio
+                if (currentStandaloneAudio) {
+                    currentStandaloneAudio.pause();
+                    isPlaying = false;
+                    audioBtn.innerHTML = '<i data-feather="volume-2" class="me-1"></i>Play Audio';
+                    audioBtn.className = 'btn btn-sm btn-success';
+                    feather.replace();
+                }
+            } else {
+                // Play audio
+                if (!currentStandaloneAnswer) {
+                    alert('No answer available to play');
+                    return;
+                }
+                
+                // Show loading state
+                audioBtn.innerHTML = '<i data-feather="loader" class="me-1"></i>Loading...';
+                audioBtn.disabled = true;
+                
+                try {
+                    const response = await fetch('/api/generate-audio', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            text: currentStandaloneAnswer,
+                            language: 'en'
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success || result.audio_url) {
+                        // Stop any existing audio
+                        if (currentStandaloneAudio) {
+                            currentStandaloneAudio.pause();
+                        }
+                        
+                        // Create and play new audio
+                        currentStandaloneAudio = new Audio(result.audio_url);
+                        currentStandaloneAudio.play();
+                        isPlaying = true;
+                        
+                        // Update button to show pause
+                        audioBtn.innerHTML = '<i data-feather="pause" class="me-1"></i>Pause Audio';
+                        audioBtn.className = 'btn btn-sm btn-warning';
+                        audioBtn.disabled = false;
+                        feather.replace();
+                        
+                        // Handle audio end
+                        currentStandaloneAudio.addEventListener('ended', () => {
+                            isPlaying = false;
+                            audioBtn.innerHTML = '<i data-feather="volume-2" class="me-1"></i>Play Audio';
+                            audioBtn.className = 'btn btn-sm btn-success';
+                            feather.replace();
+                        });
+                    } else {
+                        // Reset button on error
+                        audioBtn.innerHTML = '<i data-feather="volume-2" class="me-1"></i>Play Audio';
+                        audioBtn.disabled = false;
+                        alert('Error generating audio: ' + (result.message || 'Unknown error'));
+                    }
+                } catch (error) {
+                    // Reset button on error
+                    audioBtn.innerHTML = '<i data-feather="volume-2" class="me-1"></i>Play Audio';
+                    audioBtn.disabled = false;
+                    console.error('Error:', error);
+                    alert('Failed to generate audio. Please try again.');
+                }
+            }
         }
 
         function resetStandaloneAudioButtons() {
