@@ -109,6 +109,104 @@
             </div>
         </div>
 
+        <!-- Ask Your Question Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-feather="help-circle" class="me-2"></i>Ask Your Question
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="standalone-subject" class="form-label">Subject</label>
+                                    <select class="form-select" id="standalone-subject">
+                                        <option value="English">English</option>
+                                        <option value="Maths">Mathematics</option>
+                                        <option value="Science">Science</option>
+                                        <option value="Social">Social Studies</option>
+                                        <option value="Hindi">Hindi</option>
+                                        <option value="Telugu">Telugu</option>
+                                        <option value="IT-Computers">IT & Computers</option>
+                                        <option value="GK">General Knowledge</option>
+                                        <option value="Value Education">Value Education</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="standalone-document" class="form-label">Related Document (Optional)</label>
+                                    <select class="form-select" id="standalone-document">
+                                        <option value="">Select a document...</option>
+                                        <!-- Documents will be populated by JavaScript -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="standalone-question" class="form-label">Your Question</label>
+                            <textarea class="form-control" id="standalone-question" rows="3" 
+                                     placeholder="Type your homework question here..."></textarea>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button class="btn btn-success me-2" onclick="submitStandaloneQuestion()">
+                                <i data-feather="send" class="me-2"></i>Submit Question
+                            </button>
+                            <button class="btn btn-primary" onclick="startVoiceQuestion()">
+                                <i data-feather="mic" class="me-2"></i>Speak Question
+                            </button>
+                            <button class="btn btn-info" onclick="showDocumentPreview()">
+                                <i data-feather="info" class="me-2"></i>Need a hint?
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Standalone Answer Display -->
+        <div id="standalone-answer" class="row mb-4 d-none">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i data-feather="check-circle" class="me-2"></i>Answer:
+                        </h6>
+                        <div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="resetStandaloneAnswer()">
+                                <i data-feather="x" class="me-1"></i>Stop
+                            </button>
+                            <button class="btn btn-sm btn-outline-info" onclick="showDocumentPreview()">
+                                <i data-feather="info" class="me-1"></i>Need a hint?
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="standalone-answer-text" class="mb-3"></div>
+                        <div class="text-center">
+                            <button class="btn btn-outline-success" id="play-standalone-btn" onclick="playStandaloneAnswer()">
+                                <i data-feather="volume-2" class="me-2"></i>Listen to Answer
+                            </button>
+                            <button class="btn btn-outline-warning" id="pause-standalone-btn" onclick="pauseStandaloneAnswer()" style="display: none;">
+                                <i data-feather="pause" class="me-2"></i>Pause Audio
+                            </button>
+                            <button class="btn btn-outline-info" id="resume-standalone-btn" onclick="resumeStandaloneAnswer()" style="display: none;">
+                                <i data-feather="play" class="me-2"></i>Resume Audio
+                            </button>
+                            <button class="btn btn-outline-danger" id="stop-standalone-btn" onclick="stopStandaloneAnswer()" style="display: none;">
+                                <i data-feather="stop-circle" class="me-2"></i>Stop Audio
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Session Selection -->
         <div id="session-selection" class="row">
             <div class="col-md-6 mb-4">
@@ -330,9 +428,248 @@
         let sessionType = 'homework';
         let hintsUsed = 0;
         let attemptsCount = 0;
+        let currentStandaloneAudio = null;
+        let currentStandaloneAnswer = null;
 
         // Initialize Feather icons
         feather.replace();
+
+        // Load documents on page load
+        window.addEventListener('load', function() {
+            loadDocuments();
+        });
+
+        function loadDocuments() {
+            fetch('/api/documents')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const select = document.getElementById('standalone-document');
+                        // Clear existing options except the first one
+                        while (select.children.length > 1) {
+                            select.removeChild(select.lastChild);
+                        }
+                        
+                        data.documents.forEach(doc => {
+                            const option = document.createElement('option');
+                            option.value = doc.id;
+                            option.textContent = `${doc.subject} - ${doc.title}`;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error loading documents:', error));
+        }
+
+        // Standalone Question Functions
+        async function submitStandaloneQuestion() {
+            const subject = document.getElementById('standalone-subject').value;
+            const documentId = document.getElementById('standalone-document').value;
+            const question = document.getElementById('standalone-question').value.trim();
+            
+            if (!question) {
+                alert('Please enter a question');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/homework/ask-question', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subject: subject,
+                        document_id: documentId || null,
+                        question: question
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentStandaloneAnswer = result.answer;
+                    document.getElementById('standalone-answer-text').innerHTML = result.answer.replace(/\n/g, '<br>');
+                    document.getElementById('standalone-answer').classList.remove('d-none');
+                    
+                    // Reset audio buttons
+                    resetStandaloneAudioButtons();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to process question. Please try again.');
+            }
+        }
+
+        function resetStandaloneAnswer() {
+            document.getElementById('standalone-answer').classList.add('d-none');
+            document.getElementById('standalone-question').value = '';
+            stopStandaloneAnswer();
+            currentStandaloneAnswer = null;
+        }
+
+        function resetStandaloneAudioButtons() {
+            const playBtn = document.getElementById('play-standalone-btn');
+            const pauseBtn = document.getElementById('pause-standalone-btn');
+            const resumeBtn = document.getElementById('resume-standalone-btn');
+            const stopBtn = document.getElementById('stop-standalone-btn');
+            
+            playBtn.style.display = 'inline-block';
+            pauseBtn.style.display = 'none';
+            resumeBtn.style.display = 'none';
+            stopBtn.style.display = 'none';
+            
+            // Ensure all buttons are enabled
+            playBtn.disabled = false;
+            pauseBtn.disabled = false;
+            resumeBtn.disabled = false;
+            stopBtn.disabled = false;
+            
+            playBtn.innerHTML = '<i data-feather="volume-2" class="me-2"></i>Listen to Answer';
+            pauseBtn.innerHTML = '<i data-feather="pause" class="me-2"></i>Pause Audio';
+            resumeBtn.innerHTML = '<i data-feather="play" class="me-2"></i>Resume Audio';
+            stopBtn.innerHTML = '<i data-feather="stop-circle" class="me-2"></i>Stop Audio';
+            
+            // Re-render feather icons
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
+            
+            currentStandaloneAudio = null;
+        }
+
+        async function playStandaloneAnswer() {
+            if (!currentStandaloneAnswer) return;
+            
+            try {
+                const response = await fetch('/api/generate-audio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: currentStandaloneAnswer,
+                        language: 'en'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentStandaloneAudio = new Audio(result.audio_url);
+                    currentStandaloneAudio.play();
+                    
+                    // Update button states
+                    const playBtn = document.getElementById('play-standalone-btn');
+                    const pauseBtn = document.getElementById('pause-standalone-btn');
+                    const stopBtn = document.getElementById('stop-standalone-btn');
+                    
+                    playBtn.style.display = 'none';
+                    pauseBtn.style.display = 'inline-block';
+                    stopBtn.style.display = 'inline-block';
+                    
+                    // Ensure buttons are enabled
+                    pauseBtn.disabled = false;
+                    stopBtn.disabled = false;
+                    
+                    // Handle audio end
+                    currentStandaloneAudio.addEventListener('ended', () => {
+                        resetStandaloneAudioButtons();
+                    });
+                } else {
+                    alert('Error generating audio: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to generate audio. Please try again.');
+            }
+        }
+
+        function pauseStandaloneAnswer() {
+            if (currentStandaloneAudio) {
+                currentStandaloneAudio.pause();
+                
+                // Update button states
+                const pauseBtn = document.getElementById('pause-standalone-btn');
+                const resumeBtn = document.getElementById('resume-standalone-btn');
+                
+                pauseBtn.style.display = 'none';
+                resumeBtn.style.display = 'inline-block';
+                
+                // Ensure buttons are enabled
+                pauseBtn.disabled = false;
+                resumeBtn.disabled = false;
+                
+                // Re-render feather icons
+                if (typeof feather !== 'undefined') {
+                    feather.replace();
+                }
+            }
+        }
+
+        function resumeStandaloneAnswer() {
+            if (currentStandaloneAudio) {
+                currentStandaloneAudio.play();
+                
+                // Update button states
+                const pauseBtn = document.getElementById('pause-standalone-btn');
+                const resumeBtn = document.getElementById('resume-standalone-btn');
+                
+                pauseBtn.style.display = 'inline-block';
+                resumeBtn.style.display = 'none';
+                
+                // Ensure buttons are enabled
+                pauseBtn.disabled = false;
+                resumeBtn.disabled = false;
+                
+                // Re-render feather icons
+                if (typeof feather !== 'undefined') {
+                    feather.replace();
+                }
+            }
+        }
+
+        function stopStandaloneAnswer() {
+            if (currentStandaloneAudio) {
+                currentStandaloneAudio.pause();
+                currentStandaloneAudio.currentTime = 0;
+                resetStandaloneAudioButtons();
+            }
+        }
+
+        function startVoiceQuestion() {
+            if ('webkitSpeechRecognition' in window) {
+                const recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+                
+                recognition.onstart = function() {
+                    console.log('Voice recognition started');
+                };
+                
+                recognition.onresult = function(event) {
+                    const transcript = event.results[0][0].transcript;
+                    document.getElementById('standalone-question').value = transcript;
+                };
+                
+                recognition.onerror = function(event) {
+                    console.error('Speech recognition error:', event.error);
+                    alert('Speech recognition failed. Please try again.');
+                };
+                
+                recognition.start();
+            } else {
+                alert('Speech recognition not supported in your browser');
+            }
+        }
+
+        function showDocumentPreview() {
+            const documentId = document.getElementById('standalone-document').value;
+            if (documentId) {
+                window.open(`/document/${documentId}`, '_blank');
+            } else {
+                alert('Please select a document first');
+            }
+        }
 
         function startHomeworkSession() {
             sessionType = 'homework';

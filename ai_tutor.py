@@ -2,6 +2,7 @@ import logging
 import os
 from google import genai
 from google.genai import types
+from number_formatter import format_indian_numbers
 
 logger = logging.getLogger(__name__)
 
@@ -220,6 +221,9 @@ FINAL REMINDER FOR MATHS: If subject is "Maths", you MUST start your response wi
         text = text.replace('latitude', '📏 latitude')
         text = text.replace('longitude', '📐 longitude')
         text = text.replace('coordinates', '📍 coordinates')
+        
+        # Format Indian numbers for proper pronunciation
+        text = format_indian_numbers(text)
         
         # Add educational emojis for Hindi words
         text = text.replace('कविता', '📝 कविता')

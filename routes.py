@@ -10,6 +10,7 @@ from ai_tutor import AITutor
 from simple_voice_tutor import SimpleVoiceTutor
 from homework_assistant import HomeworkAssistant
 from google.genai import types
+from number_formatter import format_indian_numbers
 import logging
 
 logger = logging.getLogger(__name__)
@@ -506,6 +507,40 @@ def api_speak_text():
     except Exception as e:
         logging.error(f"Error generating speech: {e}")
         return jsonify({"success": False, "message": "Failed to generate speech"})
+
+@app.route('/api/generate-audio', methods=['POST'])
+def api_generate_audio():
+    """Generate audio for text with Indian number formatting"""
+    try:
+        data = request.get_json()
+        text = data.get('text')
+        language = data.get('language', 'en')
+        
+        if not text:
+            return jsonify({"success": False, "message": "Text required"})
+        
+        # Apply Indian number formatting before generating audio
+        formatted_text = format_indian_numbers(text)
+        
+        voice_tutor = SimpleVoiceTutor()
+        
+        # Use the voice tutor's generate_audio_file method for better error handling
+        audio_url = voice_tutor.generate_audio_file(formatted_text, 'English')
+        
+        if audio_url:
+            return jsonify({
+                "success": True,
+                "audio_url": audio_url,
+                "hint_text": formatted_text,
+                "message": "Audio generated successfully"
+            })
+        else:
+            logging.error("Audio generation failed - no URL returned")
+            return jsonify({"success": False, "message": "Failed to generate audio"})
+        
+    except Exception as e:
+        logging.error(f"Error generating audio: {e}")
+        return jsonify({"success": False, "message": "Failed to generate audio"})
 
 @app.route('/api/voice/process-response', methods=['POST'])
 def api_process_response():

@@ -8,6 +8,7 @@ import re
 from models import Document, DocumentPage
 from app import db
 from ai_tutor import AITutor
+from number_formatter import format_indian_numbers
 
 class SimpleVoiceTutor:
     """Simplified voice-based AI tutor that generates audio files for browser playback"""
@@ -72,6 +73,9 @@ class SimpleVoiceTutor:
         # Remove ALL single quotes to prevent "backfoot" pronunciation issues in math content
         # This is aggressive but necessary for clear speech in mathematical contexts
         text = text.replace("'", "")
+        
+        # Format Indian numbers for proper pronunciation
+        text = format_indian_numbers(text)
         
         # Also remove backticks that might cause similar issues
         text = text.replace("`", "")
