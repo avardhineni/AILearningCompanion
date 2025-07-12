@@ -222,8 +222,7 @@ FINAL REMINDER FOR MATHS: If subject is "Maths", you MUST start your response wi
         text = text.replace('longitude', '📐 longitude')
         text = text.replace('coordinates', '📍 coordinates')
         
-        # Format Indian numbers for proper pronunciation
-        text = format_indian_numbers(text)
+        # Note: Indian numbers are formatted for TTS only, not for display
         
         # Add educational emojis for Hindi words
         text = text.replace('कविता', '📝 कविता')

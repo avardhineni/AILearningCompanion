@@ -557,18 +557,26 @@
                     currentStandaloneAudio = new Audio(result.audio_url);
                     currentStandaloneAudio.play();
                     
-                    // Update button states
+                    // Update button states - show pause and stop when playing
                     const playBtn = document.getElementById('play-standalone-btn');
                     const pauseBtn = document.getElementById('pause-standalone-btn');
+                    const resumeBtn = document.getElementById('resume-standalone-btn');
                     const stopBtn = document.getElementById('stop-standalone-btn');
                     
                     playBtn.style.display = 'none';
                     pauseBtn.style.display = 'inline-block';
+                    resumeBtn.style.display = 'none';
                     stopBtn.style.display = 'inline-block';
                     
                     // Ensure buttons are enabled
                     pauseBtn.disabled = false;
+                    resumeBtn.disabled = false;
                     stopBtn.disabled = false;
+                    
+                    // Re-render feather icons
+                    if (typeof feather !== 'undefined') {
+                        feather.replace();
+                    }
                     
                     // Handle audio end
                     currentStandaloneAudio.addEventListener('ended', () => {
@@ -587,16 +595,19 @@
             if (currentStandaloneAudio) {
                 currentStandaloneAudio.pause();
                 
-                // Update button states
+                // Update button states - show resume and stop when paused
                 const pauseBtn = document.getElementById('pause-standalone-btn');
                 const resumeBtn = document.getElementById('resume-standalone-btn');
+                const stopBtn = document.getElementById('stop-standalone-btn');
                 
                 pauseBtn.style.display = 'none';
                 resumeBtn.style.display = 'inline-block';
+                stopBtn.style.display = 'inline-block';
                 
                 // Ensure buttons are enabled
                 pauseBtn.disabled = false;
                 resumeBtn.disabled = false;
+                stopBtn.disabled = false;
                 
                 // Re-render feather icons
                 if (typeof feather !== 'undefined') {
@@ -609,16 +620,19 @@
             if (currentStandaloneAudio) {
                 currentStandaloneAudio.play();
                 
-                // Update button states
+                // Update button states - show pause and stop when playing
                 const pauseBtn = document.getElementById('pause-standalone-btn');
                 const resumeBtn = document.getElementById('resume-standalone-btn');
+                const stopBtn = document.getElementById('stop-standalone-btn');
                 
                 pauseBtn.style.display = 'inline-block';
                 resumeBtn.style.display = 'none';
+                stopBtn.style.display = 'inline-block';
                 
                 // Ensure buttons are enabled
                 pauseBtn.disabled = false;
                 resumeBtn.disabled = false;
+                stopBtn.disabled = false;
                 
                 // Re-render feather icons
                 if (typeof feather !== 'undefined') {
