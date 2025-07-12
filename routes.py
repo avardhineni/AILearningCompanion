@@ -531,7 +531,8 @@ def api_generate_audio():
             return jsonify({
                 "success": True,
                 "audio_url": audio_url,
-                "hint_text": formatted_text,
+                "original_text": text,  # Original text for display
+                "formatted_text": formatted_text,  # Formatted text for TTS
                 "message": "Audio generated successfully"
             })
         else:
