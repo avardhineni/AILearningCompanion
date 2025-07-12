@@ -66,6 +66,14 @@ class AITutor:
             - Use proper mathematical formatting with clear steps
             - Help students understand the concept, not just get the answer
             - Include why each mathematical rule or method is used
+            
+            CRITICAL FOR INDIAN NUMBERS:
+            - When writing Indian currency amounts, use proper Indian numbering system
+            - Write ₹1,50,000 as "one lakh fifty thousand" NOT "one thousand fifty thousand"
+            - Write ₹10,000 as "ten thousand" NOT "ten zero zero zero"
+            - Write ₹2,00,000 as "two lakh" NOT "two thousand zero thousand"
+            - Always use Indian place value system: lakh (100,000), crore (10,000,000)
+            - This is essential for proper pronunciation and understanding
             """
             
             user_prompt = f"""Based on the following lesson content, please provide a detailed and comprehensive answer to the student's question.

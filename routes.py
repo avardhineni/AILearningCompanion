@@ -1708,6 +1708,13 @@ def generate_fallback_answer(question, subject):
         4. Uses simple language appropriate for the age group
         5. Responds in {response_language}
         
+        CRITICAL FOR INDIAN NUMBERS:
+        - When writing Indian currency amounts, use proper Indian numbering system
+        - Write ₹1,50,000 as "one lakh fifty thousand" NOT "one thousand fifty thousand"
+        - Write ₹10,000 as "ten thousand" NOT "ten zero zero zero"
+        - Write ₹2,00,000 as "two lakh" NOT "two thousand zero thousand"
+        - Always use Indian place value system: lakh (100,000), crore (10,000,000)
+        
         If this is a math problem, show the steps but let the student work through them.
         If this is a reading question, help them understand the concept.
         Always be encouraging and supportive.
