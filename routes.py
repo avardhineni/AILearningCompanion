@@ -1731,9 +1731,13 @@ def generate_fallback_answer(question, subject):
         
         answer = response.text if response.text else "I'm here to help! Could you please rephrase your question?"
         
+        # Apply Indian number formatting as post-processing
+        from number_formatter import format_indian_numbers
+        formatted_answer = format_indian_numbers(answer)
+        
         return jsonify({
             "success": True,
-            "answer": answer,
+            "answer": formatted_answer,
             "page_references": []
         })
         

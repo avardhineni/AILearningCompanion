@@ -169,9 +169,14 @@ FINAL REMINDER FOR MATHS: If subject is "Maths", you MUST start your response wi
                 logger.info(f"AI response received for document {document_id}, length: {len(response.text)}")
                 # Make the response kid-friendly by replacing markdown with emojis
                 kid_friendly_answer = self._make_kid_friendly(response.text)
-                logger.info(f"Kid-friendly response prepared, length: {len(kid_friendly_answer)}")
+                
+                # Apply Indian number formatting as post-processing
+                from number_formatter import format_indian_numbers
+                formatted_answer = format_indian_numbers(kid_friendly_answer)
+                
+                logger.info(f"Kid-friendly response prepared, length: {len(formatted_answer)}")
                 return {
-                    "answer": kid_friendly_answer,
+                    "answer": formatted_answer,
                     "document_title": document.lesson_title,
                     "subject": document.subject,
                     "total_pages": len(pages)

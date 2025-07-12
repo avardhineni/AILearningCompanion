@@ -487,8 +487,18 @@
                     document.getElementById('standalone-answer-text').innerHTML = result.answer.replace(/\n/g, '<br>');
                     document.getElementById('standalone-answer').classList.remove('d-none');
                     
-                    // Reset audio buttons
+                    // Reset audio buttons and ensure they're visible
                     resetStandaloneAudioButtons();
+                    
+                    // Force show the play button
+                    setTimeout(() => {
+                        const playBtn = document.getElementById('play-standalone-btn');
+                        if (playBtn) {
+                            playBtn.style.display = 'inline-block';
+                            playBtn.style.visibility = 'visible';
+                            console.log('Audio control buttons should now be visible');
+                        }
+                    }, 100);
                 } else {
                     alert('Error: ' + result.message);
                 }
@@ -516,6 +526,13 @@
                 pauseBtn: !!pauseBtn,
                 resumeBtn: !!resumeBtn,
                 stopBtn: !!stopBtn
+            });
+            
+            console.log('Current button display states:', {
+                playBtn: playBtn ? playBtn.style.display : 'not found',
+                pauseBtn: pauseBtn ? pauseBtn.style.display : 'not found',
+                resumeBtn: resumeBtn ? resumeBtn.style.display : 'not found',
+                stopBtn: stopBtn ? stopBtn.style.display : 'not found'
             });
             
             if (playBtn) {
