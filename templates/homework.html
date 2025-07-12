@@ -179,7 +179,7 @@
                         </h6>
                         <div>
                             <button class="btn btn-sm btn-outline-danger" onclick="resetStandaloneAnswer()">
-                                <i data-feather="x" class="me-1"></i>Stop
+                                <i data-feather="x" class="me-1"></i>Close
                             </button>
                             <button class="btn btn-sm btn-outline-info" onclick="showDocumentPreview()">
                                 <i data-feather="info" class="me-1"></i>Need a hint?
@@ -188,19 +188,24 @@
                     </div>
                     <div class="card-body">
                         <div id="standalone-answer-text" class="mb-3"></div>
-                        <div class="text-center">
-                            <button class="btn btn-outline-success" id="play-standalone-btn" onclick="playStandaloneAnswer()">
-                                <i data-feather="volume-2" class="me-2"></i>Listen to Answer
-                            </button>
-                            <button class="btn btn-outline-warning" id="pause-standalone-btn" onclick="pauseStandaloneAnswer()" style="display: none;">
-                                <i data-feather="pause" class="me-2"></i>Pause Audio
-                            </button>
-                            <button class="btn btn-outline-info" id="resume-standalone-btn" onclick="resumeStandaloneAnswer()" style="display: none;">
-                                <i data-feather="play" class="me-2"></i>Resume Audio
-                            </button>
-                            <button class="btn btn-outline-danger" id="stop-standalone-btn" onclick="stopStandaloneAnswer()" style="display: none;">
-                                <i data-feather="stop-circle" class="me-2"></i>Stop Audio
-                            </button>
+                        
+                        <!-- Audio Controls Section -->
+                        <div class="border-top pt-3">
+                            <h6 class="mb-2 text-muted">Audio Controls</h6>
+                            <div class="d-flex justify-content-center gap-2 flex-wrap">
+                                <button class="btn btn-outline-success" id="play-standalone-btn" onclick="playStandaloneAnswer()">
+                                    <i data-feather="volume-2" class="me-2"></i>Listen to Answer
+                                </button>
+                                <button class="btn btn-outline-warning" id="pause-standalone-btn" onclick="pauseStandaloneAnswer()" style="display: none;">
+                                    <i data-feather="pause" class="me-2"></i>Pause Audio
+                                </button>
+                                <button class="btn btn-outline-info" id="resume-standalone-btn" onclick="resumeStandaloneAnswer()" style="display: none;">
+                                    <i data-feather="play" class="me-2"></i>Resume Audio
+                                </button>
+                                <button class="btn btn-outline-danger" id="stop-standalone-btn" onclick="stopStandaloneAnswer()" style="display: none;">
+                                    <i data-feather="stop-circle" class="me-2"></i>Stop Audio
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -539,26 +544,44 @@
         }
 
         async function playStandaloneAnswer() {
-            if (!currentStandaloneAnswer) return;
+            // Get the answer text from the display
+            const answerText = document.getElementById('standalone-answer-text').textContent;
+            if (!answerText) return;
+            
+            // Show loading state
+            const playBtn = document.getElementById('play-standalone-btn');
+            const originalText = playBtn.innerHTML;
+            playBtn.innerHTML = '<i data-feather="loader" class="me-2"></i>Loading...';
+            playBtn.disabled = true;
             
             try {
                 const response = await fetch('/api/generate-audio', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        text: currentStandaloneAnswer,
+                        text: answerText,
                         language: 'en'
                     })
                 });
                 
                 const result = await response.json();
                 
-                if (result.success) {
+                if (result.success || result.audio_url) {
+                    // Stop any existing audio
+                    if (currentStandaloneAudio) {
+                        currentStandaloneAudio.pause();
+                        currentStandaloneAudio = null;
+                    }
+                    
+                    // Create and play new audio
                     currentStandaloneAudio = new Audio(result.audio_url);
                     currentStandaloneAudio.play();
                     
+                    // Reset play button
+                    playBtn.innerHTML = originalText;
+                    playBtn.disabled = false;
+                    
                     // Update button states - show pause and stop when playing
-                    const playBtn = document.getElementById('play-standalone-btn');
                     const pauseBtn = document.getElementById('pause-standalone-btn');
                     const resumeBtn = document.getElementById('resume-standalone-btn');
                     const stopBtn = document.getElementById('stop-standalone-btn');
@@ -583,9 +606,15 @@
                         resetStandaloneAudioButtons();
                     });
                 } else {
-                    alert('Error generating audio: ' + result.message);
+                    // Reset play button on error
+                    playBtn.innerHTML = originalText;
+                    playBtn.disabled = false;
+                    alert('Error generating audio: ' + (result.message || 'Unknown error'));
                 }
             } catch (error) {
+                // Reset play button on error
+                playBtn.innerHTML = originalText;
+                playBtn.disabled = false;
                 console.error('Error:', error);
                 alert('Failed to generate audio. Please try again.');
             }
